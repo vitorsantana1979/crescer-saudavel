@@ -2,30 +2,89 @@ using Microsoft.AspNetCore.Identity;
 
 namespace CrescerSaudavel.Api.Models;
 
+public abstract class EntidadeAuditavel
+{
+    public DateTimeOffset CriadoEm { get; set; }
+    public Guid? CriadoPorUserId { get; set; }
+    public DateTimeOffset? AtualizadoEm { get; set; }
+    public Guid? AtualizadoPorUserId { get; set; }
+}
+
+public class TipoConselho
+{
+    public int Id { get; set; }
+    public string Sigla { get; set; } = string.Empty;
+    public string Nome { get; set; } = string.Empty;
+    public string TipoProfissional { get; set; } = string.Empty;
+    public bool Ativo { get; set; } = true;
+}
+
+public class GrupoSaude : EntidadeAuditavel
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Nome { get; set; } = string.Empty;
+    public string Tipo { get; set; } = "Secretaria de Saúde";
+    public string? Cnpj { get; set; }
+    public string? Telefone { get; set; }
+    public string? Endereco { get; set; }
+    public string? Cidade { get; set; }
+    public string? Estado { get; set; }
+    public string? Cep { get; set; }
+    public bool Ativo { get; set; } = true;
+
+    public ICollection<Tenant> Unidades { get; set; } = new List<Tenant>();
+}
+
 public class ProfissionalSaude : IdentityUser<Guid>
 {
-    public Guid TenantId { get; set; }
+    public Guid? GrupoSaudeId { get; set; }
+    public GrupoSaude? GrupoSaude { get; set; }
+    public Guid? TenantId { get; set; }
+    public Tenant? TenantAtual { get; set; }
     public string Nome { get; set; } = string.Empty;
-    public string Conselho { get; set; } = string.Empty;
-    public string RegistroConselho { get; set; } = string.Empty;
-    public string Especialidade { get; set; } = string.Empty;
+    public int TipoConselhoId { get; set; }
+    public TipoConselho? TipoConselho { get; set; }
+    public string NumeroRegistro { get; set; } = string.Empty;
+    public string? Especialidade { get; set; }
     public bool Ativo { get; set; } = true;
-    public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
+    public DateTimeOffset CriadoEm { get; set; } = DateTimeOffset.UtcNow;
+    public ICollection<ProfissionalSaudeUnidade> UnidadesPermitidas { get; set; } = new List<ProfissionalSaudeUnidade>();
 }
 
-public class Tenant
+public class ProfissionalSaudeUnidade : EntidadeAuditavel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid ProfissionalSaudeId { get; set; }
+    public ProfissionalSaude? ProfissionalSaude { get; set; }
+    public Guid TenantId { get; set; }
+    public Tenant? Tenant { get; set; }
+    public bool Principal { get; set; } = false;
+}
+
+public class Tenant : EntidadeAuditavel
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid GrupoSaudeId { get; set; }
+    public GrupoSaude? GrupoSaude { get; set; }
     public string Nome { get; set; } = string.Empty;
     public string Tipo { get; set; } = "hospital";
+    public string? TipoUnidade { get; set; }
+    public string? Cnpj { get; set; }
+    public string? Telefone { get; set; }
+    public string? Endereco { get; set; }
+    public string? Cidade { get; set; }
+    public string? Estado { get; set; }
+    public string? Cep { get; set; }
     public int IdadePreTermoLimite { get; set; } = 37;
     public bool Ativo { get; set; } = true;
+    public ICollection<ProfissionalSaudeUnidade> Profissionais { get; set; } = new List<ProfissionalSaudeUnidade>();
 }
 
-public class RecemNascido
+public class RecemNascido : EntidadeAuditavel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid TenantId { get; set; }
+    public Tenant? Tenant { get; set; }
     public string Nome { get; set; } = string.Empty;
     public char Sexo { get; set; }
     public DateTime DataNascimento { get; set; }
@@ -36,10 +95,11 @@ public class RecemNascido
     public ICollection<Consulta> Consultas { get; set; } = new List<Consulta>();
 }
 
-public class Consulta
+public class Consulta : EntidadeAuditavel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid RecemNascidoId { get; set; }
+    public RecemNascido? RecemNascido { get; set; }
     public DateTime DataHora { get; set; }
     public decimal PesoKg { get; set; }
     public decimal EstaturaCm { get; set; }
@@ -49,10 +109,11 @@ public class Consulta
     public decimal? ZScorePerimetro { get; set; }
 }
 
-public class Alimento
+public class Alimento : EntidadeAuditavel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid TenantId { get; set; }
+    public Tenant? Tenant { get; set; }
     public string Nome { get; set; } = string.Empty;
     public string Categoria { get; set; } = "leite";
     public string Unidade { get; set; } = "ml";
@@ -61,20 +122,24 @@ public class Alimento
     public bool Ativo { get; set; } = true;
 }
 
-public class Dieta
+public class Dieta : EntidadeAuditavel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid RecemNascidoId { get; set; }
+    public RecemNascido? RecemNascido { get; set; }
     public DateTime DataInicio { get; set; }
     public DateTime? DataFim { get; set; }
+    public double FrequenciaHoras { get; set; } = 3;
     public ICollection<DietaItem> Itens { get; set; } = new List<DietaItem>();
 }
 
-public class DietaItem
+public class DietaItem : EntidadeAuditavel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid DietaId { get; set; }
+    public Dieta? Dieta { get; set; }
     public Guid AlimentoId { get; set; }
+    public Alimento? Alimento { get; set; }
     public decimal Quantidade { get; set; }
     public decimal? EnergiaTotalKcal { get; set; }
     public decimal? ProteinaTotalG { get; set; }

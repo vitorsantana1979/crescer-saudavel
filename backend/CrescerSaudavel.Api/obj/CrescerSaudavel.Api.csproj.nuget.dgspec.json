@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/Users/vitorsantana/Dev/crescer-saudavel/crescer-saudavel/backend/CrescerSaudavel.Api/CrescerSaudavel.Api.csproj": {}
+    "/src/CrescerSaudavel.Api/CrescerSaudavel.Api.csproj": {}
   },
   "projects": {
-    "/Users/vitorsantana/Dev/crescer-saudavel/crescer-saudavel/backend/CrescerSaudavel.Api/CrescerSaudavel.Api.csproj": {
+    "/src/CrescerSaudavel.Api/CrescerSaudavel.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/vitorsantana/Dev/crescer-saudavel/crescer-saudavel/backend/CrescerSaudavel.Api/CrescerSaudavel.Api.csproj",
+        "projectUniqueName": "/src/CrescerSaudavel.Api/CrescerSaudavel.Api.csproj",
         "projectName": "CrescerSaudavel.Api",
-        "projectPath": "/Users/vitorsantana/Dev/crescer-saudavel/crescer-saudavel/backend/CrescerSaudavel.Api/CrescerSaudavel.Api.csproj",
-        "packagesPath": "/Users/vitorsantana/.nuget/packages/",
-        "outputPath": "/Users/vitorsantana/Dev/crescer-saudavel/crescer-saudavel/backend/CrescerSaudavel.Api/obj/",
+        "projectPath": "/src/CrescerSaudavel.Api/CrescerSaudavel.Api.csproj",
+        "packagesPath": "/root/.nuget/packages/",
+        "outputPath": "/src/CrescerSaudavel.Api/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/Users/vitorsantana/.nuget/NuGet/NuGet.Config"
+          "/root/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
@@ -37,8 +37,7 @@
           "enableAudit": "true",
           "auditLevel": "low",
           "auditMode": "direct"
-        },
-        "SdkAnalysisLevel": "9.0.300"
+        }
       },
       "frameworks": {
         "net8.0": {
@@ -85,7 +84,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.415/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

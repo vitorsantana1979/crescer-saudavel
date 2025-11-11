@@ -12,13 +12,8 @@ curl -L -o "$BASE/OMS/estatura_f.csv" "https://www.who.int/tools/child-growth-st
 curl -L -o "$BASE/OMS/perimetro_m.csv" "https://www.who.int/tools/child-growth-standards/standards/head-circumference-for-age-boys.csv"
 curl -L -o "$BASE/OMS/perimetro_f.csv" "https://www.who.int/tools/child-growth-standards/standards/head-circumference-for-age-girls.csv"
 
-# INTERGROWTH
-curl -L -o "$BASE/INTERGROWTH/peso_m.csv" "https://intergrowth21.ndog.ox.ac.uk/Content/PDF/VeryPreterm/INTERGROWTH-21st_Weight_Z_Scores_Boys.csv"
-curl -L -o "$BASE/INTERGROWTH/peso_f.csv" "https://intergrowth21.ndog.ox.ac.uk/Content/PDF/VeryPreterm/INTERGROWTH-21st_Weight_Z_Scores_Girls.csv"
-curl -L -o "$BASE/INTERGROWTH/comprimento_m.csv" "https://intergrowth21.ndog.ox.ac.uk/Content/PDF/VeryPreterm/INTERGROWTH-21st_Length_Z_Scores_Boys.csv"
-curl -L -o "$BASE/INTERGROWTH/comprimento_f.csv" "https://intergrowth21.ndog.ox.ac.uk/Content/PDF/VeryPreterm/INTERGROWTH-21st_Length_Z_Scores_Girls.csv"
-curl -L -o "$BASE/INTERGROWTH/cabeca_m.csv" "https://intergrowth21.ndog.ox.ac.uk/Content/PDF/VeryPreterm/INTERGROWTH-21st_Head_Circumference_Z_Scores_Boys.csv"
-curl -L -o "$BASE/INTERGROWTH/cabeca_f.csv" "https://intergrowth21.ndog.ox.ac.uk/Content/PDF/VeryPreterm/INTERGROWTH-21st_Head_Circumference_Z_Scores_Girls.csv"
+# INTERGROWTH-21st - Baixar PDFs (as tabelas são fornecidas apenas em PDF)
+echo "ℹ️  INTERGROWTH-21st fornece apenas PDFs, não CSVs. Use as tabelas manuais já criadas."
 
 echo "✅ Download concluído. Convertendo CSVs em JSON..."
 python3 "$(dirname "$0")/convert_to_json.py" "$BASE"

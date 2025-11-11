@@ -1,0 +1,144 @@
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (43ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+      FROM [core].[AspNetRoles] AS [a]
+      WHERE [a].[NormalizedName] = @__normalizedName_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (34ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+      FROM [core].[AspNetRoles] AS [a]
+      WHERE [a].[NormalizedName] = @__normalizedName_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (25ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+      FROM [core].[AspNetRoles] AS [a]
+      WHERE [a].[NormalizedName] = @__normalizedName_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (25ms) [Parameters=[@__normalizedName_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+      FROM [core].[AspNetRoles] AS [a]
+      WHERE [a].[NormalizedName] = @__normalizedName_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (27ms) [Parameters=[@__normalizedEmail_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(2) [a].[Id], [a].[AccessFailedCount], [a].[Ativo], [a].[ConcurrencyStamp], [a].[CriadoEm], [a].[Email], [a].[EmailConfirmed], [a].[Especialidade], [a].[GrupoSaudeId], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[Nome], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[NumeroRegistro], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TenantId], [a].[TipoConselhoId], [a].[TwoFactorEnabled], [a].[UserName]
+      FROM [core].[AspNetUsers] AS [a]
+      WHERE [a].[NormalizedEmail] = @__normalizedEmail_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (26ms) [Parameters=[@__normalizedRoleName_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(2) [a].[Id], [a].[ConcurrencyStamp], [a].[Name], [a].[NormalizedName]
+      FROM [core].[AspNetRoles] AS [a]
+      WHERE [a].[NormalizedName] = @__normalizedRoleName_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (46ms) [Parameters=[@__get_Item_0='?' (DbType = Guid), @__get_Item_1='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [a].[UserId], [a].[RoleId]
+      FROM [core].[AspNetUserRoles] AS [a]
+      WHERE [a].[UserId] = @__get_Item_0 AND [a].[RoleId] = @__get_Item_1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (26ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT [a].[Id], [a].[AccessFailedCount], [a].[Ativo], [a].[ConcurrencyStamp], [a].[CriadoEm], [a].[Email], [a].[EmailConfirmed], [a].[Especialidade], [a].[GrupoSaudeId], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[Nome], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[NumeroRegistro], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TenantId], [a].[TipoConselhoId], [a].[TwoFactorEnabled], [a].[UserName]
+      FROM [core].[AspNetUsers] AS [a]
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (54ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT [a0].[Name]
+      FROM [core].[AspNetUserRoles] AS [a]
+      INNER JOIN [core].[AspNetRoles] AS [a0] ON [a].[RoleId] = [a0].[Id]
+      WHERE [a].[UserId] = @__userId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (26ms) [Parameters=[@__8__locals1_usuario_TenantId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [t].[Id], [t].[Ativo], [t].[AtualizadoEm], [t].[AtualizadoPorUserId], [t].[Cep], [t].[Cidade], [t].[Cnpj], [t].[CriadoEm], [t].[CriadoPorUserId], [t].[Endereco], [t].[Estado], [t].[GrupoSaudeId], [t].[IdadePreTermoLimite], [t].[Nome], [t].[Telefone], [t].[Tipo], [t].[TipoUnidade]
+      FROM [core].[Tenant] AS [t]
+      WHERE [t].[Id] = @__8__locals1_usuario_TenantId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (26ms) [Parameters=[@__8__locals1_usuario_Id_0='?' (DbType = Guid), @__tenant_Id_1='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [core].[ProfissionalSaudeUnidade] AS [p]
+              WHERE [p].[ProfissionalSaudeId] = @__8__locals1_usuario_Id_0 AND [p].[TenantId] = @__tenant_Id_1) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (56ms) [Parameters=[@__normalizedUserName_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [a].[Id], [a].[AccessFailedCount], [a].[Ativo], [a].[ConcurrencyStamp], [a].[CriadoEm], [a].[Email], [a].[EmailConfirmed], [a].[Especialidade], [a].[GrupoSaudeId], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[Nome], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[NumeroRegistro], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TenantId], [a].[TipoConselhoId], [a].[TwoFactorEnabled], [a].[UserName]
+      FROM [core].[AspNetUsers] AS [a]
+      WHERE [a].[NormalizedUserName] = @__normalizedUserName_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (28ms) [Parameters=[@p22='?' (DbType = Guid), @p0='?' (DbType = Int32), @p1='?' (DbType = Boolean), @p2='?' (Size = 4000), @p23='?' (Size = 4000), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 256), @p5='?' (DbType = Boolean), @p6='?' (Size = 4000), @p7='?' (DbType = Guid), @p8='?' (DbType = Boolean), @p9='?' (DbType = DateTimeOffset), @p10='?' (Size = 4000), @p11='?' (Size = 256), @p12='?' (Size = 256), @p13='?' (Size = 4000), @p14='?' (Size = 4000), @p15='?' (Size = 4000), @p16='?' (DbType = Boolean), @p17='?' (Size = 4000), @p18='?' (DbType = Guid), @p19='?' (DbType = Int32), @p20='?' (DbType = Boolean), @p21='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      UPDATE [core].[AspNetUsers] SET [AccessFailedCount] = @p0, [Ativo] = @p1, [ConcurrencyStamp] = @p2, [CriadoEm] = @p3, [Email] = @p4, [EmailConfirmed] = @p5, [Especialidade] = @p6, [GrupoSaudeId] = @p7, [LockoutEnabled] = @p8, [LockoutEnd] = @p9, [Nome] = @p10, [NormalizedEmail] = @p11, [NormalizedUserName] = @p12, [NumeroRegistro] = @p13, [PasswordHash] = @p14, [PhoneNumber] = @p15, [PhoneNumberConfirmed] = @p16, [SecurityStamp] = @p17, [TenantId] = @p18, [TipoConselhoId] = @p19, [TwoFactorEnabled] = @p20, [UserName] = @p21
+      OUTPUT 1
+      WHERE [Id] = @p22 AND [ConcurrencyStamp] = @p23;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (26ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT [a0].[Name]
+      FROM [core].[AspNetUserRoles] AS [a]
+      INNER JOIN [core].[AspNetRoles] AS [a0] ON [a].[RoleId] = [a0].[Id]
+      WHERE [a].[UserId] = @__userId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (25ms) [Parameters=[@__8__locals1_usuario_TenantId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [t].[Id], [t].[Ativo], [t].[AtualizadoEm], [t].[AtualizadoPorUserId], [t].[Cep], [t].[Cidade], [t].[Cnpj], [t].[CriadoEm], [t].[CriadoPorUserId], [t].[Endereco], [t].[Estado], [t].[GrupoSaudeId], [t].[IdadePreTermoLimite], [t].[Nome], [t].[Telefone], [t].[Tipo], [t].[TipoUnidade]
+      FROM [core].[Tenant] AS [t]
+      WHERE [t].[Id] = @__8__locals1_usuario_TenantId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (26ms) [Parameters=[@__8__locals1_usuario_Id_0='?' (DbType = Guid), @__tenant_Id_1='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT CASE
+          WHEN EXISTS (
+              SELECT 1
+              FROM [core].[ProfissionalSaudeUnidade] AS [p]
+              WHERE [p].[ProfissionalSaudeId] = @__8__locals1_usuario_Id_0 AND [p].[TenantId] = @__tenant_Id_1) THEN CAST(1 AS bit)
+          ELSE CAST(0 AS bit)
+      END
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (26ms) [Parameters=[@__normalizedUserName_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [a].[Id], [a].[AccessFailedCount], [a].[Ativo], [a].[ConcurrencyStamp], [a].[CriadoEm], [a].[Email], [a].[EmailConfirmed], [a].[Especialidade], [a].[GrupoSaudeId], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[Nome], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[NumeroRegistro], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TenantId], [a].[TipoConselhoId], [a].[TwoFactorEnabled], [a].[UserName]
+      FROM [core].[AspNetUsers] AS [a]
+      WHERE [a].[NormalizedUserName] = @__normalizedUserName_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (27ms) [Parameters=[@p22='?' (DbType = Guid), @p0='?' (DbType = Int32), @p1='?' (DbType = Boolean), @p2='?' (Size = 4000), @p23='?' (Size = 4000), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 256), @p5='?' (DbType = Boolean), @p6='?' (Size = 4000), @p7='?' (DbType = Guid), @p8='?' (DbType = Boolean), @p9='?' (DbType = DateTimeOffset), @p10='?' (Size = 4000), @p11='?' (Size = 256), @p12='?' (Size = 256), @p13='?' (Size = 4000), @p14='?' (Size = 4000), @p15='?' (Size = 4000), @p16='?' (DbType = Boolean), @p17='?' (Size = 4000), @p18='?' (DbType = Guid), @p19='?' (DbType = Int32), @p20='?' (DbType = Boolean), @p21='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      UPDATE [core].[AspNetUsers] SET [AccessFailedCount] = @p0, [Ativo] = @p1, [ConcurrencyStamp] = @p2, [CriadoEm] = @p3, [Email] = @p4, [EmailConfirmed] = @p5, [Especialidade] = @p6, [GrupoSaudeId] = @p7, [LockoutEnabled] = @p8, [LockoutEnd] = @p9, [Nome] = @p10, [NormalizedEmail] = @p11, [NormalizedUserName] = @p12, [NumeroRegistro] = @p13, [PasswordHash] = @p14, [PhoneNumber] = @p15, [PhoneNumberConfirmed] = @p16, [SecurityStamp] = @p17, [TenantId] = @p18, [TipoConselhoId] = @p19, [TwoFactorEnabled] = @p20, [UserName] = @p21
+      OUTPUT 1
+      WHERE [Id] = @p22 AND [ConcurrencyStamp] = @p23;
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (37ms) [Parameters=[@__userId_0='?' (DbType = Guid)], CommandType='Text', CommandTimeout='30']
+      SELECT [a0].[Name]
+      FROM [core].[AspNetUserRoles] AS [a]
+      INNER JOIN [core].[AspNetRoles] AS [a0] ON [a].[RoleId] = [a0].[Id]
+      WHERE [a].[UserId] = @__userId_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (27ms) [Parameters=[@__normalizedUserName_0='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SELECT TOP(1) [a].[Id], [a].[AccessFailedCount], [a].[Ativo], [a].[ConcurrencyStamp], [a].[CriadoEm], [a].[Email], [a].[EmailConfirmed], [a].[Especialidade], [a].[GrupoSaudeId], [a].[LockoutEnabled], [a].[LockoutEnd], [a].[Nome], [a].[NormalizedEmail], [a].[NormalizedUserName], [a].[NumeroRegistro], [a].[PasswordHash], [a].[PhoneNumber], [a].[PhoneNumberConfirmed], [a].[SecurityStamp], [a].[TenantId], [a].[TipoConselhoId], [a].[TwoFactorEnabled], [a].[UserName]
+      FROM [core].[AspNetUsers] AS [a]
+      WHERE [a].[NormalizedUserName] = @__normalizedUserName_0
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (26ms) [Parameters=[@p22='?' (DbType = Guid), @p0='?' (DbType = Int32), @p1='?' (DbType = Boolean), @p2='?' (Size = 4000), @p23='?' (Size = 4000), @p3='?' (DbType = DateTimeOffset), @p4='?' (Size = 256), @p5='?' (DbType = Boolean), @p6='?' (Size = 4000), @p7='?' (DbType = Guid), @p8='?' (DbType = Boolean), @p9='?' (DbType = DateTimeOffset), @p10='?' (Size = 4000), @p11='?' (Size = 256), @p12='?' (Size = 256), @p13='?' (Size = 4000), @p14='?' (Size = 4000), @p15='?' (Size = 4000), @p16='?' (DbType = Boolean), @p17='?' (Size = 4000), @p18='?' (DbType = Guid), @p19='?' (DbType = Int32), @p20='?' (DbType = Boolean), @p21='?' (Size = 256)], CommandType='Text', CommandTimeout='30']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      UPDATE [core].[AspNetUsers] SET [AccessFailedCount] = @p0, [Ativo] = @p1, [ConcurrencyStamp] = @p2, [CriadoEm] = @p3, [Email] = @p4, [EmailConfirmed] = @p5, [Especialidade] = @p6, [GrupoSaudeId] = @p7, [LockoutEnabled] = @p8, [LockoutEnd] = @p9, [Nome] = @p10, [NormalizedEmail] = @p11, [NormalizedUserName] = @p12, [NumeroRegistro] = @p13, [PasswordHash] = @p14, [PhoneNumber] = @p15, [PhoneNumberConfirmed] = @p16, [SecurityStamp] = @p17, [TenantId] = @p18, [TipoConselhoId] = @p19, [TwoFactorEnabled] = @p20, [UserName] = @p21
+      OUTPUT 1
+      WHERE [Id] = @p22 AND [ConcurrencyStamp] = @p23;
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5001
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/vitorsantana/Dev/crescer-saudavel/crescer-saudavel/backend/CrescerSaudavel.Api
+fail: Microsoft.AspNetCore.Server.Kestrel[13]
+      Connection id "0HNGSGBGNQ5BB", Request id "0HNGSGBGNQ5BB:00000001": An unhandled exception was thrown by the application.
+      Microsoft.AspNetCore.Routing.Matching.AmbiguousMatchException: The request matched multiple endpoints. Matches: 
+      
+      HTTP: GET /api/localizacao/estados
+      CrescerSaudavel.Api.Controllers.LocalizacaoController.ObterEstados (CrescerSaudavel.Api)
+         at Microsoft.AspNetCore.Routing.Matching.DefaultEndpointSelector.ReportAmbiguity(Span`1 candidateState)
+         at Microsoft.AspNetCore.Routing.Matching.DefaultEndpointSelector.ProcessFinalCandidates(HttpContext httpContext, Span`1 candidateState)
+         at Microsoft.AspNetCore.Routing.Matching.DefaultEndpointSelector.Select(HttpContext httpContext, Span`1 candidateState)
+         at Microsoft.AspNetCore.Routing.Matching.DfaMatcher.MatchAsync(HttpContext httpContext)
+         at Microsoft.AspNetCore.Routing.EndpointRoutingMiddleware.Invoke(HttpContext httpContext)
+         at Microsoft.AspNetCore.HostFiltering.HostFilteringMiddleware.Invoke(HttpContext context)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http.HttpProtocol.ProcessRequests[TContext](IHttpApplication`1 application)
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...

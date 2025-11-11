@@ -1,0 +1,2942 @@
+[
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 0.63
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 1.13
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 1.55
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 1.95
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 2.39
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 2.88
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 3.47
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 0.67
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 1.17
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 1.59
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 1.99
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 2.43
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 2.92
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 3.51
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 0.71
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 1.21
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 1.63
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 2.03
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 2.47
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 2.96
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 3.55
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 0.75
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 1.25
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 1.67
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 2.07
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 2.5
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 2.99
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 3.59
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 0.79
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 1.29
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 1.71
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 2.11
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 2.54
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 3.03
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 3.62
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 0.83
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 1.33
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 1.75
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 2.15
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 2.58
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 3.07
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 3.66
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 0.87
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 1.37
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 1.79
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 2.18
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 2.62
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 3.11
+  },
+  {
+    "idadeSemanas": 33,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 3.7
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 0.91
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 1.4
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 1.82
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 2.22
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 2.65
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 3.14
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 3.73
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 0.95
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 1.44
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 1.86
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 2.26
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 2.69
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 3.18
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 3.77
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 0.98
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 1.48
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 1.9
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 2.29
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 2.73
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 3.21
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 3.8
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 1.02
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 1.51
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 1.93
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 2.33
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 2.76
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 3.25
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 3.84
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 1.05
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 1.55
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 1.97
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 2.36
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 2.8
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 3.28
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 3.87
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 1.09
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 1.58
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 2.0
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 2.4
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 2.83
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 3.32
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 3.91
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 1.12
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 1.62
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 2.04
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 2.43
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 2.86
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 3.35
+  },
+  {
+    "idadeSemanas": 34,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 3.94
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 1.16
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 1.65
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 2.07
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 2.47
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 2.9
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 3.38
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 3.97
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 1.19
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 1.69
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 2.1
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 2.5
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 2.93
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 3.42
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 4.0
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 1.23
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 1.72
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 2.14
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 2.53
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 2.96
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 3.45
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 4.04
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 1.26
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 1.75
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 2.17
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 2.57
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 3.0
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 3.48
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 4.07
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 1.29
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 1.78
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 2.2
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 2.6
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 3.03
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 3.51
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 4.1
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 1.32
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 1.82
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 2.23
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 2.63
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 3.06
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 3.54
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 4.13
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 1.36
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 1.85
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 2.26
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 2.66
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 3.09
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 3.57
+  },
+  {
+    "idadeSemanas": 35,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 4.16
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 1.39
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 1.88
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 2.29
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 2.69
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 3.12
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 3.6
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 4.19
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 1.42
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 1.91
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 2.33
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 2.72
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 3.15
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 3.63
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 4.22
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 1.45
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 1.94
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 2.36
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 2.75
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 3.18
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 3.66
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 4.25
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 1.48
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 1.97
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 2.38
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 2.78
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 3.21
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 3.69
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 4.28
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 1.51
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 2.0
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 2.41
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 2.81
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 3.24
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 3.72
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 4.3
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 1.54
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 2.03
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 2.44
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 2.84
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 3.26
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 3.75
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 4.33
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 1.57
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 2.06
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 2.47
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 2.87
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 3.29
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 3.78
+  },
+  {
+    "idadeSemanas": 36,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 4.36
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 1.59
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 2.08
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 2.5
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 2.89
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 3.32
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 3.8
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 4.39
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 1.62
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 2.11
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 2.53
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 2.92
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 3.35
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 3.83
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 4.41
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 1.65
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 2.14
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 2.55
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 2.95
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 3.37
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 3.86
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 4.44
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 1.68
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 2.17
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 2.58
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 2.97
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 3.4
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 3.88
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 4.46
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 1.7
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 2.19
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 2.61
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 3.0
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 3.43
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 3.91
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 4.49
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 1.73
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 2.22
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 2.63
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 3.03
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 3.45
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 3.93
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 4.51
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 1.76
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 2.24
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 2.66
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 3.05
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 3.48
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 3.96
+  },
+  {
+    "idadeSemanas": 37,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 4.54
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 1.78
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 2.27
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 2.68
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 3.08
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 3.5
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 3.98
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 4.56
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 1.81
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 2.29
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 2.71
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 3.1
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 3.53
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 4.01
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 4.59
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 1.83
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 2.32
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 2.73
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 3.12
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 3.55
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 4.03
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 4.61
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 1.86
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 2.34
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 2.76
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 3.15
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 3.57
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 4.05
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 4.63
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 1.88
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 2.37
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 2.78
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 3.17
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 3.6
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 4.08
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 4.66
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 1.9
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 2.39
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 2.8
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 3.19
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 3.62
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 4.1
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 4.68
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 1.93
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 2.41
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 2.82
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 3.22
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 3.64
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 4.12
+  },
+  {
+    "idadeSemanas": 38,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 4.7
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 1.95
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 2.43
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 2.85
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 3.24
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 3.66
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 4.14
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 4.72
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 1.97
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 2.46
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 2.87
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 3.26
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 3.68
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 4.16
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 4.74
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 1.99
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 2.48
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 2.89
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 3.28
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 3.71
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 4.19
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 4.76
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 2.01
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 2.5
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 2.91
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 3.3
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 3.73
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 4.21
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 4.78
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 2.04
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 2.52
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 2.93
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 3.32
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 3.75
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 4.23
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 4.8
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 2.06
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 2.54
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 2.95
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 3.34
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 3.77
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 4.25
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 4.82
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 2.08
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 2.56
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 2.97
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 3.36
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 3.79
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 4.27
+  },
+  {
+    "idadeSemanas": 39,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 4.84
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 2.1
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 2.58
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 2.99
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 3.38
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 3.81
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 4.29
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 4.86
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 2.12
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 2.6
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 3.01
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 3.4
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 3.83
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 4.3
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 4.88
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 2.14
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 2.62
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 3.03
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 3.42
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 3.85
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 4.32
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 4.9
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 2.16
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 2.64
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 3.05
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 3.44
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 3.86
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 4.34
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 4.92
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 2.17
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 2.66
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 3.07
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 3.46
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 3.88
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 4.36
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 4.94
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 2.19
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 2.68
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 3.09
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 3.48
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 3.9
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 4.38
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 4.95
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 2.21
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 2.7
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 3.1
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 3.49
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 3.92
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 4.39
+  },
+  {
+    "idadeSemanas": 40,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 4.97
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 2.23
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 2.71
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 3.12
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 3.51
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 3.93
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 4.41
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 4.99
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 2.25
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 2.73
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 3.14
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 3.53
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 3.95
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 4.43
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 5.0
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 2.26
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 2.75
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 3.16
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 3.55
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 3.97
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 4.44
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 5.02
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 2.28
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 2.76
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 3.17
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 3.56
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 3.98
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 4.46
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 5.04
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 2.3
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 2.78
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 3.19
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 3.58
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 4.0
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 4.48
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 5.05
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 2.31
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 2.8
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 3.2
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 3.59
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 4.02
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 4.49
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 5.07
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 2.33
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 2.81
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 3.22
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 3.61
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 4.03
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 4.51
+  },
+  {
+    "idadeSemanas": 41,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 5.08
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 0,
+    "z": -3,
+    "valor": 2.34
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 0,
+    "z": -2,
+    "valor": 2.83
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 0,
+    "z": -1,
+    "valor": 3.24
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 0,
+    "z": 0,
+    "valor": 3.62
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 0,
+    "z": 1,
+    "valor": 4.05
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 0,
+    "z": 2,
+    "valor": 4.52
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 0,
+    "z": 3,
+    "valor": 5.1
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 1,
+    "z": -3,
+    "valor": 2.36
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 1,
+    "z": -2,
+    "valor": 2.84
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 1,
+    "z": -1,
+    "valor": 3.25
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 1,
+    "z": 0,
+    "valor": 3.64
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 1,
+    "z": 1,
+    "valor": 4.06
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 1,
+    "z": 2,
+    "valor": 4.54
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 1,
+    "z": 3,
+    "valor": 5.11
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 2,
+    "z": -3,
+    "valor": 2.37
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 2,
+    "z": -2,
+    "valor": 2.86
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 2,
+    "z": -1,
+    "valor": 3.26
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 2,
+    "z": 0,
+    "valor": 3.65
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 2,
+    "z": 1,
+    "valor": 4.07
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 2,
+    "z": 2,
+    "valor": 4.55
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 2,
+    "z": 3,
+    "valor": 5.12
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 3,
+    "z": -3,
+    "valor": 2.39
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 3,
+    "z": -2,
+    "valor": 2.87
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 3,
+    "z": -1,
+    "valor": 3.28
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 3,
+    "z": 0,
+    "valor": 3.67
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 3,
+    "z": 1,
+    "valor": 4.09
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 3,
+    "z": 2,
+    "valor": 4.56
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 3,
+    "z": 3,
+    "valor": 5.14
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 4,
+    "z": -3,
+    "valor": 2.4
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 4,
+    "z": -2,
+    "valor": 2.88
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 4,
+    "z": -1,
+    "valor": 3.29
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 4,
+    "z": 0,
+    "valor": 3.68
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 4,
+    "z": 1,
+    "valor": 4.1
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 4,
+    "z": 2,
+    "valor": 4.58
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 4,
+    "z": 3,
+    "valor": 5.15
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 5,
+    "z": -3,
+    "valor": 2.42
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 5,
+    "z": -2,
+    "valor": 2.9
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 5,
+    "z": -1,
+    "valor": 3.31
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 5,
+    "z": 0,
+    "valor": 3.69
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 5,
+    "z": 1,
+    "valor": 4.11
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 5,
+    "z": 2,
+    "valor": 4.59
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 5,
+    "z": 3,
+    "valor": 5.16
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 6,
+    "z": -3,
+    "valor": 2.43
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 6,
+    "z": -2,
+    "valor": 2.91
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 6,
+    "z": -1,
+    "valor": 3.32
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 6,
+    "z": 0,
+    "valor": 3.71
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 6,
+    "z": 1,
+    "valor": 4.13
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 6,
+    "z": 2,
+    "valor": 4.6
+  },
+  {
+    "idadeSemanas": 42,
+    "idadeDias": 6,
+    "z": 3,
+    "valor": 5.18
+  }
+]

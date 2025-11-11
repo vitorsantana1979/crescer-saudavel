@@ -1,0 +1,27 @@
+services:
+  api:
+    build:
+      context: ./backend
+      target: dev
+    volumes:
+      - ./backend:/src
+      - /src/bin
+      - /src/obj
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://0.0.0.0:5280   # <— garante bind correto
+      - URLS=http://0.0.0.0:5280
+    ports:
+      - "5280:5280"
+
+  web:
+    build:
+      context: ./frontend
+      target: dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5174:5173"
+    depends_on:
+      - api
