@@ -5,6 +5,7 @@ using CrescerSaudavel.Api.Data;
 using CrescerSaudavel.Api.Models;
 using CrescerSaudavel.Api.Services.Time;
 using System.Linq;
+using System;
 
 namespace CrescerSaudavel.Api.Controllers;
 
@@ -27,16 +28,23 @@ public class AlimentosController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        var tenantIds = _currentUserService.TenantIds.ToHashSet();
-        if (tenantIds.Count == 0)
-            return Ok(Array.Empty<Alimento>());
+        try
+        {
+            var tenantIds = _currentUserService.TenantIds.ToHashSet();
+            if (tenantIds.Count == 0)
+                return Ok(Array.Empty<Alimento>());
 
-        var alimentos = await _context.Alimentos
-            .Where(a => a.Ativo && tenantIds.Contains(a.TenantId))
-            .OrderBy(a => a.Nome)
-            .ToListAsync();
+            var alimentos = await _context.Alimentos
+                .Where(a => a.Ativo && !a.Excluido && tenantIds.Contains(a.TenantId))
+                .OrderBy(a => a.Nome)
+                .ToListAsync();
 
-        return Ok(alimentos);
+            return Ok(alimentos);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
+        }
     }
 
     [HttpGet("{id}")]
@@ -122,7 +130,7 @@ public class AlimentosController : ControllerBase
         if (!tenantIds.Contains(alimento.TenantId))
             return Forbid();
 
-        alimento.Ativo = false;
+        alimento.Excluido = true;
         await _context.SaveChangesAsync();
 
         return NoContent();

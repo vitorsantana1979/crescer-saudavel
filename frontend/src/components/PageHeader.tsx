@@ -23,8 +23,8 @@ export default function PageHeader({
     <div className="flex items-center justify-between mb-6">
       <div className="flex items-center gap-3">
         {Icon && (
-          <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-            <Icon className="w-6 h-6 text-green-700" />
+          <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Icon className="w-6 h-6 text-primary" />
           </div>
         )}
         <div>
@@ -35,7 +35,7 @@ export default function PageHeader({
       {action && (
         <button
           onClick={action.onClick}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+          className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium transition-colors"
         >
           {ActionIcon && <ActionIcon className="w-5 h-5" />}
           {action.label}

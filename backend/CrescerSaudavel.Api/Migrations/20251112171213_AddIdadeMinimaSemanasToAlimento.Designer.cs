@@ -4,6 +4,7 @@ using CrescerSaudavel.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CrescerSaudavel.Api.Migrations
 {
     [DbContext(typeof(CrescerSaudavelDbContext))]
-    partial class CrescerSaudavelDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251112171213_AddIdadeMinimaSemanasToAlimento")]
+    partial class AddIdadeMinimaSemanasToAlimento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -48,17 +51,8 @@ namespace CrescerSaudavel.Api.Migrations
                     b.Property<Guid?>("CriadoPorUserId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<bool>("EhPreTermo")
-                        .HasColumnType("bit");
-
                     b.Property<double>("EnergiaKcalPor100")
                         .HasColumnType("float");
-
-                    b.Property<bool>("Excluido")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("IdadeMaximaSemanas")
-                        .HasColumnType("int");
 
                     b.Property<int?>("IdadeMinimaSemanas")
                         .HasColumnType("int");

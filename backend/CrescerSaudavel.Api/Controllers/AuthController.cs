@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -51,78 +52,89 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Senha))
+        try
         {
-            return BadRequest(new { message = "Email e senha são obrigatórios" });
-        }
-
-        var user = await _userManager.FindByEmailAsync(request.Email);
-        if (user == null)
-        {
-            return Unauthorized(new { message = "Credenciais inválidas" });
-        }
-
-        var result = await _signInManager.CheckPasswordSignInAsync(user, request.Senha, false);
-        if (!result.Succeeded)
-        {
-            if (result.IsLockedOut)
-                return Unauthorized(new { message = "Usuário bloqueado" });
-            if (result.IsNotAllowed)
-                return Unauthorized(new { message = "Login não permitido" });
-            return Unauthorized(new { message = "Credenciais inválidas" });
-        }
-
-        var roles = await _userManager.GetRolesAsync(user);
-        var unidades = await _context.ProfissionaisUnidades
-            .Where(p => p.ProfissionalSaudeId == user.Id)
-            .OrderByDescending(p => p.Principal)
-            .ThenBy(p => p.CriadoEm)
-            .Select(p => new { p.TenantId, p.Principal })
-            .ToListAsync();
-
-        var tenantPrincipalId = unidades.FirstOrDefault(u => u.Principal)?.TenantId
-            ?? user.TenantId
-            ?? unidades.FirstOrDefault()?.TenantId;
-
-        if (tenantPrincipalId != null && user.TenantId != tenantPrincipalId)
-        {
-            user.TenantId = tenantPrincipalId;
-            await _userManager.UpdateAsync(user);
-        }
-
-        Guid? grupoSaudeId = user.GrupoSaudeId;
-        if (grupoSaudeId == null && tenantPrincipalId != null)
-        {
-            grupoSaudeId = await _context.Tenants
-                .Where(t => t.Id == tenantPrincipalId.Value)
-                .Select(t => t.GrupoSaudeId)
-                .FirstOrDefaultAsync();
-
-            if (grupoSaudeId != null)
+            if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Senha))
             {
-                user.GrupoSaudeId = grupoSaudeId;
+                return BadRequest(new { message = "Email e senha são obrigatórios" });
+            }
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+            if (user == null)
+            {
+                return Unauthorized(new { message = "Credenciais inválidas" });
+            }
+
+            var result = await _signInManager.CheckPasswordSignInAsync(user, request.Senha, false);
+            if (!result.Succeeded)
+            {
+                if (result.IsLockedOut)
+                    return Unauthorized(new { message = "Usuário bloqueado" });
+                if (result.IsNotAllowed)
+                    return Unauthorized(new { message = "Login não permitido" });
+                return Unauthorized(new { message = "Credenciais inválidas" });
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var unidades = await _context.ProfissionaisUnidades
+                .Where(p => p.ProfissionalSaudeId == user.Id)
+                .OrderByDescending(p => p.Principal)
+                .ThenBy(p => p.CriadoEm)
+                .Select(p => new { p.TenantId, p.Principal })
+                .ToListAsync();
+
+            var tenantPrincipalId = unidades.FirstOrDefault(u => u.Principal)?.TenantId
+                ?? user.TenantId
+                ?? unidades.FirstOrDefault()?.TenantId;
+
+            if (tenantPrincipalId != null && user.TenantId != tenantPrincipalId)
+            {
+                user.TenantId = tenantPrincipalId;
                 await _userManager.UpdateAsync(user);
             }
-        }
 
-        var claims = BuildClaims(user, roles, tenantPrincipalId, grupoSaudeId, unidades.Select(u => u.TenantId));
-        var token = GenerateJwtToken(claims);
-
-        return Ok(new
-        {
-            token,
-            user = new
+            Guid? grupoSaudeId = user.GrupoSaudeId;
+            if (grupoSaudeId == null && tenantPrincipalId != null)
             {
-                user.Id,
-                user.Nome,
-                user.Email,
-                roles,
-                tenantId = tenantPrincipalId,
-                grupoSaudeId,
-                principalTenantId = tenantPrincipalId,
-                tenantIds = unidades.Select(u => u.TenantId).Distinct().ToArray()
+                grupoSaudeId = await _context.Tenants
+                    .Where(t => t.Id == tenantPrincipalId.Value)
+                    .Select(t => t.GrupoSaudeId)
+                    .FirstOrDefaultAsync();
+
+                if (grupoSaudeId != null)
+                {
+                    user.GrupoSaudeId = grupoSaudeId;
+                    await _userManager.UpdateAsync(user);
+                }
             }
-        });
+
+            var claims = BuildClaims(user, roles, tenantPrincipalId, grupoSaudeId, unidades.Select(u => u.TenantId));
+            var token = GenerateJwtToken(claims);
+
+            return Ok(new
+            {
+                token,
+                user = new
+                {
+                    user.Id,
+                    user.Nome,
+                    user.Email,
+                    roles,
+                    tenantId = tenantPrincipalId,
+                    grupoSaudeId,
+                    principalTenantId = tenantPrincipalId,
+                    tenantIds = unidades.Select(u => u.TenantId).Distinct().ToArray()
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { 
+                error = ex.Message, 
+                stackTrace = ex.StackTrace,
+                innerException = ex.InnerException?.Message 
+            });
+        }
     }
 
     [HttpPost("register")]

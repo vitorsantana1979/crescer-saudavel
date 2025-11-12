@@ -62,7 +62,7 @@ export default function GraficosZScore({
   
   // Determinar se é pré-termo (< 37 semanas gestacionais)
   const ehPretermo = idadeGestacionalSemanas < 37;
-  
+
   useEffect(() => {
     const loadCurvas = async () => {
       try {
@@ -147,13 +147,25 @@ export default function GraficosZScore({
 
         if (!Number.isFinite(semanasTotais)) return null;
 
+        // Filtrar valores fora dos limites de semanas
+        const limiteSemanasMin = ehPretermo ? 27 : 0;
+        const limiteSemanasMax = 64;
+        if (semanasTotais < limiteSemanasMin || semanasTotais > limiteSemanasMax) {
+          return null;
+        }
+
+        // Filtrar valores fora dos limites de peso (para padrão: máximo 11.8 kg)
+        if (!ehPretermo && peso > 11.8) {
+          return null;
+        }
+
         const totalDias = Math.round(semanasTotais * 7);
         const semanasInt = Math.floor(totalDias / 7);
         let dias = totalDias % 7;
         if (dias < 0) dias = 0;
         if (dias > 6) dias = 6;
 
-        return {
+    return {
           semanasFracionadas: Number(semanasTotais.toFixed(3)),
           semanasInt,
           dias,
@@ -170,10 +182,6 @@ export default function GraficosZScore({
           peso: number;
         } => ponto !== null
       )
-      .filter((ponto) => {
-        if (!ehPretermo) return true;
-        return ponto.semanasFracionadas >= 27 && ponto.semanasFracionadas <= 64;
-      })
       .sort((a, b) => a.semanasFracionadas - b.semanasFracionadas);
 
     return { pontos, houveConversao };
@@ -189,27 +197,6 @@ export default function GraficosZScore({
       );
     }
   }, [pontosPacienteMemo.houveConversao]);
-
-  const semanasDisponiveis = useMemo(() => {
-    if (curvasReferencia.length === 0) {
-      return {
-        min: ehPretermo ? 27 : 0,
-        max: ehPretermo ? 64 : 64,
-      };
-    }
-
-    const semanas = curvasReferencia.map((c) => c.semanas);
-    if (pontosPaciente.length > 0) {
-      semanas.push(...pontosPaciente.map((p) => p.semanasFracionadas));
-    }
-    const minSemana = ehPretermo
-      ? Math.max(Math.min(...semanas), 27)
-      : Math.min(...semanas);
-    return {
-      min: minSemana,
-      max: Math.max(...semanas),
-    };
-  }, [curvasReferencia, pontosPaciente, ehPretermo]);
 
   const valoresCurva = useMemo(() => {
     if (!ehPretermo || curvasReferencia.length === 0) {
@@ -227,15 +214,6 @@ export default function GraficosZScore({
     ]);
   }, [curvasReferencia, ehPretermo]);
 
-  const dadosPacienteScatter = useMemo(() => {
-    return pontosPaciente.map((p) => ({
-      semanas: p.semanasFracionadas,
-      semanasInt: p.semanasInt,
-      dias: p.dias,
-      pesoPaciente: p.peso,
-    }));
-  }, [pontosPaciente]);
-
   const yAxisPretermoMax = useMemo(() => {
     if (!valoresCurva || valoresCurva.length === 0) {
       return 4;
@@ -251,6 +229,48 @@ export default function GraficosZScore({
     const topo = Math.ceil((baseMax + margem) / 0.2) * 0.2;
     return Number(topo.toFixed(1));
   }, [valoresCurva, pontosPaciente]);
+
+  // Filtrar pontos de peso que ultrapassam o limite calculado (após yAxisPretermoMax)
+  const pontosPacienteFiltrados = useMemo(() => {
+    if (!ehPretermo) {
+      return pontosPaciente;
+    }
+
+    // Para pré-termo, filtrar pontos que ultrapassam o limite do gráfico
+    return pontosPaciente.filter((ponto) => ponto.peso <= yAxisPretermoMax);
+  }, [pontosPaciente, ehPretermo, yAxisPretermoMax]);
+
+  const semanasDisponiveis = useMemo(() => {
+    if (curvasReferencia.length === 0) {
+      return {
+        min: ehPretermo ? 27 : 0,
+        max: ehPretermo ? 64 : 64,
+      };
+    }
+
+    const pontosParaUsar = ehPretermo ? pontosPacienteFiltrados : pontosPaciente;
+    const semanas = curvasReferencia.map((c) => c.semanas);
+    if (pontosParaUsar.length > 0) {
+      semanas.push(...pontosParaUsar.map((p) => p.semanasFracionadas));
+    }
+    const minSemana = ehPretermo
+      ? Math.max(Math.min(...semanas), 27)
+      : Math.min(...semanas);
+    return {
+      min: minSemana,
+      max: Math.max(...semanas),
+    };
+  }, [curvasReferencia, pontosPaciente, pontosPacienteFiltrados, ehPretermo]);
+
+  const dadosPacienteScatter = useMemo(() => {
+    const pontosParaUsar = ehPretermo ? pontosPacienteFiltrados : pontosPaciente;
+    return pontosParaUsar.map((p) => ({
+      semanas: p.semanasFracionadas,
+      semanasInt: p.semanasInt,
+      dias: p.dias,
+      pesoPaciente: p.peso,
+    }));
+  }, [pontosPaciente, pontosPacienteFiltrados, ehPretermo]);
 
   const ticksBase = useMemo(() => {
     if (ehPretermo) {
@@ -449,8 +469,8 @@ export default function GraficosZScore({
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6 gap-4">
           <div className="text-center lg:text-left flex-1">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Peso (kg)</h3>
-            <p className="text-sm text-gray-600">
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Peso (kg)</h3>
+          <p className="text-sm text-gray-600">
               Curvas internacionais de crescimento {tipoCurva} (
               {sexo === "M" ? "meninos" : "meninas"})
               {ehPretermo && (
@@ -472,7 +492,7 @@ export default function GraficosZScore({
             <button
               onClick={handleExportarJpeg}
               disabled={exportando}
-              className="inline-flex items-center justify-center rounded-lg border border-green-600 px-4 py-2 text-sm font-semibold text-green-700 hover:bg-green-50 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center justify-center rounded-lg border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {exportando ? "Exportando..." : "Exportar JPEG"}
             </button>
@@ -511,38 +531,38 @@ export default function GraficosZScore({
                   data={curvasReferencia}
                   margin={{ top: 20, right: 50, left: 50, bottom: 60 }}
                   syncId="peso-chart"
-                >
-                <CartesianGrid
+          >
+            <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="#CBD5F5"
                   horizontal
                   vertical={false}
-                />
-                <XAxis
-                  dataKey="semanas"
+            />
+            <XAxis
+              dataKey="semanas"
                   type="number"
-                  label={{
-                    value: "Semanas",
-                    position: "insideBottom",
-                    offset: -10,
+              label={{
+                value: "Semanas",
+                position: "insideBottom",
+                offset: -10,
                     style: {
                       fontSize: "14px",
                       fontWeight: "bold",
                       fill: "#475569",
                     },
-                  }}
-                  stroke="#475569"
+              }}
+              stroke="#475569"
                   tick={{ fontSize: 11, fill: "#475569" }}
                   domain={xAxisDomain}
                   ticks={xAxisTicks}
                   interval={0}
-                />
-                <YAxis
+            />
+            <YAxis
                   yAxisId="left"
-                  label={{
-                    value: "Peso (kg)",
-                    angle: -90,
-                    position: "insideLeft",
+              label={{
+                value: "Peso (kg)",
+                angle: -90,
+                position: "insideLeft",
                     style: {
                       fontSize: "14px",
                       fontWeight: "bold",
@@ -575,11 +595,11 @@ export default function GraficosZScore({
                       fontWeight: "bold",
                       fill: "#475569",
                     },
-                  }}
-                  stroke="#475569"
+              }}
+              stroke="#475569"
                   tick={{ fontSize: 10, fill: "#475569" }}
                   domain={yAxisDomain}
-                  type="number"
+              type="number"
                   allowDecimals
                   ticks={yAxisTicks}
                   interval={0}
@@ -591,9 +611,9 @@ export default function GraficosZScore({
                   scale="linear"
                   width={50}
                   mirror
-                />
-                <Tooltip
-                  content={({ active, payload }) => {
+            />
+            <Tooltip
+              content={({ active, payload }) => {
                     if (!active || !payload || payload.length === 0) {
                       return null;
                     }
@@ -607,7 +627,7 @@ export default function GraficosZScore({
                     const pacientePayload = payload.find(
                       (item) => item.dataKey === "pesoPaciente"
                     )?.payload as
-                      | { semanasInt: number; dias: number; pesoPaciente: number }
+                      | { semanas: number; semanasInt: number; dias: number; pesoPaciente: number }
                       | undefined;
 
                     if (!curvaPayload && !pacientePayload) {
@@ -622,104 +642,175 @@ export default function GraficosZScore({
                       ? `${curvaPayload.semanas} semanas`
                       : "";
 
-                    return (
-                      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
-                        <p className="font-medium text-gray-900">
+                    // Calcular Z-score e status do paciente
+                    let zScoreCalculado: number | null = null;
+                    let statusCrianca: { texto: string; cor: string } | null = null;
+
+                    if (pacientePayload) {
+                      // Encontrar a curva de referência mais próxima
+                      const semanaPaciente = pacientePayload.semanas;
+                      const curvaRef = curvasReferencia.find(
+                        (c) => c.semanas === Math.floor(semanaPaciente)
+                      ) || curvasReferencia.find(
+                        (c) => Math.abs(c.semanas - semanaPaciente) < 1
+                      );
+
+                      if (curvaRef) {
+                        const peso = pacientePayload.pesoPaciente;
+                        // Calcular Z-score interpolando entre as curvas
+                        if (peso <= curvaRef.zN3) {
+                          zScoreCalculado = -3;
+                        } else if (peso <= curvaRef.zN2) {
+                          // Interpolar entre Z-3 e Z-2
+                          const ratio = (peso - curvaRef.zN3) / (curvaRef.zN2 - curvaRef.zN3);
+                          zScoreCalculado = -3 + ratio;
+                        } else if (peso <= curvaRef.zN1) {
+                          // Interpolar entre Z-2 e Z-1
+                          const ratio = (peso - curvaRef.zN2) / (curvaRef.zN1 - curvaRef.zN2);
+                          zScoreCalculado = -2 + ratio;
+                        } else if (peso <= curvaRef.z0) {
+                          // Interpolar entre Z-1 e Z 0
+                          const ratio = (peso - curvaRef.zN1) / (curvaRef.z0 - curvaRef.zN1);
+                          zScoreCalculado = -1 + ratio;
+                        } else if (peso <= curvaRef.zP1) {
+                          // Interpolar entre Z 0 e Z+1
+                          const ratio = (peso - curvaRef.z0) / (curvaRef.zP1 - curvaRef.z0);
+                          zScoreCalculado = ratio;
+                        } else if (peso <= curvaRef.zP2) {
+                          // Interpolar entre Z+1 e Z+2
+                          const ratio = (peso - curvaRef.zP1) / (curvaRef.zP2 - curvaRef.zP1);
+                          zScoreCalculado = 1 + ratio;
+                        } else if (peso <= curvaRef.zP3) {
+                          // Interpolar entre Z+2 e Z+3
+                          const ratio = (peso - curvaRef.zP2) / (curvaRef.zP3 - curvaRef.zP2);
+                          zScoreCalculado = 2 + ratio;
+                        } else {
+                          zScoreCalculado = 3;
+                        }
+
+                        // Determinar status baseado no Z-score
+                        if (zScoreCalculado <= -3 || zScoreCalculado >= 3) {
+                          statusCrianca = { texto: "Alerta - Avaliação imediata necessária", cor: "text-red-600" };
+                        } else if (zScoreCalculado <= -2 || zScoreCalculado >= 2) {
+                          statusCrianca = { texto: "Atenção - Monitorar crescimento", cor: "text-orange-600" };
+                        } else if (zScoreCalculado >= -1 && zScoreCalculado <= 1) {
+                          statusCrianca = { texto: "Normal - Crescimento adequado", cor: "text-green-600" };
+                        } else {
+                          statusCrianca = { texto: "Atenção - Monitorar crescimento", cor: "text-orange-600" };
+                        }
+                      }
+                    }
+
+                  return (
+                    <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md">
+                      <p className="font-medium text-gray-900">
                           {semanasLabel}
-                        </p>
+                      </p>
                         {curvaPayload && (
-                          <p className="text-xs text-gray-600 mt-1">
-                            Z-3: {curvaPayload.zN3} kg
-                            <br />
-                            Z-2: {curvaPayload.zN2} kg
-                            <br />
-                            Z-1: {curvaPayload.zN1} kg
-                            <br />Z 0: {curvaPayload.z0} kg
-                            <br />
-                            Z+1: {curvaPayload.zP1} kg
-                            <br />
-                            Z+2: {curvaPayload.zP2} kg
-                            <br />
-                            Z+3: {curvaPayload.zP3} kg
-                          </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                            Z-3: {curvaPayload.zN3.toFixed(3).replace(".", ",")} kg
+                        <br />
+                            Z-2: {curvaPayload.zN2.toFixed(3).replace(".", ",")} kg
+                        <br />
+                            Z-1: {curvaPayload.zN1.toFixed(3).replace(".", ",")} kg
+                            <br />Z 0: {curvaPayload.z0.toFixed(3).replace(".", ",")} kg
+                        <br />
+                            Z+1: {curvaPayload.zP1.toFixed(3).replace(".", ",")} kg
+                        <br />
+                            Z+2: {curvaPayload.zP2.toFixed(3).replace(".", ",")} kg
+                        <br />
+                            Z+3: {curvaPayload.zP3.toFixed(3).replace(".", ",")} kg
+                      </p>
                         )}
                         {pacientePayload && (
-                          <p className="text-xs text-blue-700 mt-2 font-semibold">
-                            Peso observado: {pacientePayload.pesoPaciente.toFixed(3)} kg
+                      <div className="mt-2">
+                        <p className="text-xs text-blue-700 font-semibold">
+                            Peso observado: {pacientePayload.pesoPaciente.toFixed(3).replace(".", ",")} kg
+                        </p>
+                        {zScoreCalculado !== null && (
+                          <p className="text-xs text-gray-700 mt-1">
+                            Z-Score: <strong>{zScoreCalculado.toFixed(2).replace(".", ",")}</strong>
+                          </p>
+                        )}
+                        {statusCrianca && (
+                          <p className={`text-xs font-semibold mt-2 ${statusCrianca.cor}`}>
+                            Status: {statusCrianca.texto}
                           </p>
                         )}
                       </div>
-                    );
-                  }}
-                />
+                        )}
+                    </div>
+                  );
+                }}
+            />
                 {/* Curvas de referência - estilo Intergrowth-21st */}
-                <Line
-                  type="monotone"
+            <Line
+              type="monotone"
                   dataKey="zN3"
-                  stroke="#DC2626"
-                  strokeWidth={1.5}
-                  dot={false}
-                  isAnimationActive={false}
+              stroke="#DC2626"
+              strokeWidth={1.5}
+              dot={false}
+              isAnimationActive={false}
                   yAxisId="left"
                   name="-3"
-                />
-                <Line
-                  type="monotone"
+            />
+            <Line
+              type="monotone"
                   dataKey="zN2"
-                  stroke="#F59E0B"
-                  strokeWidth={1.5}
-                  dot={false}
-                  isAnimationActive={false}
+              stroke="#F59E0B"
+              strokeWidth={1.5}
+              dot={false}
+              isAnimationActive={false}
                   yAxisId="left"
                   name="-2"
-                />
-                <Line
-                  type="monotone"
+            />
+            <Line
+              type="monotone"
                   dataKey="zN1"
-                  stroke="#1F2937"
-                  strokeWidth={1.2}
-                  dot={false}
-                  isAnimationActive={false}
+              stroke="#1F2937"
+              strokeWidth={1.2}
+              dot={false}
+              isAnimationActive={false}
                   yAxisId="left"
                   name="-1"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="z0"
-                  stroke="#10B981"
+            />
+            <Line
+              type="monotone"
+              dataKey="z0"
+              stroke="#10B981"
                   strokeWidth={3}
-                  dot={false}
-                  isAnimationActive={false}
+              dot={false}
+              isAnimationActive={false}
                   yAxisId="left"
                   name="0"
-                />
-                <Line
-                  type="monotone"
+            />
+            <Line
+              type="monotone"
                   dataKey="zP1"
-                  stroke="#1F2937"
-                  strokeWidth={1.2}
-                  dot={false}
-                  isAnimationActive={false}
+              stroke="#1F2937"
+              strokeWidth={1.2}
+              dot={false}
+              isAnimationActive={false}
                   yAxisId="left"
                   name="+1"
-                />
-                <Line
-                  type="monotone"
+            />
+            <Line
+              type="monotone"
                   dataKey="zP2"
-                  stroke="#F59E0B"
-                  strokeWidth={1.5}
-                  dot={false}
-                  isAnimationActive={false}
+              stroke="#F59E0B"
+              strokeWidth={1.5}
+              dot={false}
+              isAnimationActive={false}
                   yAxisId="left"
                   name="+2"
-                />
-                <Line
-                  type="monotone"
+            />
+            <Line
+              type="monotone"
                   dataKey="zP3"
-                  stroke="#DC2626"
-                  strokeWidth={1.5}
-                  dot={false}
-                  isAnimationActive={false}
+              stroke="#DC2626"
+              strokeWidth={1.5}
+              dot={false}
+              isAnimationActive={false}
                   yAxisId="left"
                   name="+3"
                 />
@@ -740,9 +831,9 @@ export default function GraficosZScore({
                         strokeWidth={1.2}
                       />
                     )}
-                    isAnimationActive={false}
-                  />
-                )}
+                isAnimationActive={false}
+              />
+            )}
                 {curvasReferencia.length > 0 && (
                   <Brush
                     dataKey="semanas"
@@ -776,15 +867,70 @@ export default function GraficosZScore({
                   />
                 )}
               </ComposedChart>
-              </ResponsiveContainer>
+        </ResponsiveContainer>
             </div>
           </div>
         </div>
         {dadosPacienteScatter.length === 0 && (
           <p className="text-center text-xs text-slate-500">
-            Selecione atendimentos e utilize o botão &quot;Plotar selecionados&quot; para visualizar os pontos do paciente.
+            Nenhum ponto do paciente para exibir. Adicione atendimentos para visualizar no gráfico.
           </p>
         )}
+      </div>
+
+      {/* Seção de Interpretação do Gráfico */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h4 className="text-lg font-bold text-gray-900 mb-4">Como Interpretar o Gráfico</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h5 className="font-semibold text-gray-800 mb-3">Z-Scores e Percentis</h5>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold">•</span>
+                <span><strong>Z 0 (P50):</strong> Mediana - 50% das crianças estão acima e 50% abaixo</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-gray-900 font-bold">•</span>
+                <span><strong>Z-1 a Z+1 (P15,9 a P84,1):</strong> Faixa normal - crescimento adequado</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-orange-600 font-bold">•</span>
+                <span><strong>Z-2 a Z-1 / Z+1 a Z+2:</strong> Atenção - monitorar crescimento</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-red-600 font-bold">•</span>
+                <span><strong>Z-3 ou Z+3:</strong> Alerta - avaliação imediata necessária</span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h5 className="font-semibold text-gray-800 mb-3">Avaliação do Crescimento</h5>
+            <ul className="space-y-2 text-sm text-gray-700">
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold">•</span>
+                <span><strong>Trajetória:</strong> Observe se os pontos seguem uma curva paralela às curvas de referência</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold">•</span>
+                <span><strong>Cruzamento de curvas:</strong> Mudanças bruscas podem indicar problemas de crescimento</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold">•</span>
+                <span><strong>Velocidade:</strong> O crescimento deve ser contínuo e proporcional</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-primary font-bold">•</span>
+                <span><strong>Consistência:</strong> Manter-se na mesma faixa Z-score indica crescimento adequado</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="mt-4 p-4 bg-primary/5 border-l-4 border-primary rounded">
+          <p className="text-sm text-gray-700">
+            <strong>Importante:</strong> Este gráfico é uma ferramenta de acompanhamento. 
+            Qualquer preocupação com o crescimento deve ser avaliada por um profissional de saúde qualificado.
+          </p>
+        </div>
       </div>
     </div>
   );

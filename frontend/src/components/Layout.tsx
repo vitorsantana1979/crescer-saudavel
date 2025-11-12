@@ -87,26 +87,42 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside
         className={`${
-          sidebarOpen ? "w-64" : "w-20"
+          sidebarOpen ? "w-auto min-w-[200px]" : "w-20"
         } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
-          {sidebarOpen && (
-            <h1 className="text-xl font-bold text-green-700">
-              Crescer Saudável
-            </h1>
+        <div className={`h-16 border-b border-gray-200 ${
+          sidebarOpen ? "flex items-center justify-between px-4" : "flex items-center justify-center"
+        }`}>
+          {sidebarOpen ? (
+            <>
+              <img 
+                src="/logo_crescer_saudavel_completa_800.png" 
+                alt="Crescer Saudável" 
+                className="h-10 object-contain"
+              />
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 rounded-lg hover:bg-gray-100"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            </>
+          ) : (
+            <div className="w-full flex flex-col items-center justify-center h-full gap-1">
+              <img 
+                src="/logo_crescer_saudavel_simbolo.png" 
+                alt="Crescer Saudável" 
+                className="h-10 w-10 object-contain"
+              />
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-1 rounded-lg hover:bg-gray-100"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+            </div>
           )}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100"
-          >
-            {sidebarOpen ? (
-              <ChevronLeft className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
-          </button>
         </div>
 
         {/* Menu */}
@@ -119,9 +135,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors whitespace-nowrap ${
                   isActive
-                    ? "bg-green-50 text-green-700 font-medium"
+                    ? "bg-primary/10 text-primary font-medium"
                     : "text-gray-700 hover:bg-gray-50"
                 }`}
               >
@@ -150,7 +166,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </p>
               <p className="text-xs text-gray-500">{auth?.email ?? "-"}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-green-600 flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
               {(auth?.nome || "U").charAt(0)}
             </div>
             <button
@@ -165,9 +181,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {unidades.length > 0 && (
           <div className="px-6 py-3 bg-slate-100 border-b border-slate-200 flex items-center gap-3 text-sm">
-            <span className="text-slate-600">Unidade ativa:</span>
+            <span className="text-slate-700 font-medium">Unidade ativa:</span>
             <select
-              className="px-3 py-1 border border-slate-300 rounded-lg text-sm"
+              className="px-3 py-1 border border-slate-400 rounded-lg text-sm bg-white text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20"
               value={activeTenantId || unidades[0]?.id}
               onChange={(e) => setActiveTenantId(e.target.value)}
             >

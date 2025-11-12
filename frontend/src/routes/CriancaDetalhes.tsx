@@ -121,13 +121,12 @@ export default function CriancaDetalhes() {
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [dietas, setDietas] = useState<Dieta[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"consultas" | "dietas">(
-    "consultas"
+  const [activeTab, setActiveTab] = useState<"graficos" | "consultas" | "dietas">(
+    "graficos"
   );
   const [todasCriancas, setTodasCriancas] = useState<Crianca[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [consultasSelecionadasIds, setConsultasSelecionadasIds] = useState<string[]>([]);
   const [consultasPlotadas, setConsultasPlotadas] = useState<Consulta[]>([]);
 
   useEffect(() => {
@@ -182,63 +181,18 @@ export default function CriancaDetalhes() {
     }
   };
 
-  const alternarSelecaoConsulta = (consultaId: string) => {
-    setConsultasSelecionadasIds((prev) =>
-      prev.includes(consultaId)
-        ? prev.filter((item) => item !== consultaId)
-        : [...prev, consultaId]
-    );
-  };
-
-  const selecionarTodasConsultas = () => {
-    setConsultasSelecionadasIds(consultas.map((consulta) => consulta.id));
-  };
-
-  const limparSelecaoConsultas = () => {
-    setConsultasSelecionadasIds([]);
-  };
-
-  const plotarConsultasSelecionadas = () => {
-    if (consultasSelecionadasIds.length === 0) {
-      toast.error("Selecione ao menos um atendimento para plotar.");
-      return;
-    }
-
-    const selecionadas = consultas
-      .filter((consulta) => consultasSelecionadasIds.includes(consulta.id))
-      .sort(
-        (a, b) =>
-          new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime()
-      );
-
-    if (selecionadas.length === 0) {
-      toast.error("Não foi possível localizar os atendimentos selecionados.");
-      return;
-    }
-
-    setConsultasPlotadas(selecionadas);
-  };
-
-  const limparGrafico = () => {
-    setConsultasPlotadas([]);
-  };
-
   useEffect(() => {
-    setConsultasSelecionadasIds([]);
     setConsultasPlotadas([]);
   }, [id]);
 
+  // Plotar automaticamente todas as consultas quando carregarem
   useEffect(() => {
-    setConsultasSelecionadasIds((prev) =>
-      prev.filter((consultaId) =>
-        consultas.some((consulta) => consulta.id === consultaId)
-      )
-    );
-    setConsultasPlotadas((prev) =>
-      prev.filter((consulta) =>
-        consultas.some((item) => item.id === consulta.id)
-      )
-    );
+    if (consultas.length > 0) {
+      const consultasOrdenadas = [...consultas].sort(
+        (a, b) => new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime()
+      );
+      setConsultasPlotadas(consultasOrdenadas);
+    }
   }, [consultas]);
 
   const zScoreChartData = useMemo(() => {
@@ -310,7 +264,7 @@ export default function CriancaDetalhes() {
     if (zScore < -1) return "text-orange-600";
     if (zScore > 2) return "text-red-600";
     if (zScore > 1) return "text-orange-600";
-    return "text-green-600";
+    return "text-primary";
   };
 
   const getZScoreIcon = (zScore?: number) => {
@@ -344,7 +298,7 @@ export default function CriancaDetalhes() {
   if (loading || !crianca) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -354,11 +308,6 @@ export default function CriancaDetalhes() {
   const criancasFiltradas = todasCriancas.filter((c) =>
     c.nome.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const totalSelecionados = consultasSelecionadasIds.length;
-  const todosSelecionados =
-    consultas.length > 0 && totalSelecionados === consultas.length;
-  const possuiPontosPlotados = consultasPlotadas.length > 0;
 
   return (
     <div className="space-y-6">
@@ -455,7 +404,7 @@ export default function CriancaDetalhes() {
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">
-            <Weight className="w-8 h-8 text-green-600" />
+            <Weight className="w-8 h-8 text-primary" />
             <div>
               <p className="text-xs text-gray-500">Peso ao Nascer</p>
               <p className="text-sm font-semibold">
@@ -482,7 +431,7 @@ export default function CriancaDetalhes() {
       <div className="flex gap-3">
         <button
           onClick={() => navigate(`/criancas/${id}/consulta/nova`)}
-          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark"
         >
           <Activity className="w-5 h-5" />
           Novo Atendimento
@@ -504,7 +453,7 @@ export default function CriancaDetalhes() {
               onClick={() => setActiveTab("graficos")}
               className={`flex-1 px-6 py-3 text-sm font-medium ${
                 activeTab === "graficos"
-                  ? "text-green-600 border-b-2 border-green-600"
+                  ? "text-primary border-b-2 border-primary"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -514,7 +463,7 @@ export default function CriancaDetalhes() {
               onClick={() => setActiveTab("consultas")}
               className={`flex-1 px-6 py-3 text-sm font-medium ${
                 activeTab === "consultas"
-                  ? "text-green-600 border-b-2 border-green-600"
+                  ? "text-primary border-b-2 border-primary"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -524,7 +473,7 @@ export default function CriancaDetalhes() {
               onClick={() => setActiveTab("dietas")}
               className={`flex-1 px-6 py-3 text-sm font-medium ${
                 activeTab === "dietas"
-                  ? "text-green-600 border-b-2 border-green-600"
+                  ? "text-primary border-b-2 border-primary"
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -550,68 +499,10 @@ export default function CriancaDetalhes() {
                 </div>
               ) : (
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-4">
-                    <button
-                      onClick={plotarConsultasSelecionadas}
-                      disabled={totalSelecionados === 0}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                        totalSelecionados === 0
-                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                          : "bg-green-600 text-white hover:bg-green-700"
-                      }`}
-                    >
-                      Plotar selecionados
-                    </button>
-                    <button
-                      onClick={limparGrafico}
-                      disabled={!possuiPontosPlotados}
-                      className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                        !possuiPontosPlotados
-                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                          : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                      }`}
-                    >
-                      Limpar gráfico
-                    </button>
-                    <span className="text-xs text-gray-500">
-                      Selecionados: {totalSelecionados} • Plotados:{" "}
-                      {consultasPlotadas.length}
-                    </span>
-                    <div className="flex-1" />
-                    <button
-                      onClick={selecionarTodasConsultas}
-                      className="px-3 py-2 rounded-lg text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors"
-                    >
-                      Selecionar todos
-                    </button>
-                    <button
-                      onClick={limparSelecaoConsultas}
-                      disabled={totalSelecionados === 0}
-                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
-                        totalSelecionados === 0
-                          ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
-                    >
-                      Limpar seleção
-                    </button>
-                  </div>
                   <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="px-3 py-3 text-center">
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4 text-green-600 rounded border-gray-300"
-                            checked={todosSelecionados}
-                            onChange={(event) =>
-                              event.target.checked
-                                ? selecionarTodasConsultas()
-                                : limparSelecaoConsultas()
-                            }
-                          />
-                        </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                           Data/Hora
                         </th>
@@ -635,16 +526,6 @@ export default function CriancaDetalhes() {
                     <tbody className="divide-y divide-gray-200">
                       {consultas.map((consulta) => (
                         <tr key={consulta.id} className="hover:bg-gray-50">
-                          <td className="px-3 py-3 text-center">
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 text-green-600 rounded border-gray-300"
-                              checked={consultasSelecionadasIds.includes(
-                                consulta.id
-                              )}
-                              onChange={() => alternarSelecaoConsulta(consulta.id)}
-                            />
-                          </td>
                           <td className="px-4 py-3 text-sm">
                             <div className="flex flex-col">
                               <span>

@@ -77,7 +77,7 @@ export default function Pacientes() {
             placeholder="Buscar paciente por nome..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg"
+            className="w-full pl-10 pr-4 py-3 border border-gray-400 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none text-lg"
             autoFocus
           />
         </div>

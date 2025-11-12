@@ -12,6 +12,9 @@ interface Alimento {
   unidade: string;
   energiaKcalPor100: number;
   proteinaGPor100: number;
+  idadeMinimaSemanas?: number | null;
+  idadeMaximaSemanas?: number | null;
+  ehPreTermo?: boolean;
 }
 
 export default function Alimentos() {
@@ -73,7 +76,7 @@ export default function Alimentos() {
             placeholder="Buscar por nome..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-400 rounded-lg bg-white text-gray-900 placeholder:text-gray-500 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
           />
         </div>
       </div>
@@ -81,7 +84,7 @@ export default function Alimentos() {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
           </div>
         ) : filteredAlimentos.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
@@ -89,7 +92,10 @@ export default function Alimentos() {
             <p>Nenhum alimento cadastrado</p>
           </div>
         ) : (
-          <table className="w-full">
+          <>
+            {/* Tabela para desktop/tablet */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full min-w-[800px]">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -107,7 +113,13 @@ export default function Alimentos() {
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                   Proteína (g/100)
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                  Idade (semanas)
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                  Pré-termo
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase w-auto whitespace-nowrap">
                   Ações
                 </th>
               </tr>
@@ -132,24 +144,112 @@ export default function Alimentos() {
                   <td className="px-6 py-4 text-sm text-gray-500 text-right">
                     {alimento.proteinaGPor100.toFixed(1)}
                   </td>
-                  <td className="px-6 py-4 text-right text-sm font-medium">
-                    <button
-                      onClick={() => navigate(`/alimentos/${alimento.id}`)}
-                      className="text-blue-600 hover:text-blue-900 mr-3"
-                    >
-                      <Edit className="w-4 h-4 inline" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(alimento.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      <Trash2 className="w-4 h-4 inline" />
-                    </button>
+                  <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                    {(alimento.idadeMinimaSemanas !== null && alimento.idadeMinimaSemanas !== undefined) || 
+                     (alimento.idadeMaximaSemanas !== null && alimento.idadeMaximaSemanas !== undefined)
+                      ? `${alimento.idadeMinimaSemanas ?? 0}-${alimento.idadeMaximaSemanas ?? "∞"} sem`
+                      : "-"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-500 text-center">
+                    {alimento.ehPreTermo ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        Sim
+                      </span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 text-right text-sm font-medium w-auto whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => navigate(`/alimentos/${alimento.id}`)}
+                        className="text-blue-600 hover:text-blue-900"
+                        title="Editar"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(alimento.id)}
+                        className="text-red-600 hover:text-red-900"
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+            </div>
+
+            {/* Cards para mobile */}
+            <div className="md:hidden divide-y divide-gray-200">
+              {filteredAlimentos.map((alimento) => (
+                <div key={alimento.id} className="p-4 hover:bg-gray-50">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-gray-900 mb-1">
+                        {alimento.nome}
+                      </h3>
+                      <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+                        <span className="capitalize">{alimento.categoria}</span>
+                        <span>•</span>
+                        <span>{alimento.unidade}</span>
+                        {alimento.ehPreTermo && (
+                          <>
+                            <span>•</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                              Pré-termo
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                      <button
+                        onClick={() => navigate(`/alimentos/${alimento.id}`)}
+                        className="text-blue-600 hover:text-blue-900 p-1"
+                        title="Editar"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(alimento.id)}
+                        className="text-red-600 hover:text-red-900 p-1"
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">Energia:</span>
+                      <span className="ml-1 font-medium text-gray-900">
+                        {alimento.energiaKcalPor100.toFixed(1)} kcal/100
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Proteína:</span>
+                      <span className="ml-1 font-medium text-gray-900">
+                        {alimento.proteinaGPor100.toFixed(1)} g/100
+                      </span>
+                    </div>
+                    {(alimento.idadeMinimaSemanas !== null && alimento.idadeMinimaSemanas !== undefined) || 
+                     (alimento.idadeMaximaSemanas !== null && alimento.idadeMaximaSemanas !== undefined) ? (
+                      <div className="col-span-2">
+                        <span className="text-gray-500">Idade:</span>
+                        <span className="ml-1 font-medium text-gray-900">
+                          {alimento.idadeMinimaSemanas ?? 0}-{alimento.idadeMaximaSemanas ?? "∞"} sem
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import api, { AuthInfo } from "@/lib/api";
-import { useAuth } from "@/contexts/AuthContext";
-import { getErrorMessage } from "@/lib/errorHandler";
+import api, { AuthInfo } from "../lib/api";
+import { useAuth } from "../contexts/AuthContext";
+import { getErrorMessage } from "../lib/errorHandler";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -36,12 +36,18 @@ export default function Login() {
       const auth: AuthInfo = {
         token: res.data.token,
         roles: res.data.user?.roles ?? [],
-        tenantId: res.data.user?.tenantId ?? res.data.user?.principalTenantId ?? undefined,
+        tenantId:
+          res.data.user?.tenantId ??
+          res.data.user?.principalTenantId ??
+          undefined,
         tenantIds: res.data.user?.tenantIds ?? [],
         grupoSaudeId: res.data.user?.grupoSaudeId ?? undefined,
         nome: res.data.user?.nome,
         email: res.data.user?.email,
-        principalTenantId: res.data.user?.principalTenantId ?? res.data.user?.tenantId ?? undefined,
+        principalTenantId:
+          res.data.user?.principalTenantId ??
+          res.data.user?.tenantId ??
+          undefined,
       };
       setAuth(auth);
       toast.success(`Bem-vindo, ${auth.nome || "Usuário"}!`, {
@@ -50,17 +56,31 @@ export default function Login() {
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Erro no login:", error);
-      
+      console.error("Detalhes do erro:", error.response?.data);
+
       // Mensagem mais específica baseada no tipo de erro
       let message = getErrorMessage(error);
-      
+
       // Melhorar mensagens específicas de login
-      if (message.includes("Credenciais inválidas")) {
-        message = "E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.";
+      if (error.response?.status === 500) {
+        const errorData = error.response?.data;
+        if (errorData?.error) {
+          console.error("Erro do servidor:", errorData.error);
+          message = `Erro no servidor: ${errorData.error}`;
+          if (errorData.innerException) {
+            console.error("Exceção interna:", errorData.innerException);
+          }
+        } else {
+          message = "Erro interno do servidor. Tente novamente mais tarde.";
+        }
+      } else if (message.includes("Credenciais inválidas")) {
+        message =
+          "E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.";
       } else if (error.response?.status === 0 || !error.response) {
-        message = "Não foi possível conectar ao servidor. Verifique se a API está rodando.";
+        message =
+          "Não foi possível conectar ao servidor. Verifique se a API está rodando.";
       }
-      
+
       toast.error(message, {
         duration: 5000,
       });
@@ -70,9 +90,15 @@ export default function Login() {
   };
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-b from-green-100 to-white">
-      <h1 className="text-3xl font-bold mb-6">Crescer Saudável</h1>
-      <div className="bg-white shadow-lg p-6 rounded-2xl w-80">
+    <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-b from-primary/10 to-white">
+      <div className="flex flex-col items-center">
+        <img
+          src="/logo_crescer_saudavel_vertical_512.png"
+          alt="Crescer Saudável"
+          className="h-80 mb-4 object-contain"
+        />
+      </div>
+      <div className="bg-white shadow-lg p-2 rounded-2xl w-80">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -80,7 +106,7 @@ export default function Login() {
           }}
         >
           <input
-            className="border rounded-md p-2 mb-2 w-full"
+            className="border border-gray-400 rounded-md p-2 mb-2 w-full bg-white text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
             placeholder="E-mail"
             type="email"
             autoComplete="email"
@@ -88,7 +114,7 @@ export default function Login() {
             onChange={(e) => setEmail(e.target.value)}
           />
           <input
-            className="border rounded-md p-2 mb-4 w-full"
+            className="border border-gray-400 rounded-md p-2 mb-4 w-full bg-white text-gray-900 placeholder:text-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 focus:outline-none"
             type="password"
             placeholder="Senha"
             autoComplete="current-password"
@@ -98,7 +124,8 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className={`bg-green-600 hover:bg-green-700 text-white rounded-md w-full p-2 transition-colors ${
+            style={{ backgroundColor: "#003366", color: "#ffffff" }}
+            className={`hover:bg-[#002244] rounded-md w-full p-2 transition-colors ${
               loading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >

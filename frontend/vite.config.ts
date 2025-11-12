@@ -8,8 +8,8 @@ export default defineConfig({
     host: true,
     port: 5193,
     proxy: {
-      '/api': {
-        target: 'http://api:5280', // nome do serviço do compose
+      "/api": {
+        target: process.env.VITE_API_URL || "http://localhost:5280", // localhost para desenvolvimento local
         changeOrigin: true,
       },
     },

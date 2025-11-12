@@ -119,6 +119,10 @@ public class Alimento : EntidadeAuditavel
     public string Unidade { get; set; } = "ml";
     public double EnergiaKcalPor100 { get; set; }
     public double ProteinaGPor100 { get; set; }
+    public int? IdadeMinimaSemanas { get; set; }
+    public int? IdadeMaximaSemanas { get; set; }
+    public bool EhPreTermo { get; set; } = false;
+    public bool Excluido { get; set; } = false;
     public bool Ativo { get; set; } = true;
 }
 
