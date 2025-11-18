@@ -1,6 +1,10 @@
 # Dev: só para rodar no compose com hot-reload
 FROM node:20-alpine AS dev
 WORKDIR /app
+
+# Instala/atualiza Git
+RUN apk add --no-cache git
+
 COPY package*.json ./
 RUN npm ci
 COPY . .
@@ -11,6 +15,10 @@ CMD ["npm","run","dev","--","--host","0.0.0.0","--port","5173"]
 # Build de produção
 FROM node:20-alpine AS build
 WORKDIR /app
+
+# Instala/atualiza Git
+RUN apk add --no-cache git
+
 COPY package*.json ./
 RUN npm ci
 COPY . .

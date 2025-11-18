@@ -155,6 +155,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
+                "https://cs.quasarai.co",
                 "https://stock.menthor.app",
                 "http://localhost:5193",
                 "http://localhost:5173",

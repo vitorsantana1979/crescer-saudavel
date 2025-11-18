@@ -13,12 +13,34 @@ export interface AuthInfo {
 
 const AUTH_STORAGE_KEY = "auth-info";
 
-// Usar URL direta do backend em desenvolvimento
-const baseURL = import.meta.env.VITE_API_BASE || "http://localhost:5280/api";
+// Determinar a URL base da API
+function getApiBaseURL(): string {
+  // Se VITE_API_BASE estiver definida, usar ela
+  if (import.meta.env.VITE_API_BASE) {
+    return import.meta.env.VITE_API_BASE;
+  }
+
+  // Detectar se está em produção
+  const isProduction = 
+    window.location.protocol === "https:" || 
+    !window.location.hostname.includes("localhost") ||
+    import.meta.env.PROD;
+
+  // Em produção, usar URL relativa (será roteada pelo Caddy)
+  if (isProduction) {
+    return "/api";
+  }
+
+  // Em desenvolvimento, usar localhost
+  return "http://localhost:5280/api";
+}
+
+const baseURL = getApiBaseURL();
 
 console.log("[API Config] baseURL configurado:", baseURL);
 console.log("[API Config] VITE_API_BASE:", import.meta.env.VITE_API_BASE);
 console.log("[API Config] window.location.origin:", window.location.origin);
+console.log("[API Config] Ambiente detectado:", import.meta.env.PROD ? "produção" : "desenvolvimento");
 
 export const api = axios.create({
   baseURL,
