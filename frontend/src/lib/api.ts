@@ -13,12 +13,16 @@ export interface AuthInfo {
 
 const AUTH_STORAGE_KEY = "auth-info";
 
-// const baseURL = "http://localhost:5001/api";
+// Usar URL direta do backend em desenvolvimento
+const baseURL = import.meta.env.VITE_API_BASE || "http://localhost:5280/api";
 
-const baseURL = import.meta.env.VITE_API_BASE || "/api";
+console.log("[API Config] baseURL configurado:", baseURL);
+console.log("[API Config] VITE_API_BASE:", import.meta.env.VITE_API_BASE);
+console.log("[API Config] window.location.origin:", window.location.origin);
 
 export const api = axios.create({
   baseURL,
+  timeout: 30000, // 30 segundos
 });
 
 export const loadAuth = (): AuthInfo | null => {
@@ -44,20 +48,38 @@ export const saveAuth = (auth: AuthInfo | null) => {
 export const clearAuth = () => saveAuth(null);
 
 api.interceptors.request.use((config) => {
-  const auth = loadAuth();
-  if (auth?.token) {
-    config.headers.Authorization = `Bearer ${auth.token}`;
+  console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
+  
+  // Não adicionar token/tenantId para a rota de login
+  const isLoginRoute = config.url?.includes('/auth/login');
+  
+  if (!isLoginRoute) {
+    const auth = loadAuth();
+    if (auth?.token) {
+      config.headers.Authorization = `Bearer ${auth.token}`;
+      console.log(`[API Request] Token adicionado ao header`);
+    }
+    if (auth?.tenantId) {
+      config.headers["X-Tenant-Id"] = auth.tenantId;
+      console.log(`[API Request] TenantId adicionado: ${auth.tenantId}`);
+    }
+  } else {
+    console.log(`[API Request] Rota de login detectada - não adicionando token`);
   }
-  if (auth?.tenantId) {
-    config.headers["X-Tenant-Id"] = auth.tenantId;
-  }
+  
+  console.log(`[API Request] Headers:`, config.headers);
   return config;
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`[API Response] ${response.status} ${response.config.url}`);
+    return response;
+  },
   (error) => {
+    console.error(`[API Response Error] ${error.response?.status || "NO STATUS"} ${error.config?.url}`);
     if (error.response?.status === 401 && window.location.pathname !== "/") {
+      console.log("[API Response] 401 Unauthorized - limpando auth e redirecionando");
       clearAuth();
       window.location.href = "/";
     }

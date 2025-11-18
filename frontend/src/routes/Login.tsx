@@ -31,8 +31,46 @@ export default function Login() {
 
     setLoading(true);
     try {
-      console.log("Tentando fazer login...", { email });
-      const res = await api.post("/auth/login", { email, senha });
+      console.log("=== INÍCIO DO LOGIN ===");
+      console.log("Email:", email);
+      console.log("Senha presente:", !!senha);
+      console.log("URL da API:", api.defaults.baseURL);
+      console.log("Endpoint completo:", `${api.defaults.baseURL}/auth/login`);
+      console.log("URL completa da requisição:", `${window.location.origin}${api.defaults.baseURL}/auth/login`);
+      console.log("VITE_API_BASE:", import.meta.env.VITE_API_BASE);
+      console.log("VITE_API_URL:", import.meta.env.VITE_API_URL);
+      
+      const payload = { email, senha };
+      console.log("Payload sendo enviado:", { email, senha: "***" });
+      
+      console.log("Fazendo requisição POST...");
+      
+      // Adicionar timeout e capturar erros de rede
+      const res = await api.post("/auth/login", payload, {
+        timeout: 10000, // 10 segundos
+      }).catch((error) => {
+        console.error("=== ERRO NA REQUISIÇÃO ===");
+        console.error("Erro capturado:", error);
+        throw error;
+      });
+      
+      console.log("=== RESPOSTA RECEBIDA ===");
+      console.log("Status:", res.status);
+      console.log("Headers:", res.headers);
+      console.log("Data completa:", res.data);
+      console.log("Token presente:", !!res.data?.token);
+      console.log("User presente:", !!res.data?.user);
+      
+      if (!res.data || !res.data.token) {
+        console.error("=== ERRO: RESPOSTA INVÁLIDA ===");
+        console.error("Resposta completa:", res.data);
+        console.error("Token não encontrado na resposta");
+        toast.error("Resposta inválida do servidor. Tente novamente.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("=== CRIANDO AUTHINFO ===");
       const auth: AuthInfo = {
         token: res.data.token,
         roles: res.data.user?.roles ?? [],
@@ -49,14 +87,66 @@ export default function Login() {
           res.data.user?.tenantId ??
           undefined,
       };
+      
+      console.log("AuthInfo criado:", {
+        token: auth.token ? `${auth.token.substring(0, 20)}...` : "NULL",
+        roles: auth.roles,
+        tenantId: auth.tenantId,
+        tenantIds: auth.tenantIds,
+        nome: auth.nome,
+        email: auth.email,
+      });
+      
+      console.log("Chamando setAuth...");
       setAuth(auth);
+      
+      console.log("Verificando se auth foi salvo no localStorage...");
+      const authVerificado = localStorage.getItem("auth-info");
+      console.log("Auth no localStorage:", authVerificado ? "PRESENTE" : "AUSENTE");
+      
+      if (authVerificado) {
+        try {
+          const parsed = JSON.parse(authVerificado);
+          console.log("Auth parseado do localStorage:", {
+            token: parsed.token ? `${parsed.token.substring(0, 20)}...` : "NULL",
+            nome: parsed.nome,
+          });
+        } catch (e) {
+          console.error("Erro ao parsear auth do localStorage:", e);
+        }
+      }
+      
+      console.log("Navegando para dashboard...");
       toast.success(`Bem-vindo, ${auth.nome || "Usuário"}!`, {
         duration: 3000,
       });
-      navigate("/dashboard");
+      
+      // Navegar após garantir que o auth foi salvo
+      // O RequireAuth agora verifica o localStorage também
+      navigate("/dashboard", { replace: true });
+      console.log("=== LOGIN CONCLUÍDO ===");
     } catch (error: any) {
-      console.error("Erro no login:", error);
-      console.error("Detalhes do erro:", error.response?.data);
+      console.error("=== ERRO NO LOGIN ===");
+      console.error("Tipo do erro:", error?.constructor?.name);
+      console.error("Mensagem:", error?.message);
+      console.error("Stack:", error?.stack);
+      
+      if (error.response) {
+        console.error("Resposta HTTP recebida:");
+        console.error("  Status:", error.response.status);
+        console.error("  Status Text:", error.response.statusText);
+        console.error("  Headers:", error.response.headers);
+        console.error("  Data:", error.response.data);
+      } else if (error.request) {
+        console.error("Requisição feita mas sem resposta:");
+        console.error("  Request:", error.request);
+        console.error("  Isso geralmente indica problema de CORS ou servidor offline");
+      } else {
+        console.error("Erro ao configurar a requisição:", error.message);
+      }
+      
+      console.error("Config da requisição:", error?.config);
+      console.error("====================");
 
       // Mensagem mais específica baseada no tipo de erro
       let message = getErrorMessage(error);

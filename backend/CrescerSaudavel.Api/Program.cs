@@ -13,7 +13,11 @@ using Swashbuckle.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://localhost:5001");
+// Configurar logging para aparecer no console
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+builder.Logging.SetMinimumLevel(LogLevel.Information);
 
 builder.Services.AddDbContext<CrescerSaudavelDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -189,14 +193,15 @@ app.MapGet("/api/localizacao/cep/{cep}", async (string cep, ILocationService ser
     return info is null ? Results.NotFound(new { message = "CEP não encontrado" }) : Results.Ok(info);
 });
 
-// Em dev, NÃO redireciona para HTTPS
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+// HTTPS redirect DESABILITADO para desenvolvimento local
+// if (!app.Environment.IsDevelopment())
+// {
+//     app.UseHttpsRedirection();
+// }
 
-// Se quiser garantir por código também:
+// Configurar URLs para desenvolvimento
 app.Urls.Add("http://0.0.0.0:5280");
+app.Urls.Add("http://localhost:5280");
 
 app.UseAuthentication();
 app.UseAuthorization();

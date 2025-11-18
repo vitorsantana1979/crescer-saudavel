@@ -35,8 +35,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [auth, activeTenantId]);
 
   const setAuth = (value: AuthInfo | null) => {
+    console.log("=== AuthContext.setAuth CHAMADO ===");
+    console.log("Valor recebido:", value ? {
+      token: value.token ? `${value.token.substring(0, 20)}...` : "NULL",
+      nome: value.nome,
+      email: value.email,
+      tenantId: value.tenantId,
+      roles: value.roles,
+    } : "NULL");
+    
+    console.log("Atualizando estado do React...");
     setAuthState(value);
+    
+    console.log("Salvando no localStorage...");
     saveAuth(value);
+    
+    console.log("Verificando se foi salvo...");
+    const verificado = localStorage.getItem("auth-info");
+    console.log("Auth no localStorage após salvar:", verificado ? "PRESENTE" : "AUSENTE");
+    
+    if (verificado && value) {
+      try {
+        const parsed = JSON.parse(verificado);
+        console.log("Auth verificado:", {
+          token: parsed.token ? `${parsed.token.substring(0, 20)}...` : "NULL",
+          nome: parsed.nome,
+        });
+      } catch (e) {
+        console.error("Erro ao verificar auth salvo:", e);
+      }
+    }
+    
+    console.log("=== AuthContext.setAuth CONCLUÍDO ===");
   };
 
   const setActiveTenantId = (tenantId: string) => {

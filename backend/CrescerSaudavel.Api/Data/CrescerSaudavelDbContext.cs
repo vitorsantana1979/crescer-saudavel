@@ -155,6 +155,7 @@ public class CrescerSaudavelDbContext
     private static void ConfigurePrecisions(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<RecemNascido>().Property(r => r.IdadeGestacionalSemanas).HasPrecision(5, 2);
+        modelBuilder.Entity<RecemNascido>().Property(r => r.IdadeGestacionalCorrigidaSemanas).HasPrecision(5, 2);
         modelBuilder.Entity<RecemNascido>().Property(r => r.ComprimentoCm).HasPrecision(6, 2);
         modelBuilder.Entity<RecemNascido>().Property(r => r.PerimetroCefalicoCm).HasPrecision(6, 2);
 

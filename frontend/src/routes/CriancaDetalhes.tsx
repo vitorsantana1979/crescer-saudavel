@@ -16,7 +16,14 @@ import {
   Circle,
   Trash2,
   Search,
+  AlertCircle,
 } from "lucide-react";
+import {
+  classificarIdadeGestacional,
+  classificarPesoNascimento,
+  formatarIdadeGestacional,
+  formatarPeso,
+} from "@/lib/classificacoes";
 
 interface Crianca {
   id: string;
@@ -24,7 +31,15 @@ interface Crianca {
   sexo: string;
   dataNascimento: string;
   idadeGestacionalSemanas: number;
+  idadeGestacionalDias?: number;
+  idadeGestacionalCorrigidaSemanas?: number;
+  idadeGestacionalCorrigidaDias?: number;
+  classificacaoIG?: string;
+  tipoParto?: string;
+  apgar1Minuto?: number;
+  apgar5Minuto?: number;
   pesoNascimentoGr: number;
+  classificacaoPN?: string;
   comprimentoCm?: number;
   perimetroCefalicoCm?: number;
 }
@@ -295,6 +310,24 @@ export default function CriancaDetalhes() {
     }
   };
 
+  const calcularIdadeCronologica = (dataNascimento: string) => {
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+    const diffMs = hoje.getTime() - nascimento.getTime();
+    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    return diffDias;
+  };
+
+  const formatarIdadeGestacional = (
+    semanas: number,
+    dias?: number
+  ): string => {
+    if (dias !== undefined && dias !== null && dias > 0) {
+      return `${semanas} semanas e ${dias} dia${dias > 1 ? "s" : ""}`;
+    }
+    return `${semanas} semanas`;
+  };
+
   if (loading || !crianca) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -377,7 +410,7 @@ export default function CriancaDetalhes() {
       />
 
       {/* Cards de Informações */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">
             <Calendar className="w-8 h-8 text-blue-600" />
@@ -394,9 +427,77 @@ export default function CriancaDetalhes() {
           <div className="flex items-center gap-3">
             <TrendingUp className="w-8 h-8 text-purple-600" />
             <div>
-              <p className="text-xs text-gray-500">Idade Gestacional</p>
+              <p className="text-xs text-gray-500">IG ao Nascimento</p>
               <p className="text-sm font-semibold">
-                {crianca.idadeGestacionalSemanas} semanas
+                {formatarIdadeGestacional(
+                  crianca.idadeGestacionalSemanas,
+                  crianca.idadeGestacionalDias
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {crianca.idadeGestacionalCorrigidaSemanas && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="w-8 h-8 text-indigo-600" />
+              <div>
+                <p className="text-xs text-gray-500">IGC</p>
+                <p className="text-sm font-semibold">
+                  {formatarIdadeGestacional(
+                    crianca.idadeGestacionalCorrigidaSemanas,
+                    crianca.idadeGestacionalCorrigidaDias
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Classificação por IG */}
+        {crianca.idadeGestacionalSemanas && (
+          (() => {
+            const classif = classificarIdadeGestacional(crianca.idadeGestacionalSemanas);
+            return (
+              <div className={`col-span-full rounded-lg shadow-sm border-2 p-4 ${classif.cor}`}>
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-sm mb-1">
+                      Classificação segundo a Idade Gestacional (IG)
+                    </h4>
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        <span className="font-medium">IG:</span>{" "}
+                        {formatarIdadeGestacional(
+                          crianca.idadeGestacionalSemanas,
+                          crianca.idadeGestacionalDias
+                        )}
+                      </p>
+                      <p>
+                        <span className="font-medium">Classificação:</span>{" "}
+                        <span className="font-bold">{classif.sigla}</span> - {classif.descricao}
+                      </p>
+                      <p className="text-xs opacity-75">{classif.faixa}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()
+        )}
+
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex items-center gap-3">
+            <Calendar className="w-8 h-8 text-green-600" />
+            <div>
+              <p className="text-xs text-gray-500">Idade Cronológica</p>
+              <p className="text-sm font-semibold">
+                {calcularIdadeCronologica(crianca.dataNascimento)} dia
+                {calcularIdadeCronologica(crianca.dataNascimento) !== 1
+                  ? "s"
+                  : ""}
               </p>
             </div>
           </div>
@@ -414,6 +515,36 @@ export default function CriancaDetalhes() {
           </div>
         </div>
 
+        {/* Classificação por Peso */}
+        {crianca.pesoNascimentoGr && (
+          (() => {
+            const classif = classificarPesoNascimento(crianca.pesoNascimentoGr);
+            return (
+              <div className={`col-span-full rounded-lg shadow-sm border-2 p-4 ${classif.cor}`}>
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-sm mb-1">
+                      Classificação segundo o Peso ao Nascer (PN)
+                    </h4>
+                    <div className="space-y-1 text-sm">
+                      <p>
+                        <span className="font-medium">PN:</span>{" "}
+                        {crianca.pesoNascimentoGr} g ({formatarPeso(crianca.pesoNascimentoGr)})
+                      </p>
+                      <p>
+                        <span className="font-medium">Classificação:</span>{" "}
+                        <span className="font-bold">{classif.nome}</span>
+                      </p>
+                      <p className="text-xs opacity-75">{classif.faixa}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()
+        )}
+
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">
             <Ruler className="w-8 h-8 text-orange-600" />
@@ -425,6 +556,38 @@ export default function CriancaDetalhes() {
             </div>
           </div>
         </div>
+
+        {crianca.tipoParto && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+              <Baby className="w-8 h-8 text-pink-600" />
+              <div>
+                <p className="text-xs text-gray-500">Tipo de Parto</p>
+                <p className="text-sm font-semibold">{crianca.tipoParto}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {(crianca.apgar1Minuto !== undefined ||
+          crianca.apgar5Minuto !== undefined) && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+              <Activity className="w-8 h-8 text-red-600" />
+              <div>
+                <p className="text-xs text-gray-500">Apgar</p>
+                <p className="text-sm font-semibold">
+                  {crianca.apgar1Minuto !== undefined &&
+                  crianca.apgar5Minuto !== undefined
+                    ? `${crianca.apgar1Minuto}/${crianca.apgar5Minuto}`
+                    : crianca.apgar1Minuto !== undefined
+                    ? `${crianca.apgar1Minuto}/-`
+                    : `-/${crianca.apgar5Minuto}`}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Botões de Ação */}

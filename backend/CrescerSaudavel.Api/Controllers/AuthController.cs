@@ -23,19 +23,22 @@ public class AuthController : ControllerBase
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
     private readonly IConfiguration _configuration;
     private readonly CrescerSaudavelDbContext _context;
+    private readonly ILogger<AuthController> _logger;
 
     public AuthController(
         UserManager<ProfissionalSaude> userManager,
         SignInManager<ProfissionalSaude> signInManager,
         RoleManager<IdentityRole<Guid>> roleManager,
         IConfiguration configuration,
-        CrescerSaudavelDbContext context)
+        CrescerSaudavelDbContext context,
+        ILogger<AuthController> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _roleManager = roleManager;
         _configuration = configuration;
         _context = context;
+        _logger = logger;
     }
 
     [HttpGet("tipos-conselho")]
@@ -54,28 +57,54 @@ public class AuthController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("=== LOGIN REQUEST RECEBIDO ===");
+            _logger.LogInformation("Email: {Email}", request?.Email ?? "NULL");
+            _logger.LogInformation("Senha presente: {HasPassword}", !string.IsNullOrWhiteSpace(request?.Senha));
+            
             if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Senha))
             {
+                _logger.LogWarning("ERRO: Email ou senha vazios");
                 return BadRequest(new { message = "Email e senha são obrigatórios" });
             }
 
+            _logger.LogInformation("Buscando usuário com email: {Email}", request.Email);
             var user = await _userManager.FindByEmailAsync(request.Email);
             if (user == null)
             {
+                _logger.LogWarning("ERRO: Usuário não encontrado para email: {Email}", request.Email);
                 return Unauthorized(new { message = "Credenciais inválidas" });
             }
 
+            _logger.LogInformation("Usuário encontrado: {Nome} (ID: {UserId})", user.Nome, user.Id);
+            _logger.LogInformation("Verificando senha...");
+            
             var result = await _signInManager.CheckPasswordSignInAsync(user, request.Senha, false);
+            _logger.LogInformation("Resultado da verificação de senha: Succeeded={Succeeded}, IsLockedOut={IsLockedOut}, IsNotAllowed={IsNotAllowed}", 
+                result.Succeeded, result.IsLockedOut, result.IsNotAllowed);
+            
             if (!result.Succeeded)
             {
                 if (result.IsLockedOut)
+                {
+                    _logger.LogWarning("ERRO: Usuário bloqueado");
                     return Unauthorized(new { message = "Usuário bloqueado" });
+                }
                 if (result.IsNotAllowed)
+                {
+                    _logger.LogWarning("ERRO: Login não permitido");
                     return Unauthorized(new { message = "Login não permitido" });
+                }
+                _logger.LogWarning("ERRO: Credenciais inválidas - senha incorreta");
                 return Unauthorized(new { message = "Credenciais inválidas" });
             }
+            
+            _logger.LogInformation("Senha verificada com sucesso!");
 
+            _logger.LogInformation("Buscando roles do usuário...");
             var roles = await _userManager.GetRolesAsync(user);
+            _logger.LogInformation("Roles encontradas: {Roles}", string.Join(", ", roles));
+            
+            _logger.LogInformation("Buscando unidades do profissional...");
             var unidades = await _context.ProfissionaisUnidades
                 .Where(p => p.ProfissionalSaudeId == user.Id)
                 .OrderByDescending(p => p.Principal)
@@ -83,19 +112,31 @@ public class AuthController : ControllerBase
                 .Select(p => new { p.TenantId, p.Principal })
                 .ToListAsync();
 
+            _logger.LogInformation("Unidades encontradas: {Count}", unidades.Count);
+            foreach (var unidade in unidades)
+            {
+                _logger.LogInformation("  - TenantId: {TenantId}, Principal: {Principal}", unidade.TenantId, unidade.Principal);
+            }
+
             var tenantPrincipalId = unidades.FirstOrDefault(u => u.Principal)?.TenantId
                 ?? user.TenantId
                 ?? unidades.FirstOrDefault()?.TenantId;
 
+            _logger.LogInformation("Tenant Principal ID: {TenantId}", tenantPrincipalId);
+
             if (tenantPrincipalId != null && user.TenantId != tenantPrincipalId)
             {
+                _logger.LogInformation("Atualizando TenantId do usuário de {OldTenantId} para {NewTenantId}", user.TenantId, tenantPrincipalId);
                 user.TenantId = tenantPrincipalId;
                 await _userManager.UpdateAsync(user);
             }
 
             Guid? grupoSaudeId = user.GrupoSaudeId;
+            _logger.LogInformation("GrupoSaudeId atual: {GrupoSaudeId}", grupoSaudeId);
+            
             if (grupoSaudeId == null && tenantPrincipalId != null)
             {
+                _logger.LogInformation("Buscando GrupoSaudeId do tenant...");
                 grupoSaudeId = await _context.Tenants
                     .Where(t => t.Id == tenantPrincipalId.Value)
                     .Select(t => t.GrupoSaudeId)
@@ -103,15 +144,25 @@ public class AuthController : ControllerBase
 
                 if (grupoSaudeId != null)
                 {
+                    _logger.LogInformation("GrupoSaudeId encontrado: {GrupoSaudeId}", grupoSaudeId);
                     user.GrupoSaudeId = grupoSaudeId;
                     await _userManager.UpdateAsync(user);
                 }
+                else
+                {
+                    _logger.LogWarning("GrupoSaudeId não encontrado para o tenant");
+                }
             }
 
+            _logger.LogInformation("Construindo claims...");
             var claims = BuildClaims(user, roles, tenantPrincipalId, grupoSaudeId, unidades.Select(u => u.TenantId));
+            _logger.LogInformation("Claims criadas: {Count}", claims.Count);
+            
+            _logger.LogInformation("Gerando token JWT...");
             var token = GenerateJwtToken(claims);
+            _logger.LogInformation("Token gerado: {TokenPreview}...", token?.Substring(0, Math.Min(50, token?.Length ?? 0)));
 
-            return Ok(new
+            var response = new
             {
                 token,
                 user = new
@@ -125,10 +176,27 @@ public class AuthController : ControllerBase
                     principalTenantId = tenantPrincipalId,
                     tenantIds = unidades.Select(u => u.TenantId).Distinct().ToArray()
                 }
-            });
+            };
+
+            _logger.LogInformation("=== LOGIN SUCESSO ===");
+            _logger.LogInformation("Usuário: {Nome}", user.Nome);
+            _logger.LogInformation("TenantId: {TenantId}", tenantPrincipalId);
+            _logger.LogInformation("Roles: {Roles}", string.Join(", ", roles));
+            _logger.LogInformation("Enviando resposta...");
+
+            return Ok(response);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "=== ERRO NO LOGIN ===");
+            _logger.LogError("Mensagem: {Message}", ex.Message);
+            _logger.LogError("StackTrace: {StackTrace}", ex.StackTrace);
+            if (ex.InnerException != null)
+            {
+                _logger.LogError("InnerException: {InnerException}", ex.InnerException.Message);
+            }
+            _logger.LogError("=====================");
+            
             return StatusCode(500, new { 
                 error = ex.Message, 
                 stackTrace = ex.StackTrace,

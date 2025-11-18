@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using CrescerSaudavel.Api.Data;
 using CrescerSaudavel.Api.Models;
 using CrescerSaudavel.Api.Services.Time;
+using CrescerSaudavel.Api.Services;
 using System.Linq;
 
 namespace CrescerSaudavel.Api.Controllers;
@@ -74,6 +75,14 @@ public class RecemNascidoController : ControllerBase
         if (!tenantIds.Contains(recemNascido.TenantId))
             return Forbid();
 
+        // Calcular classificações automaticamente
+        recemNascido.ClassificacaoIG = RecemNascidoClassificacaoService.ClassificarIdadeGestacional(recemNascido.IdadeGestacionalSemanas);
+        
+        if (recemNascido.PesoNascimentoGr.HasValue)
+        {
+            recemNascido.ClassificacaoPN = RecemNascidoClassificacaoService.ClassificarPesoNascimento(recemNascido.PesoNascimentoGr.Value);
+        }
+
         _context.RecemNascidos.Add(recemNascido);
         await _context.SaveChangesAsync();
 
@@ -92,6 +101,14 @@ public class RecemNascidoController : ControllerBase
 
         if (!tenantIds.Contains(recemNascido.TenantId))
             return Forbid();
+
+        // Recalcular classificações automaticamente
+        recemNascido.ClassificacaoIG = RecemNascidoClassificacaoService.ClassificarIdadeGestacional(recemNascido.IdadeGestacionalSemanas);
+        
+        if (recemNascido.PesoNascimentoGr.HasValue)
+        {
+            recemNascido.ClassificacaoPN = RecemNascidoClassificacaoService.ClassificarPesoNascimento(recemNascido.PesoNascimentoGr.Value);
+        }
 
         _context.Entry(recemNascido).State = EntityState.Modified;
 

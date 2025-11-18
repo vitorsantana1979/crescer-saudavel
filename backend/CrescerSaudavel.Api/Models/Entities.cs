@@ -89,7 +89,21 @@ public class RecemNascido : EntidadeAuditavel
     public char Sexo { get; set; }
     public DateTime DataNascimento { get; set; }
     public decimal IdadeGestacionalSemanas { get; set; }
+    public int? IdadeGestacionalDias { get; set; } // 0-6 dias
+    public decimal? IdadeGestacionalCorrigidaSemanas { get; set; }
+    public int? IdadeGestacionalCorrigidaDias { get; set; } // 0-6 dias
+    
+    // Classificação segundo a Idade Gestacional
+    public string? ClassificacaoIG { get; set; } // RNPTE, RNPTM, RNPTT, RNPT, RNT, RNP
+    
+    public string? TipoParto { get; set; } // "Cesáreo", "Normal", "Fórceps", etc.
+    public int? Apgar1Minuto { get; set; } // 0-10
+    public int? Apgar5Minuto { get; set; } // 0-10
     public int? PesoNascimentoGr { get; set; }
+    
+    // Classificação segundo o Peso ao Nascer
+    public string? ClassificacaoPN { get; set; } // Macrossomia, Adequado, Insuficiente, Baixo, Muito Baixo, Extremo Baixo
+    
     public decimal? ComprimentoCm { get; set; }
     public decimal? PerimetroCefalicoCm { get; set; }
     public ICollection<Consulta> Consultas { get; set; } = new List<Consulta>();
