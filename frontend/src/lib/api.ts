@@ -45,6 +45,9 @@ console.log("[API Config] Ambiente detectado:", import.meta.env.PROD ? "produç�
 export const api = axios.create({
   baseURL,
   timeout: 30000, // 30 segundos
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 export const loadAuth = (): AuthInfo | null => {
@@ -71,6 +74,11 @@ export const clearAuth = () => saveAuth(null);
 
 api.interceptors.request.use((config) => {
   console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
+  
+  // Garantir que Content-Type está definido
+  if (!config.headers["Content-Type"] && !config.headers["content-type"]) {
+    config.headers["Content-Type"] = "application/json";
+  }
   
   // Não adicionar token/tenantId para a rota de login
   const isLoginRoute = config.url?.includes('/auth/login');
@@ -99,7 +107,35 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    console.error(`[API Response Error] ${error.response?.status || "NO STATUS"} ${error.config?.url}`);
+    const status = error.response?.status || "NO STATUS";
+    const url = error.config?.url || "UNKNOWN";
+    const errorData = error.response?.data;
+    
+    console.error(`[API Response Error] ${status} ${url}`);
+    
+    // Log detailed error information
+    if (error.response) {
+      console.error(`[API Error Details] Status: ${status}`);
+      console.error(`[API Error Details] URL: ${url}`);
+      console.error(`[API Error Details] Response Data:`, errorData);
+      console.error(`[API Error Details] Response Headers:`, error.response.headers);
+      
+      // Log error message if available
+      if (errorData) {
+        if (typeof errorData === 'string') {
+          console.error(`[API Error Message] ${errorData}`);
+        } else if (errorData.message) {
+          console.error(`[API Error Message] ${errorData.message}`);
+        } else if (errorData.title) {
+          console.error(`[API Error Title] ${errorData.title}`);
+        }
+      }
+    } else if (error.request) {
+      console.error(`[API Error] No response received. Request:`, error.request);
+    } else {
+      console.error(`[API Error] Request setup error:`, error.message);
+    }
+    
     if (error.response?.status === 401 && window.location.pathname !== "/") {
       console.log("[API Response] 401 Unauthorized - limpando auth e redirecionando");
       clearAuth();

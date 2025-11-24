@@ -150,20 +150,33 @@ builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ILocationService, LocationService>();
 
+// Serviços de interoperabilidade (PIX/PDQ)
+builder.Services.AddScoped<CrescerSaudavel.Api.Services.Interoperabilidade.IPixService, CrescerSaudavel.Api.Services.Interoperabilidade.PixService>();
+builder.Services.AddScoped<CrescerSaudavel.Api.Services.Interoperabilidade.IPdqService, CrescerSaudavel.Api.Services.Interoperabilidade.PdqService>();
+builder.Services.AddScoped<CrescerSaudavel.Api.Services.Interoperabilidade.IAuditoriaAcessoService, CrescerSaudavel.Api.Services.Interoperabilidade.AuditoriaAcessoService>();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-                "https://cs.quasarai.co",
-                "https://stock.menthor.app",
-                "http://localhost:5193",
-                "http://localhost:5173",
-                "http://localhost:5174",
-                "http://localhost:5175")
-              .AllowAnyHeader()
-              .AllowAnyMethod()
-              .AllowCredentials();
+        if (builder.Environment.IsDevelopment())
+        {
+            // Em desenvolvimento, permitir qualquer origem (útil para Docker/VM onde IP pode variar)
+            policy.SetIsOriginAllowed(_ => true)
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
+        else
+        {
+            // Em produção, apenas origens específicas
+            policy.WithOrigins(
+                    "https://cs.quasarai.co",
+                    "https://stock.menthor.app")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        }
     });
 });
 

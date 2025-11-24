@@ -4,6 +4,12 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    "process.env": JSON.stringify({
+      NODE_ENV: process.env.NODE_ENV || "development",
+    }),
+    global: "globalThis",
+  },
   server: {
     host: true,
     port: 5193,

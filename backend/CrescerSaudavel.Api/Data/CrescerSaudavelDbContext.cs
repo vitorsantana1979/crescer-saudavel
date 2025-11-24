@@ -28,6 +28,8 @@ public class CrescerSaudavelDbContext
     public DbSet<Alimento> Alimentos => Set<Alimento>();
     public DbSet<Dieta> Dietas => Set<Dieta>();
     public DbSet<DietaItem> DietaItens => Set<DietaItem>();
+    public DbSet<PacienteIdentificador> PacienteIdentificadores => Set<PacienteIdentificador>();
+    public DbSet<AuditoriaAcessoPaciente> AuditoriaAcessoPacientes => Set<AuditoriaAcessoPaciente>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +45,8 @@ public class CrescerSaudavelDbContext
         modelBuilder.Entity<Alimento>().ToTable("Alimento", "nutricao");
         modelBuilder.Entity<Dieta>().ToTable("Dieta", "nutricao");
         modelBuilder.Entity<DietaItem>().ToTable("DietaItem", "nutricao");
+        modelBuilder.Entity<PacienteIdentificador>().ToTable("PacienteIdentificador", "interoperabilidade");
+        modelBuilder.Entity<AuditoriaAcessoPaciente>().ToTable("AuditoriaAcessoPaciente", "interoperabilidade");
 
         modelBuilder.Entity<GrupoSaude>()
             .HasMany(g => g.Unidades)
@@ -105,6 +109,39 @@ public class CrescerSaudavelDbContext
             .WithMany()
             .HasForeignKey(i => i.AlimentoId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // Configurações de relacionamentos para interoperabilidade
+        modelBuilder.Entity<RecemNascido>()
+            .HasMany(r => r.Identificadores)
+            .WithOne(i => i.RecemNascido)
+            .HasForeignKey(i => i.RecemNascidoId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PacienteIdentificador>()
+            .HasIndex(i => new { i.RecemNascidoId, i.TipoIdentificador, i.Valor })
+            .IsUnique();
+
+        modelBuilder.Entity<PacienteIdentificador>()
+            .HasIndex(i => new { i.TipoIdentificador, i.Valor })
+            .HasFilter("[Ativo] = 1");
+
+        modelBuilder.Entity<AuditoriaAcessoPaciente>()
+            .HasOne(a => a.RecemNascido)
+            .WithMany()
+            .HasForeignKey(a => a.RecemNascidoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AuditoriaAcessoPaciente>()
+            .HasOne(a => a.Usuario)
+            .WithMany()
+            .HasForeignKey(a => a.UsuarioId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<AuditoriaAcessoPaciente>()
+            .HasIndex(a => new { a.RecemNascidoId, a.CriadoEm });
+
+        modelBuilder.Entity<AuditoriaAcessoPaciente>()
+            .HasIndex(a => new { a.UsuarioId, a.CriadoEm });
 
         // Seed data: Tipos de Conselho
         modelBuilder.Entity<TipoConselho>().HasData(

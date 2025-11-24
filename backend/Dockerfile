@@ -31,8 +31,8 @@
     FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS prod
     WORKDIR /app
     
-    # Instala/atualiza Git (se necessário no runtime)
-    RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+    # Instala ferramentas necessárias (Git e wget para healthcheck)
+    RUN apt-get update && apt-get install -y git wget && rm -rf /var/lib/apt/lists/*
     
     COPY --from=build /app/publish .
     EXPOSE 5280

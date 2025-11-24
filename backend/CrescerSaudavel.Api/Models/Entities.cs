@@ -106,7 +106,24 @@ public class RecemNascido : EntidadeAuditavel
     
     public decimal? ComprimentoCm { get; set; }
     public decimal? PerimetroCefalicoCm { get; set; }
+    
+    // Dados demográficos expandidos para conformidade com PDQ (IHE PDQV3)
+    public string? NomeMae { get; set; }
+    public string? NomePai { get; set; }
+    public string? EnderecoLogradouro { get; set; }
+    public string? EnderecoNumero { get; set; }
+    public string? EnderecoComplemento { get; set; }
+    public string? EnderecoBairro { get; set; }
+    public string? EnderecoCidade { get; set; }
+    public string? EnderecoUf { get; set; }
+    public string? EnderecoCep { get; set; }
+    public string? Telefone { get; set; }
+    public string? TelefoneCelular { get; set; }
+    public string? Email { get; set; }
+    
+    // Relacionamentos
     public ICollection<Consulta> Consultas { get; set; } = new List<Consulta>();
+    public ICollection<PacienteIdentificador> Identificadores { get; set; } = new List<PacienteIdentificador>();
 }
 
 public class Consulta : EntidadeAuditavel
@@ -161,4 +178,98 @@ public class DietaItem : EntidadeAuditavel
     public decimal Quantidade { get; set; }
     public decimal? EnergiaTotalKcal { get; set; }
     public decimal? ProteinaTotalG { get; set; }
+}
+
+/// <summary>
+/// Armazena múltiplos identificadores de um paciente para conformidade com IHE PIX.
+/// Permite correlacionar informações de um mesmo paciente entre múltiplas aplicações.
+/// </summary>
+public class PacienteIdentificador : EntidadeAuditavel
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid RecemNascidoId { get; set; }
+    public RecemNascido? RecemNascido { get; set; }
+    
+    /// <summary>
+    /// Tipo do identificador conforme padrão IHE PIX.
+    /// Valores possíveis: CNS, ID_LOCAL, ID_PLANO, ID_HOSPITAL, ID_EXTERNO
+    /// </summary>
+    public string TipoIdentificador { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Valor do identificador (ex: número do CNS, GUID interno, etc.)
+    /// </summary>
+    public string Valor { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Sistema emissor/origem do identificador (ex: "CadSUS", "CrescerSaudavel", "Hospital X")
+    /// </summary>
+    public string SistemaEmissor { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Indica se este é o identificador principal/preferencial para o paciente
+    /// </summary>
+    public bool Principal { get; set; } = false;
+    
+    /// <summary>
+    /// Indica se o identificador está ativo
+    /// </summary>
+    public bool Ativo { get; set; } = true;
+    
+    /// <summary>
+    /// Data de expiração do identificador (se aplicável)
+    /// </summary>
+    public DateTime? DataExpiracao { get; set; }
+    
+    /// <summary>
+    /// Observações sobre o identificador
+    /// </summary>
+    public string? Observacoes { get; set; }
+}
+
+/// <summary>
+/// Registra auditoria de acesso a dados de pacientes para conformidade com LGPD e Portaria 2.073/2011.
+/// </summary>
+public class AuditoriaAcessoPaciente : EntidadeAuditavel
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid RecemNascidoId { get; set; }
+    public RecemNascido? RecemNascido { get; set; }
+    public Guid UsuarioId { get; set; }
+    public ProfissionalSaude? Usuario { get; set; }
+    
+    /// <summary>
+    /// Tipo de operação: Leitura, Criacao, Atualizacao, Exclusao, ConsultaPDQ, ConsultaPIX
+    /// </summary>
+    public string TipoOperacao { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Endpoint/rota acessada
+    /// </summary>
+    public string? Endpoint { get; set; }
+    
+    /// <summary>
+    /// IP de origem da requisição
+    /// </summary>
+    public string? IpOrigem { get; set; }
+    
+    /// <summary>
+    /// User-Agent do cliente
+    /// </summary>
+    public string? UserAgent { get; set; }
+    
+    /// <summary>
+    /// Resumo dos dados acessados (sem dados sensíveis completos)
+    /// </summary>
+    public string? ResumoDadosAcessados { get; set; }
+    
+    /// <summary>
+    /// Indica se a operação foi bem-sucedida
+    /// </summary>
+    public bool Sucesso { get; set; } = true;
+    
+    /// <summary>
+    /// Mensagem de erro (se houver)
+    /// </summary>
+    public string? MensagemErro { get; set; }
 }

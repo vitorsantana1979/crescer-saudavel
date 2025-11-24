@@ -8,6 +8,16 @@
   </head>
   <body class="bg-gray-50">
     <div id="root"></div>
+    <script>
+      // Polyfill for process (used by some dependencies)
+      if (typeof process === 'undefined') {
+        window.process = {
+          env: {
+            NODE_ENV: 'development'
+          }
+        };
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

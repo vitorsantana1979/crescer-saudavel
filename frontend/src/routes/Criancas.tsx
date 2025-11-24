@@ -37,8 +37,28 @@ export default function Criancas() {
     try {
       const response = await api.get("/recemnascido");
       setCriancas(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao carregar crianças:", error);
+      
+      // Extract error message for user feedback
+      let errorMessage = "Erro ao carregar lista de crianças";
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (typeof errorData === 'string') {
+          errorMessage = errorData;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        } else if (errorData.title) {
+          errorMessage = errorData.title;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+      
+      // Set empty array on error to show empty state
+      setCriancas([]);
     } finally {
       setLoading(false);
     }
