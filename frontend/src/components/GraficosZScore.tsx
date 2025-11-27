@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Scatter,
+  ReferenceLine,
 } from "recharts";
 import { useEffect, useMemo, useState, useRef } from "react";
 import api from "@/lib/api";
@@ -34,24 +35,63 @@ interface GraficosZScoreProps {
   }>;
   sexo?: string; // "M" ou "F"
   idadeGestacionalSemanas?: number; // Semanas de gestação ao nascimento
+  idadeGestacionalDias?: number; // Dias de gestação ao nascimento (0-6)
   dataNascimento?: string; // Data de nascimento para calcular idade corrigida
+  nomeCrianca?: string; // Nome do recém-nascido
+  pesoNascimentoGr?: number; // Peso ao nascer em gramas
+  comprimentoCm?: number; // Comprimento ao nascer em cm
+  perimetroCefalicoNascimentoCm?: number; // Perímetro cefálico ao nascer em cm
 }
 
+// Cores das curvas de referência conforme padrão OMS/Intergrowth
+const CORES_Z_SCORE = {
+  zN3: "#000000", // Preto para Z-3
+  zN2: "#DC2626", // Vermelho para Z-2
+  zN1: "#000000", // Preto para Z-1
+  z0: "#10B981",  // Verde para Z0 (mediana)
+  zP1: "#000000", // Preto para Z+1
+  zP2: "#DC2626", // Vermelho para Z+2
+  zP3: "#000000", // Preto para Z+3
+};
+
+// Cores dos eixos e títulos conforme sexo (padrão OMS)
+const CORES_SEXO = {
+  M: {
+    // Azul para meninos
+    primaria: "#2196F3",      // Azul principal
+    secundaria: "#1976D2",    // Azul escuro
+    texto: "#1565C0",          // Azul para texto
+    eixo: "#2196F3",           // Cor dos eixos
+  },
+  F: {
+    // Rosa para meninas
+    primaria: "#E91E63",      // Rosa principal
+    secundaria: "#C2185B",    // Rosa escuro
+    texto: "#AD1457",          // Rosa para texto
+    eixo: "#E91E63",           // Cor dos eixos
+  },
+};
+
 const PRETERMO_LEGEND = [
-  { label: "Z+3 (P99,9)", color: "#DC2626" },
-  { label: "Z+2 (P97,7)", color: "#F59E0B" },
-  { label: "Z+1 (P84,1)", color: "#1F2937" },
-  { label: "Z 0 (P50)", color: "#10B981" },
-  { label: "Z-1 (P15,9)", color: "#1F2937" },
-  { label: "Z-2 (P2,3)", color: "#F59E0B" },
-  { label: "Z-3 (P0,1)", color: "#DC2626" },
+  { label: "Z+3 (P99,9)", color: CORES_Z_SCORE.zP3 },
+  { label: "Z+2 (P97,7)", color: CORES_Z_SCORE.zP2 },
+  { label: "Z+1 (P84,1)", color: CORES_Z_SCORE.zP1 },
+  { label: "Z 0 (P50)", color: CORES_Z_SCORE.z0 },
+  { label: "Z-1 (P15,9)", color: CORES_Z_SCORE.zN1 },
+  { label: "Z-2 (P2,3)", color: CORES_Z_SCORE.zN2 },
+  { label: "Z-3 (P0,1)", color: CORES_Z_SCORE.zN3 },
 ];
 
 export default function GraficosZScore({
   consultasSelecionadas = [],
   sexo = "M",
   idadeGestacionalSemanas = 40,
+  idadeGestacionalDias = 0,
   dataNascimento,
+  nomeCrianca,
+  pesoNascimentoGr,
+  comprimentoCm,
+  perimetroCefalicoNascimentoCm,
 }: GraficosZScoreProps) {
   const [curvasReferencia, setCurvasReferencia] = useState<CurvaReferencia[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +102,37 @@ export default function GraficosZScore({
   
   // Determinar se é pré-termo (< 37 semanas gestacionais)
   const ehPretermo = idadeGestacionalSemanas < 37;
+
+  // Função para calcular IGC (Idade Gestacional Corrigida)
+  const calcularIGC = (
+    dataConsulta: Date,
+    dataNascimento: string,
+    idadeGestacionalSemanas: number,
+    idadeGestacionalDias: number
+  ): number => {
+    const nascimento = new Date(dataNascimento);
+    const msPorDia = 24 * 60 * 60 * 1000;
+    const diasVida = Math.floor(
+      (dataConsulta.getTime() - nascimento.getTime()) / msPorDia
+    );
+    
+    // Converter idade cronológica para semanas e dias
+    const semanasVida = Math.floor(diasVida / 7);
+    const diasRestantes = diasVida % 7;
+    
+    // Somar IG ao nascimento + idade cronológica
+    let semanasTotais = idadeGestacionalSemanas + semanasVida;
+    let diasTotais = idadeGestacionalDias + diasRestantes;
+    
+    // Ajustar se dias >= 7
+    if (diasTotais >= 7) {
+      semanasTotais += Math.floor(diasTotais / 7);
+      diasTotais = diasTotais % 7;
+    }
+    
+    // Retornar semanas totais como decimal (incluindo fração de dias)
+    return semanasTotais + (diasTotais / 7);
+  };
 
   useEffect(() => {
     const loadCurvas = async () => {
@@ -130,14 +201,37 @@ export default function GraficosZScore({
         let semanasTotais: number | null = null;
 
         if (dataNascimento) {
-          const nascimento = new Date(dataNascimento);
-          const diasDeVida = Math.floor(
-            (dataConsulta.getTime() - nascimento.getTime()) / msPorDia
-          );
-          const semanasVida = diasDeVida / 7;
-          semanasTotais = ehPretermo
-            ? idadeGestacionalSemanas + semanasVida
-            : semanasVida;
+          if (ehPretermo) {
+            // Para pré-termo: usar IGC (IG ao nascimento + idade cronológica)
+            semanasTotais = calcularIGC(
+              dataConsulta,
+              dataNascimento,
+              idadeGestacionalSemanas,
+              idadeGestacionalDias || 0
+            );
+            
+            // Limite de 64 semanas de IGC para Intergrowth
+            if (semanasTotais > 64) {
+              return null;
+            }
+            
+            // Limite mínimo de 27 semanas para Intergrowth
+            if (semanasTotais < 27) {
+              return null;
+            }
+          } else {
+            // Para a termo: usar idade cronológica (semanas desde nascimento)
+            const nascimento = new Date(dataNascimento);
+            const diasDeVida = Math.floor(
+              (dataConsulta.getTime() - nascimento.getTime()) / msPorDia
+            );
+            semanasTotais = diasDeVida / 7;
+            
+            // Limite máximo de 64 semanas para OMS também
+            if (semanasTotais > 64) {
+              return null;
+            }
+          }
         } else {
           const diasDesdePrimeira = Math.floor(
             (dataConsulta.getTime() - primeiroAtendimento.getTime()) / msPorDia
@@ -147,17 +241,8 @@ export default function GraficosZScore({
 
         if (!Number.isFinite(semanasTotais)) return null;
 
-        // Filtrar valores fora dos limites de semanas
-        const limiteSemanasMin = ehPretermo ? 27 : 0;
-        const limiteSemanasMax = 64;
-        if (semanasTotais < limiteSemanasMin || semanasTotais > limiteSemanasMax) {
-          return null;
-        }
-
-        // Filtrar valores fora dos limites de peso (para padrão: máximo 11.8 kg)
-        if (!ehPretermo && peso > 11.8) {
-          return null;
-        }
+        // Para gráficos OMS (a termo), não filtrar por peso máximo (até 30 kg)
+        // O filtro será feito pelo domínio do eixo Y
 
         const totalDias = Math.round(semanasTotais * 7);
         const semanasInt = Math.floor(totalDias / 7);
@@ -185,7 +270,7 @@ export default function GraficosZScore({
       .sort((a, b) => a.semanasFracionadas - b.semanasFracionadas);
 
     return { pontos, houveConversao };
-  }, [consultasSelecionadas, dataNascimento, ehPretermo, idadeGestacionalSemanas]);
+  }, [consultasSelecionadas, dataNascimento, ehPretermo, idadeGestacionalSemanas, idadeGestacionalDias]);
 
   const pontosPaciente = pontosPacienteMemo.pontos;
 
@@ -256,9 +341,15 @@ export default function GraficosZScore({
     const minSemana = ehPretermo
       ? Math.max(Math.min(...semanas), 27)
       : Math.min(...semanas);
+    
+    // Limitar máximo a 64 semanas de IGC para pré-termo
+    const maxSemana = ehPretermo
+      ? Math.min(Math.max(...semanas), 64)
+      : Math.min(Math.max(...semanas), 64);
+    
     return {
       min: minSemana,
-      max: Math.max(...semanas),
+      max: maxSemana,
     };
   }, [curvasReferencia, pontosPaciente, pontosPacienteFiltrados, ehPretermo]);
 
@@ -272,14 +363,34 @@ export default function GraficosZScore({
     }));
   }, [pontosPaciente, pontosPacienteFiltrados, ehPretermo]);
 
+  // Ticks para labels do eixo X (mostrar de 2 em 2 meses para OMS)
   const ticksBase = useMemo(() => {
     if (ehPretermo) {
       const total = semanasDisponiveis.max - semanasDisponiveis.min + 1;
       return Array.from({ length: total }, (_, i) => semanasDisponiveis.min + i);
     }
 
-    return Array.from({ length: 65 }, (_, i) => i); // 0 a 64
+    // Para OMS: mostrar labels de 2 em 2 meses
+    // 1 mês ≈ 4.33 semanas, então 2 meses ≈ 8.66 semanas
+    const meses = [];
+    for (let m = 0; m <= 60; m += 2) {
+      meses.push(Math.round(m * 4.33));
+    }
+    return meses;
   }, [ehPretermo, semanasDisponiveis]);
+
+  // Ticks para grid vertical (cada mês para OMS)
+  const gridTicksX = useMemo(() => {
+    if (ehPretermo) {
+      return null; // Sem grid vertical para pré-termo
+    }
+    // Grid vertical: uma linha para cada mês (0 a 60 meses)
+    const meses = [];
+    for (let m = 0; m <= 60; m++) {
+      meses.push(Math.round(m * 4.33));
+    }
+    return meses;
+  }, [ehPretermo]);
   const xAxisTicks = useMemo(() => {
     if (!zoomIntervalo) return ticksBase;
     return ticksBase.filter(
@@ -295,12 +406,13 @@ export default function GraficosZScore({
       );
     }
 
-    return Array.from({ length: 60 }, (_, i) => i * 0.2);
+    // Para OMS: mostrar de 1 em 1 kg (2, 3, 4, ..., 30) para grid quadriculado
+    return Array.from({ length: 29 }, (_, i) => i + 2);
   }, [ehPretermo, yAxisPretermoMax]);
 
   const dominioPadraoX = ehPretermo
     ? ([semanasDisponiveis.min, semanasDisponiveis.max] as [number, number])
-    : ([0, 64] as [number, number]);
+    : ([0, 260] as [number, number]); // 260 semanas ≈ 60 meses (5 anos)
 
   const xAxisDomain = zoomIntervalo ?? dominioPadraoX;
 
@@ -325,7 +437,7 @@ export default function GraficosZScore({
     return idx;
   }, [curvasReferencia, zoomIntervalo]);
 
-  const yAxisDomain = ehPretermo ? [0, yAxisPretermoMax] : [0, 11.8];
+  const yAxisDomain = ehPretermo ? [0, yAxisPretermoMax] : [2, 30] as [number, number]; // OMS: 2 a 30 kg (começa em 2)
 
   const exportarGraficoComoJpeg = async (): Promise<string> => {
     if (!areaGraficoRef.current) {
@@ -381,9 +493,10 @@ export default function GraficosZScore({
 
     const padding = 32;
     const legendWidth = ehPretermo ? 220 : 0;
+    const headerHeight = 180; // Altura do cabeçalho
     const outputCanvas = document.createElement("canvas");
     outputCanvas.width = (legendWidth + width + padding * 3) * pixelRatio;
-    outputCanvas.height = (height + padding * 2) * pixelRatio;
+    outputCanvas.height = (height + padding * 2 + headerHeight) * pixelRatio;
 
     const outCtx = outputCanvas.getContext("2d");
     if (!outCtx) {
@@ -393,6 +506,108 @@ export default function GraficosZScore({
     outCtx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
     outCtx.scale(pixelRatio, pixelRatio);
 
+    // Desenhar cabeçalho
+    const headerStartY = padding;
+    let currentY = headerStartY;
+    const headerStartX = legendWidth + padding * 2;
+    const headerWidth = width;
+
+    // Título principal
+    outCtx.fillStyle = "#0f172a";
+    outCtx.font = "bold 20px 'Inter', sans-serif";
+    const generoTexto = sexo === "F" ? "MENINAS" : "MENINOS";
+    const tipoTexto = ehPretermo ? " - PRÉ-TERMO" : " - A TERMO";
+    const titulo = `Peso para idade ${generoTexto}${tipoTexto}`;
+    outCtx.fillText(titulo, headerStartX, currentY + 20);
+    currentY += 35;
+
+    // Subtítulo
+    outCtx.fillStyle = "#475569";
+    outCtx.font = "14px 'Inter', sans-serif";
+    outCtx.fillText("Nascimento até 5 anos (z-scores)", headerStartX, currentY + 14);
+    currentY += 25;
+
+    // WHO Child Growth Standards
+    outCtx.fillStyle = "#64748b";
+    outCtx.font = "12px 'Inter', sans-serif";
+    outCtx.fillText("WHO Child Growth Standards", headerStartX, currentY + 12);
+    currentY += 30;
+
+    // Linha separadora
+    outCtx.strokeStyle = "#e2e8f0";
+    outCtx.lineWidth = 1;
+    outCtx.beginPath();
+    outCtx.moveTo(headerStartX, currentY);
+    outCtx.lineTo(headerStartX + headerWidth, currentY);
+    outCtx.stroke();
+    currentY += 20;
+
+    // Dados do RN
+    if (nomeCrianca || dataNascimento || pesoNascimentoGr || comprimentoCm) {
+      outCtx.fillStyle = "#0f172a";
+      outCtx.font = "bold 12px 'Inter', sans-serif";
+      outCtx.fillText("Dados do Recém-Nascido:", headerStartX, currentY + 12);
+      currentY += 20;
+
+      const dadosLinhas: string[] = [];
+      if (nomeCrianca) {
+        dadosLinhas.push(`Nome: ${nomeCrianca}`);
+      }
+      if (dataNascimento) {
+        const dataNasc = new Date(dataNascimento);
+        const dataFormatada = dataNasc.toLocaleDateString("pt-BR");
+        dadosLinhas.push(`Data de Nascimento: ${dataFormatada}`);
+      }
+      if (dataNascimento) {
+        const hoje = new Date();
+        const nascimento = new Date(dataNascimento);
+        const diasVida = Math.floor((hoje.getTime() - nascimento.getTime()) / (1000 * 60 * 60 * 24));
+        const semanasVida = Math.floor(diasVida / 7);
+        const diasRestantes = diasVida % 7;
+        dadosLinhas.push(`Idade Cronológica: ${semanasVida} semanas e ${diasRestantes} dias`);
+      }
+      if (ehPretermo && dataNascimento && idadeGestacionalSemanas && idadeGestacionalDias !== undefined) {
+        const hoje = new Date();
+        const nascimento = new Date(dataNascimento);
+        const diasVida = Math.floor((hoje.getTime() - nascimento.getTime()) / (1000 * 60 * 60 * 24));
+        const semanasVida = Math.floor(diasVida / 7);
+        const diasRestantes = diasVida % 7;
+        
+        let igcSemanas = idadeGestacionalSemanas + semanasVida;
+        let igcDias = (idadeGestacionalDias || 0) + diasRestantes;
+        if (igcDias >= 7) {
+          igcSemanas += Math.floor(igcDias / 7);
+          igcDias = igcDias % 7;
+        }
+        dadosLinhas.push(`Idade Gestacional Corrigida: ${igcSemanas} semanas e ${igcDias} dias`);
+      }
+      if (pesoNascimentoGr) {
+        const pesoKg = pesoNascimentoGr / 1000;
+        dadosLinhas.push(`Peso ao Nascer: ${pesoKg.toFixed(3).replace(".", ",")} kg`);
+      }
+      if (comprimentoCm) {
+        dadosLinhas.push(`Comprimento ao Nascer: ${comprimentoCm.toFixed(1).replace(".", ",")} cm`);
+      }
+      if (perimetroCefalicoNascimentoCm) {
+        dadosLinhas.push(`Perímetro Cefálico ao Nascer: ${perimetroCefalicoNascimentoCm.toFixed(1).replace(".", ",")} cm`);
+      }
+      if (idadeGestacionalSemanas !== undefined && idadeGestacionalDias !== undefined) {
+        dadosLinhas.push(`Idade Gestacional ao Nascimento: ${idadeGestacionalSemanas} semanas e ${idadeGestacionalDias} dias`);
+      }
+
+      outCtx.fillStyle = "#475569";
+      outCtx.font = "11px 'Inter', sans-serif";
+      dadosLinhas.forEach((linha, index) => {
+        const coluna = index % 2;
+        const linhaIndex = Math.floor(index / 2);
+        const x = headerStartX + coluna * (headerWidth / 2 + 20);
+        const y = currentY + linhaIndex * 18;
+        outCtx.fillText(linha, x, y + 11);
+      });
+      currentY += Math.ceil(dadosLinhas.length / 2) * 18 + 10;
+    }
+
+    // Desenhar legenda (se pré-termo)
     if (ehPretermo) {
       const legendStartX = padding;
       let legendStartY = padding + 4;
@@ -411,10 +626,11 @@ export default function GraficosZScore({
       });
     }
 
+    // Desenhar gráfico abaixo do cabeçalho
     outCtx.drawImage(
       chartCanvas,
       legendWidth + padding * 2,
-      padding,
+      padding + headerHeight,
       width,
       height
     );
@@ -463,22 +679,33 @@ export default function GraficosZScore({
     );
   }
 
+  const cores = CORES_SEXO[sexo as "M" | "F"] || CORES_SEXO.M;
+
   return (
     <div className="space-y-6">
       {/* Gráfico Peso */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-6 gap-4">
           <div className="text-center lg:text-left flex-1">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Peso (kg)</h3>
-          <p className="text-sm text-gray-600">
-              Curvas internacionais de crescimento {tipoCurva} (
-              {sexo === "M" ? "meninos" : "meninas"})
+          <div>
+            <h3 
+              className="text-xl font-bold mb-1"
+              style={{ color: cores.primaria }}
+            >
+              Peso para idade {sexo === "M" ? "MENINOS" : "MENINAS"}
+            </h3>
+            <p className="text-xs text-gray-500 mb-1">
+              {ehPretermo ? "Nascimento até 64 semanas (z-scores)" : "Nascimento até 5 anos (z-scores)"}
+            </p>
+            <p className="text-xs text-gray-400 italic">
+              {ehPretermo ? "INTERGROWTH-21st" : "WHO Child Growth Standards"}
               {ehPretermo && (
-                <span className="ml-2 text-xs text-orange-600">
+                <span className="ml-2 text-orange-600">
                   (Pré-termo - Idade corrigida)
                 </span>
               )}
             </p>
+          </div>
           </div>
           <div className="flex items-center justify-center lg:justify-end gap-2">
             {zoomIntervalo && (
@@ -519,43 +746,76 @@ export default function GraficosZScore({
           )}
           <div className="flex-1">
             <div
-              className="mx-auto"
-              style={
-                ehPretermo
+              className="mx-auto rounded-lg overflow-hidden"
+              style={{
+                backgroundColor: cores.primaria,
+                padding: "4px",
+                ...(ehPretermo
                   ? { width: 760, height: 960 }
-                  : { width: "100%", height: 1200 }
-              }
+                  : { width: "100%", height: 1200 }),
+              }}
             >
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart
-                  data={curvasReferencia}
-                  margin={{ top: 20, right: 50, left: 50, bottom: 60 }}
-                  syncId="peso-chart"
-          >
+              <div
+                className="bg-white rounded"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                }}
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart
+                    data={curvasReferencia}
+                    margin={{ top: 20, right: 50, left: 50, bottom: 60 }}
+                    syncId="peso-chart"
+              >
             <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#CBD5F5"
-                  horizontal
-                  vertical={false}
+                  strokeDasharray="1 1"
+                  stroke="#E0E0E0"
+                  strokeWidth={0.5}
+                  horizontal={true}
+                  vertical={!ehPretermo} // Grid vertical apenas para OMS (meses)
             />
             <XAxis
               dataKey="semanas"
                   type="number"
               label={{
-                value: "Semanas",
+                value: ehPretermo ? "Semanas" : "Idade (meses e anos completos)",
                 position: "insideBottom",
                 offset: -10,
                     style: {
                       fontSize: "14px",
                       fontWeight: "bold",
-                      fill: "#475569",
+                      fill: cores.primaria,
                     },
               }}
-              stroke="#475569"
-                  tick={{ fontSize: 11, fill: "#475569" }}
+              stroke={cores.primaria}
+                  tick={{ fontSize: 10, fill: cores.primaria }}
                   domain={xAxisDomain}
-                  ticks={xAxisTicks}
+                  ticks={gridTicksX || xAxisTicks} // Usar gridTicksX para grid completo, mas labels apenas nos ticksBase
                   interval={0}
+                  tickFormatter={(value) => {
+                    if (ehPretermo) {
+                      return value.toString();
+                    }
+                    // Converter semanas para meses para OMS
+                    const semanas = value;
+                    if (semanas === 0) return "Birth";
+                    
+                    // Aproximação: 4.33 semanas por mês
+                    const meses = Math.round(semanas / 4.33);
+                    
+                    // Mostrar labels apenas de 2 em 2 meses: 2, 4, 6, 8, 10, 12 (1 year), 14, 16, etc.
+                    if (meses % 2 !== 0) return ""; // Não mostrar label para meses ímpares
+                    
+                    if (meses === 12) return "1 year";
+                    if (meses === 24) return "2 years";
+                    if (meses === 36) return "3 years";
+                    if (meses === 48) return "4 years";
+                    if (meses === 60) return "5 years";
+                    
+                    // Mostrar meses para outros valores pares
+                    return `${meses}m`;
+                  }}
             />
             <YAxis
                   yAxisId="left"
@@ -566,11 +826,11 @@ export default function GraficosZScore({
                     style: {
                       fontSize: "14px",
                       fontWeight: "bold",
-                      fill: "#475569",
+                      fill: cores.primaria,
                     },
                   }}
-                  stroke="#475569"
-                  tick={{ fontSize: 10, fill: "#475569" }}
+                  stroke={cores.primaria}
+                  tick={{ fontSize: 10, fill: cores.primaria }}
                   domain={yAxisDomain}
                   type="number"
                   allowDecimals
@@ -593,11 +853,11 @@ export default function GraficosZScore({
                     style: {
                       fontSize: "14px",
                       fontWeight: "bold",
-                      fill: "#475569",
+                      fill: cores.primaria,
                     },
               }}
-              stroke="#475569"
-                  tick={{ fontSize: 10, fill: "#475569" }}
+              stroke={cores.primaria}
+                  tick={{ fontSize: 10, fill: cores.primaria }}
                   domain={yAxisDomain}
               type="number"
                   allowDecimals
@@ -743,11 +1003,59 @@ export default function GraficosZScore({
                   );
                 }}
             />
-                {/* Curvas de referência - estilo Intergrowth-21st */}
+                {/* Linhas verticais destacadas para anos (apenas OMS) */}
+                {!ehPretermo && (
+                  <>
+                    <ReferenceLine
+                      x={52}
+                      yAxisId="left"
+                      stroke="#999999"
+                      strokeWidth={1.5}
+                      strokeDasharray="2 2"
+                      label={{ value: "1 year", position: "top", fill: cores.primaria, fontSize: 11 }}
+                    />
+                    <ReferenceLine
+                      x={104}
+                      yAxisId="left"
+                      stroke="#999999"
+                      strokeWidth={1.5}
+                      strokeDasharray="2 2"
+                      label={{ value: "2 years", position: "top", fill: cores.primaria, fontSize: 11 }}
+                    />
+                    <ReferenceLine
+                      x={156}
+                      yAxisId="left"
+                      stroke="#999999"
+                      strokeWidth={1.5}
+                      strokeDasharray="2 2"
+                      label={{ value: "3 years", position: "top", fill: cores.primaria, fontSize: 11 }}
+                    />
+                    <ReferenceLine
+                      x={208}
+                      yAxisId="left"
+                      stroke="#999999"
+                      strokeWidth={1.5}
+                      strokeDasharray="2 2"
+                      label={{ value: "4 years", position: "top", fill: cores.primaria, fontSize: 11 }}
+                    />
+                    <ReferenceLine
+                      x={260}
+                      yAxisId="left"
+                      stroke="#999999"
+                      strokeWidth={1.5}
+                      strokeDasharray="2 2"
+                      label={{ value: "5 years", position: "top", fill: cores.primaria, fontSize: 11 }}
+                    />
+                  </>
+                )}
+                {/* Curvas de referência - estilo OMS/Intergrowth */}
+            {/* Para OMS (a termo): apenas 5 linhas (-3, -2, 0, +2, +3) */}
+            {/* Para Intergrowth (pré-termo): 7 linhas (-3, -2, -1, 0, +1, +2, +3) */}
+            {/* Usar type="monotone" para curvas suaves tanto para OMS quanto Intergrowth */}
             <Line
               type="monotone"
                   dataKey="zN3"
-              stroke="#DC2626"
+              stroke={CORES_Z_SCORE.zN3}
               strokeWidth={1.5}
               dot={false}
               isAnimationActive={false}
@@ -757,47 +1065,53 @@ export default function GraficosZScore({
             <Line
               type="monotone"
                   dataKey="zN2"
-              stroke="#F59E0B"
+              stroke={CORES_Z_SCORE.zN2}
               strokeWidth={1.5}
               dot={false}
               isAnimationActive={false}
                   yAxisId="left"
                   name="-2"
             />
-            <Line
-              type="monotone"
-                  dataKey="zN1"
-              stroke="#1F2937"
-              strokeWidth={1.2}
-              dot={false}
-              isAnimationActive={false}
-                  yAxisId="left"
-                  name="-1"
-            />
+            {/* Linha -1 apenas para pré-termo (Intergrowth) */}
+            {ehPretermo && (
+              <Line
+                type="monotone"
+                    dataKey="zN1"
+                stroke={CORES_Z_SCORE.zN1}
+                strokeWidth={1.2}
+                dot={false}
+                isAnimationActive={false}
+                    yAxisId="left"
+                    name="-1"
+              />
+            )}
             <Line
               type="monotone"
               dataKey="z0"
-              stroke="#10B981"
+              stroke={CORES_Z_SCORE.z0}
                   strokeWidth={3}
               dot={false}
               isAnimationActive={false}
                   yAxisId="left"
                   name="0"
             />
-            <Line
-              type="monotone"
-                  dataKey="zP1"
-              stroke="#1F2937"
-              strokeWidth={1.2}
-              dot={false}
-              isAnimationActive={false}
-                  yAxisId="left"
-                  name="+1"
-            />
+            {/* Linha +1 apenas para pré-termo (Intergrowth) */}
+            {ehPretermo && (
+              <Line
+                type="monotone"
+                    dataKey="zP1"
+                stroke={CORES_Z_SCORE.zP1}
+                strokeWidth={1.2}
+                dot={false}
+                isAnimationActive={false}
+                    yAxisId="left"
+                    name="+1"
+              />
+            )}
             <Line
               type="monotone"
                   dataKey="zP2"
-              stroke="#F59E0B"
+              stroke={CORES_Z_SCORE.zP2}
               strokeWidth={1.5}
               dot={false}
               isAnimationActive={false}
@@ -807,7 +1121,7 @@ export default function GraficosZScore({
             <Line
               type="monotone"
                   dataKey="zP3"
-              stroke="#DC2626"
+              stroke={CORES_Z_SCORE.zP3}
               strokeWidth={1.5}
               dot={false}
               isAnimationActive={false}
@@ -826,9 +1140,9 @@ export default function GraficosZScore({
                         cx={props.cx}
                         cy={props.cy}
                         r={6}
-                        fill="#ef4444"
-                        stroke="#b91c1c"
-                        strokeWidth={1.2}
+                        fill={cores.primaria}
+                        stroke={cores.secundaria}
+                        strokeWidth={1.5}
                       />
                     )}
                 isAnimationActive={false}
@@ -838,7 +1152,7 @@ export default function GraficosZScore({
                   <Brush
                     dataKey="semanas"
                     height={26}
-                    stroke="#059669"
+                    stroke={cores.primaria}
                     travellerWidth={10}
                     startIndex={indiceInicioZoom}
                     endIndex={indiceFimZoom}
@@ -867,7 +1181,8 @@ export default function GraficosZScore({
                   />
                 )}
               </ComposedChart>
-        </ResponsiveContainer>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>

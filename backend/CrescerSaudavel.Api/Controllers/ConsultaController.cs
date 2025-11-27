@@ -94,6 +94,43 @@ public class ConsultaController : ControllerBase
         var idadeDias = (request.DataHora.Date - crianca.DataNascimento.Date).Days;
         var idadeSemanas = idadeDias / 7.0;
 
+        // Para pré-termo: calcular IGC (Idade Gestacional Corrigida)
+        // IGC = IG ao Nascimento + Idade Cronológica
+        var ehPretermo = crianca.IdadeGestacionalSemanas < 37;
+        double idadeParaCalculo = idadeSemanas;
+        
+        if (ehPretermo)
+        {
+            // Calcular IGC considerando semanas e dias
+            // Idade cronológica: converter dias para semanas e dias
+            var idadeCronologicaSemanas = idadeDias / 7; // Divisão inteira
+            var idadeCronologicaDias = idadeDias % 7;
+            
+            // IG ao nascimento
+            var igSemanas = (int)crianca.IdadeGestacionalSemanas;
+            var igDias = crianca.IdadeGestacionalDias ?? 0;
+            
+            // Somar IG ao nascimento + idade cronológica
+            var igcSemanas = igSemanas + idadeCronologicaSemanas;
+            var igcDias = igDias + idadeCronologicaDias;
+            
+            // Ajustar se dias >= 7 (converter dias extras para semanas)
+            if (igcDias >= 7)
+            {
+                igcSemanas += igcDias / 7; // Divisão inteira
+                igcDias = igcDias % 7;
+            }
+            
+            // Converter para semanas decimais para cálculo do Z-Score
+            idadeParaCalculo = igcSemanas + (igcDias / 7.0);
+            
+            // Limite de 64 semanas de IGC para Intergrowth
+            if (idadeParaCalculo > 64)
+            {
+                return BadRequest(new { message = "IGC ultrapassa o limite de 64 semanas para gráfico Intergrowth" });
+            }
+        }
+
         // Calcular Z-Scores
         decimal? zScorePeso = null;
         decimal? zScoreAltura = null;
@@ -102,21 +139,21 @@ public class ConsultaController : ControllerBase
         try
         {
             // Determinar se usa INTERGROWTH ou OMS baseado na idade gestacional
-            var curva = crianca.IdadeGestacionalSemanas < 37 ? "INTERGROWTH" : "OMS";
+            var curva = ehPretermo ? "INTERGROWTH" : "OMS";
             var sexo = crianca.Sexo == 'M' ? "m" : "f";
 
             var zPeso = _zScoreService.CalcularZ(
-                idadeSemanas, (double)request.PesoKg, sexo, curva, "peso"
+                idadeParaCalculo, (double)request.PesoKg, sexo, curva, "peso"
             );
             zScorePeso = zPeso.HasValue ? (decimal)zPeso.Value : null;
 
             var zAltura = _zScoreService.CalcularZ(
-                idadeSemanas, (double)request.EstaturaCm, sexo, curva, "comprimento"
+                idadeParaCalculo, (double)request.EstaturaCm, sexo, curva, "comprimento"
             );
             zScoreAltura = zAltura.HasValue ? (decimal)zAltura.Value : null;
 
             var zPerimetro = _zScoreService.CalcularZ(
-                idadeSemanas, (double)request.PerimetroCefalicoCm, sexo, curva, "pc"
+                idadeParaCalculo, (double)request.PerimetroCefalicoCm, sexo, curva, "pc"
             );
             zScorePerimetro = zPerimetro.HasValue ? (decimal)zPerimetro.Value : null;
         }
@@ -164,24 +201,60 @@ public class ConsultaController : ControllerBase
         var idadeDias = (request.DataHora.Date - crianca.DataNascimento.Date).Days;
         var idadeSemanas = idadeDias / 7.0;
 
+        // Para pré-termo: calcular IGC (Idade Gestacional Corrigida)
+        var ehPretermo = crianca.IdadeGestacionalSemanas < 37;
+        double idadeParaCalculo = idadeSemanas;
+        
+        if (ehPretermo)
+        {
+            // Calcular IGC considerando semanas e dias
+            // Idade cronológica: converter dias para semanas e dias
+            var idadeCronologicaSemanas = idadeDias / 7; // Divisão inteira
+            var idadeCronologicaDias = idadeDias % 7;
+            
+            // IG ao nascimento
+            var igSemanas = (int)crianca.IdadeGestacionalSemanas;
+            var igDias = crianca.IdadeGestacionalDias ?? 0;
+            
+            // Somar IG ao nascimento + idade cronológica
+            var igcSemanas = igSemanas + idadeCronologicaSemanas;
+            var igcDias = igDias + idadeCronologicaDias;
+            
+            // Ajustar se dias >= 7 (converter dias extras para semanas)
+            if (igcDias >= 7)
+            {
+                igcSemanas += igcDias / 7; // Divisão inteira
+                igcDias = igcDias % 7;
+            }
+            
+            // Converter para semanas decimais para cálculo do Z-Score
+            idadeParaCalculo = igcSemanas + (igcDias / 7.0);
+            
+            // Limite de 64 semanas de IGC para Intergrowth
+            if (idadeParaCalculo > 64)
+            {
+                return BadRequest(new { message = "IGC ultrapassa o limite de 64 semanas para gráfico Intergrowth" });
+            }
+        }
+
         // Recalcular Z-Scores
         try
         {
-            var curva = crianca.IdadeGestacionalSemanas < 37 ? "INTERGROWTH" : "OMS";
+            var curva = ehPretermo ? "INTERGROWTH" : "OMS";
             var sexo = crianca.Sexo == 'M' ? "m" : "f";
 
             var zPeso = _zScoreService.CalcularZ(
-                idadeSemanas, (double)request.PesoKg, sexo, curva, "peso"
+                idadeParaCalculo, (double)request.PesoKg, sexo, curva, "peso"
             );
             consulta.ZScorePeso = zPeso.HasValue ? (decimal)zPeso.Value : null;
 
             var zAltura = _zScoreService.CalcularZ(
-                idadeSemanas, (double)request.EstaturaCm, sexo, curva, "comprimento"
+                idadeParaCalculo, (double)request.EstaturaCm, sexo, curva, "comprimento"
             );
             consulta.ZScoreAltura = zAltura.HasValue ? (decimal)zAltura.Value : null;
 
             var zPerimetro = _zScoreService.CalcularZ(
-                idadeSemanas, (double)request.PerimetroCefalicoCm, sexo, curva, "pc"
+                idadeParaCalculo, (double)request.PerimetroCefalicoCm, sexo, curva, "pc"
             );
             consulta.ZScorePerimetro = zPerimetro.HasValue ? (decimal)zPerimetro.Value : null;
         }

@@ -321,3 +321,4 @@
 /src/CrescerSaudavel.Api/obj/Debug/net8.0/CrescerSaudavel.Api.pdb
 /src/CrescerSaudavel.Api/obj/Debug/net8.0/CrescerSaudavel.Api.genruntimeconfig.cache
 /src/CrescerSaudavel.Api/obj/Debug/net8.0/ref/CrescerSaudavel.Api.dll
+/Users/vitorsantana/Dev/crescer-saudavel/crescer-saudavel/backend/CrescerSaudavel.Api/bin/Debug/net8.0/appsettings.Production.json

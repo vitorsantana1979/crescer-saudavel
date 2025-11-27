@@ -156,6 +156,12 @@ public class ZScoreService
 
     public double? CalcularZ(double idadeSemanas, double valor, string sexo, string tipo, string medida)
     {
+        // Validação: para Intergrowth, IGC não pode ultrapassar 64 semanas
+        if (tipo.Equals("INTERGROWTH", StringComparison.OrdinalIgnoreCase) && idadeSemanas > 64)
+        {
+            return null; // Retorna null se ultrapassar limite de 64 semanas de IGC
+        }
+
         var key = $"{tipo}/{medida}_{sexo}".ToLower();
         if (!_cache.ContainsKey(key)) return null;
 

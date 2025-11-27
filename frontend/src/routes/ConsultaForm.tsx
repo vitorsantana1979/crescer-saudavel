@@ -199,7 +199,7 @@ export default function ConsultaForm() {
                   {errors.pesoKg.message}
                 </p>
               )}
-              {consulta?.zScorePeso !== undefined && (
+              {consulta?.zScorePeso !== undefined && consulta?.zScorePeso !== null && (
                 <div className="mt-2">
                   <p className="text-xs text-gray-500">Z-Score Peso</p>
                   <p
@@ -238,7 +238,7 @@ export default function ConsultaForm() {
                   {errors.estaturaCm.message}
                 </p>
               )}
-              {consulta?.zScoreAltura !== undefined && (
+              {consulta?.zScoreAltura !== undefined && consulta?.zScoreAltura !== null && (
                 <div className="mt-2">
                   <p className="text-xs text-gray-500">Z-Score Altura</p>
                   <p
@@ -274,7 +274,7 @@ export default function ConsultaForm() {
                   {errors.perimetroCefalicoCm.message}
                 </p>
               )}
-              {consulta?.zScorePerimetro !== undefined && (
+              {consulta?.zScorePerimetro !== undefined && consulta?.zScorePerimetro !== null && (
                 <div className="mt-2">
                   <p className="text-xs text-gray-500">Z-Score PC</p>
                   <p

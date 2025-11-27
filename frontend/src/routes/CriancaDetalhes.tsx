@@ -318,6 +318,33 @@ export default function CriancaDetalhes() {
     return diffDias;
   };
 
+  const calcularIGC = (
+    dataNascimento: string,
+    idadeGestacionalSemanas: number,
+    idadeGestacionalDias: number = 0,
+    dataAtual: Date = new Date()
+  ): { semanas: number; dias: number } => {
+    const nascimento = new Date(dataNascimento);
+    const diffMs = dataAtual.getTime() - nascimento.getTime();
+    const diasVida = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    // Converter idade cronológica para semanas e dias
+    const semanasVida = Math.floor(diasVida / 7);
+    const diasRestantes = diasVida % 7;
+
+    // Somar IG ao nascimento + idade cronológica
+    let semanasTotais = idadeGestacionalSemanas + semanasVida;
+    let diasTotais = idadeGestacionalDias + diasRestantes;
+
+    // Ajustar se dias >= 7
+    if (diasTotais >= 7) {
+      semanasTotais += Math.floor(diasTotais / 7);
+      diasTotais = diasTotais % 7;
+    }
+
+    return { semanas: semanasTotais, dias: diasTotais };
+  };
+
   const formatarIdadeGestacional = (
     semanas: number,
     dias?: number
@@ -438,22 +465,26 @@ export default function CriancaDetalhes() {
           </div>
         </div>
 
-        {crianca.idadeGestacionalCorrigidaSemanas && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-8 h-8 text-indigo-600" />
-              <div>
-                <p className="text-xs text-gray-500">IGC</p>
-                <p className="text-sm font-semibold">
-                  {formatarIdadeGestacional(
-                    crianca.idadeGestacionalCorrigidaSemanas,
-                    crianca.idadeGestacionalCorrigidaDias
-                  )}
-                </p>
+        {isPreTermo && (() => {
+          const igc = calcularIGC(
+            crianca.dataNascimento,
+            crianca.idadeGestacionalSemanas,
+            crianca.idadeGestacionalDias || 0
+          );
+          return (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="w-8 h-8 text-indigo-600" />
+                <div>
+                  <p className="text-xs text-gray-500">IGC (calculada)</p>
+                  <p className="text-sm font-semibold">
+                    {formatarIdadeGestacional(igc.semanas, igc.dias)}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Classificação por IG */}
         {crianca.idadeGestacionalSemanas && (
@@ -651,7 +682,12 @@ export default function CriancaDetalhes() {
               consultasSelecionadas={consultasPlotadas}
               sexo={crianca.sexo}
               idadeGestacionalSemanas={crianca.idadeGestacionalSemanas}
+              idadeGestacionalDias={crianca.idadeGestacionalDias}
               dataNascimento={crianca.dataNascimento}
+              nomeCrianca={crianca.nome}
+              pesoNascimentoGr={crianca.pesoNascimentoGr}
+              comprimentoCm={crianca.comprimentoCm}
+              perimetroCefalicoNascimentoCm={crianca.perimetroCefalicoCm}
             />
           ) : activeTab === "consultas" ? (
             <div>
