@@ -55,19 +55,28 @@ interface Consulta {
   zScorePerimetro?: number;
 }
 
+interface DietaItem {
+  id: string;
+  alimentoId: string;
+  quantidade: number;
+  energiaTotalKcal?: number;
+  proteinaTotalG?: number;
+  alimento?: {
+    id: string;
+    nome: string;
+    categoria: string;
+    unidade: string;
+    energiaKcalPor100: number;
+    proteinaGPor100: number;
+  };
+}
+
 interface Dieta {
   id: string;
   dataInicio: string;
   dataFim?: string;
   frequenciaHoras: number;
   itens: DietaItem[];
-}
-
-interface DietaItem {
-  id: string;
-  quantidade: number;
-  energiaTotalKcal?: number;
-  proteinaTotalG?: number;
 }
 
 export default function CriancaDetalhes() {
@@ -189,12 +198,52 @@ export default function CriancaDetalhes() {
   const loadDietas = async () => {
     try {
       const response = await api.get(`/dietas/crianca/${id}`);
-      setDietas(response.data);
+      const dietasData = response.data;
+      
+      // Carregar alimentos para cada item das dietas
+      const alimentosResponse = await api.get('/alimentos');
+      const alimentosMap = new Map<string, any>();
+      alimentosResponse.data.forEach((alimento: any) => {
+        alimentosMap.set(alimento.id, alimento);
+      });
+      
+      // Associar alimentos aos itens das dietas
+      const dietasComAlimentos = dietasData.map((dieta: Dieta) => ({
+        ...dieta,
+        itens: dieta.itens.map((item: DietaItem) => ({
+          ...item,
+          alimento: alimentosMap.get(item.alimentoId) || null,
+        })),
+      }));
+      
+      setDietas(dietasComAlimentos);
     } catch (error) {
       console.error("Erro ao carregar dietas:", error);
       setDietas([]);
     }
   };
+  
+  // Obter a dieta atual (mais recente em andamento)
+  const dietaAtual = useMemo(() => {
+    if (dietas.length === 0) return null;
+    
+    const hoje = new Date();
+    const dietasAtivas = dietas.filter(d => {
+      const inicio = new Date(d.dataInicio);
+      const fim = d.dataFim ? new Date(d.dataFim) : null;
+      return inicio <= hoje && (!fim || fim >= hoje);
+    });
+    
+    if (dietasAtivas.length > 0) {
+      // Retornar a mais recente
+      return dietasAtivas.sort((a, b) => 
+        new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime()
+      )[0];
+    }
+    
+    // Se não houver dieta ativa, retornar a mais recente
+    return dietas[0];
+  }, [dietas]);
 
   useEffect(() => {
     setConsultasPlotadas([]);
@@ -472,17 +521,17 @@ export default function CriancaDetalhes() {
             crianca.idadeGestacionalDias || 0
           );
           return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center gap-3">
-                <TrendingUp className="w-8 h-8 text-indigo-600" />
-                <div>
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="flex items-center gap-3">
+              <TrendingUp className="w-8 h-8 text-indigo-600" />
+              <div>
                   <p className="text-xs text-gray-500">IGC (calculada)</p>
-                  <p className="text-sm font-semibold">
+                <p className="text-sm font-semibold">
                     {formatarIdadeGestacional(igc.semanas, igc.dias)}
-                  </p>
-                </div>
+                </p>
               </div>
             </div>
+          </div>
           );
         })()}
 
@@ -688,6 +737,10 @@ export default function CriancaDetalhes() {
               pesoNascimentoGr={crianca.pesoNascimentoGr}
               comprimentoCm={crianca.comprimentoCm}
               perimetroCefalicoNascimentoCm={crianca.perimetroCefalicoCm}
+              tipoParto={crianca.tipoParto}
+              apgar1Minuto={crianca.apgar1Minuto}
+              apgar5Minuto={crianca.apgar5Minuto}
+              dietaAtual={dietaAtual || undefined}
             />
           ) : activeTab === "consultas" ? (
             <div>

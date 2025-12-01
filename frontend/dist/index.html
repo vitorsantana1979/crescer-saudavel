@@ -3,11 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <title>Crescer Saudável</title>
-    <script type="module" crossorigin src="/assets/index-DToySMY-.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DcHnJtOd.css">
+    <script type="module" crossorigin src="/assets/index-CBnDH7xO.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CNmNzGqL.css">
   </head>
   <body class="bg-gray-50">
     <div id="root"></div>
+    <script>
+      // Polyfill for process (used by some dependencies)
+      if (typeof process === 'undefined') {
+        window.process = {
+          env: {
+            NODE_ENV: 'development'
+          }
+        };
+      }
+    </script>
   </body>
 </html>

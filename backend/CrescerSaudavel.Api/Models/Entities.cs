@@ -172,6 +172,7 @@ public class DietaItem : EntidadeAuditavel
 {
     public Guid Id { get; set; } = Guid.NewGuid();
     public Guid DietaId { get; set; }
+    [System.Text.Json.Serialization.JsonIgnore]
     public Dieta? Dieta { get; set; }
     public Guid AlimentoId { get; set; }
     public Alimento? Alimento { get; set; }

@@ -42,6 +42,7 @@ public class DietaController : ControllerBase
             return Forbid();
 
         var dietas = await _context.Dietas
+            .AsNoTracking()
             .Include(d => d.Itens)
             .Where(d => d.RecemNascidoId == recemNascidoId)
             .OrderByDescending(d => d.DataInicio)
