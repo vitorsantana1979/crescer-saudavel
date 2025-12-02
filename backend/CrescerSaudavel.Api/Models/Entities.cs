@@ -165,6 +165,33 @@ public class Dieta : EntidadeAuditavel
     public DateTime DataInicio { get; set; }
     public DateTime? DataFim { get; set; }
     public double FrequenciaHoras { get; set; } = 3;
+    
+    // Parâmetros nutricionais definidos pelo profissional de saúde
+    /// <summary>
+    /// Taxa de conversão energética em kcal/kg/dia (ex: 110, 120, 130, 140)
+    /// </summary>
+    public double? TaxaEnergeticaKcalKg { get; set; }
+    
+    /// <summary>
+    /// Meta de proteína em g/kg/dia (ex: 2.5, 3.0, 3.5, 4.0)
+    /// </summary>
+    public double? MetaProteinaGKg { get; set; }
+    
+    /// <summary>
+    /// Peso de referência usado para cálculo das necessidades (em kg)
+    /// </summary>
+    public double? PesoReferenciaKg { get; set; }
+    
+    /// <summary>
+    /// Via de administração: Oral, Enteral (Sonda), NPT, Mista
+    /// </summary>
+    public string? ViaAdministracao { get; set; }
+    
+    /// <summary>
+    /// Observações do profissional sobre a dietoterapia
+    /// </summary>
+    public string? Observacoes { get; set; }
+    
     public ICollection<DietaItem> Itens { get; set; } = new List<DietaItem>();
 }
 

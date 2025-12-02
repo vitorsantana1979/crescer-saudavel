@@ -17,6 +17,7 @@ import {
   Trash2,
   Search,
   AlertCircle,
+  Brain,
 } from "lucide-react";
 import {
   classificarIdadeGestacional,
@@ -76,6 +77,11 @@ interface Dieta {
   dataInicio: string;
   dataFim?: string;
   frequenciaHoras: number;
+  taxaEnergeticaKcalKg?: number;
+  metaProteinaGKg?: number;
+  pesoReferenciaKg?: number;
+  viaAdministracao?: string;
+  observacoes?: string;
   itens: DietaItem[];
 }
 
@@ -110,8 +116,7 @@ export default function CriancaDetalhes() {
     const diasDeVida = Math.max(
       0,
       Math.round(
-        (consultaAtual.getTime() - nascimento.getTime()) /
-          (1000 * 60 * 60 * 24)
+        (consultaAtual.getTime() - nascimento.getTime()) / (1000 * 60 * 60 * 24)
       )
     );
 
@@ -145,9 +150,9 @@ export default function CriancaDetalhes() {
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [dietas, setDietas] = useState<Dieta[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"graficos" | "consultas" | "dietas">(
-    "graficos"
-  );
+  const [activeTab, setActiveTab] = useState<
+    "graficos" | "consultas" | "dietas"
+  >("graficos");
   const [todasCriancas, setTodasCriancas] = useState<Crianca[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -199,14 +204,14 @@ export default function CriancaDetalhes() {
     try {
       const response = await api.get(`/dietas/crianca/${id}`);
       const dietasData = response.data;
-      
+
       // Carregar alimentos para cada item das dietas
-      const alimentosResponse = await api.get('/alimentos');
+      const alimentosResponse = await api.get("/alimentos");
       const alimentosMap = new Map<string, any>();
       alimentosResponse.data.forEach((alimento: any) => {
         alimentosMap.set(alimento.id, alimento);
       });
-      
+
       // Associar alimentos aos itens das dietas
       const dietasComAlimentos = dietasData.map((dieta: Dieta) => ({
         ...dieta,
@@ -215,32 +220,33 @@ export default function CriancaDetalhes() {
           alimento: alimentosMap.get(item.alimentoId) || null,
         })),
       }));
-      
+
       setDietas(dietasComAlimentos);
     } catch (error) {
       console.error("Erro ao carregar dietas:", error);
       setDietas([]);
     }
   };
-  
+
   // Obter a dieta atual (mais recente em andamento)
   const dietaAtual = useMemo(() => {
     if (dietas.length === 0) return null;
-    
+
     const hoje = new Date();
-    const dietasAtivas = dietas.filter(d => {
+    const dietasAtivas = dietas.filter((d) => {
       const inicio = new Date(d.dataInicio);
       const fim = d.dataFim ? new Date(d.dataFim) : null;
       return inicio <= hoje && (!fim || fim >= hoje);
     });
-    
+
     if (dietasAtivas.length > 0) {
       // Retornar a mais recente
-      return dietasAtivas.sort((a, b) => 
-        new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime()
+      return dietasAtivas.sort(
+        (a, b) =>
+          new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime()
       )[0];
     }
-    
+
     // Se não houver dieta ativa, retornar a mais recente
     return dietas[0];
   }, [dietas]);
@@ -253,7 +259,8 @@ export default function CriancaDetalhes() {
   useEffect(() => {
     if (consultas.length > 0) {
       const consultasOrdenadas = [...consultas].sort(
-        (a, b) => new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime()
+        (a, b) =>
+          new Date(a.dataHora).getTime() - new Date(b.dataHora).getTime()
       );
       setConsultasPlotadas(consultasOrdenadas);
     }
@@ -394,10 +401,7 @@ export default function CriancaDetalhes() {
     return { semanas: semanasTotais, dias: diasTotais };
   };
 
-  const formatarIdadeGestacional = (
-    semanas: number,
-    dias?: number
-  ): string => {
+  const formatarIdadeGestacional = (semanas: number, dias?: number): string => {
     if (dias !== undefined && dias !== null && dias > 0) {
       return `${semanas} semanas e ${dias} dia${dias > 1 ? "s" : ""}`;
     }
@@ -514,33 +518,38 @@ export default function CriancaDetalhes() {
           </div>
         </div>
 
-        {isPreTermo && (() => {
-          const igc = calcularIGC(
-            crianca.dataNascimento,
-            crianca.idadeGestacionalSemanas,
-            crianca.idadeGestacionalDias || 0
-          );
-          return (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="w-8 h-8 text-indigo-600" />
-              <div>
-                  <p className="text-xs text-gray-500">IGC (calculada)</p>
-                <p className="text-sm font-semibold">
-                    {formatarIdadeGestacional(igc.semanas, igc.dias)}
-                </p>
+        {isPreTermo &&
+          (() => {
+            const igc = calcularIGC(
+              crianca.dataNascimento,
+              crianca.idadeGestacionalSemanas,
+              crianca.idadeGestacionalDias || 0
+            );
+            return (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-8 h-8 text-indigo-600" />
+                  <div>
+                    <p className="text-xs text-gray-500">IGC (calculada)</p>
+                    <p className="text-sm font-semibold">
+                      {formatarIdadeGestacional(igc.semanas, igc.dias)}
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          );
-        })()}
+            );
+          })()}
 
         {/* Classificação por IG */}
-        {crianca.idadeGestacionalSemanas && (
+        {crianca.idadeGestacionalSemanas &&
           (() => {
-            const classif = classificarIdadeGestacional(crianca.idadeGestacionalSemanas);
+            const classif = classificarIdadeGestacional(
+              crianca.idadeGestacionalSemanas
+            );
             return (
-              <div className={`col-span-full rounded-lg shadow-sm border-2 p-4 ${classif.cor}`}>
+              <div
+                className={`col-span-full rounded-lg shadow-sm border-2 p-4 ${classif.cor}`}
+              >
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
@@ -557,7 +566,8 @@ export default function CriancaDetalhes() {
                       </p>
                       <p>
                         <span className="font-medium">Classificação:</span>{" "}
-                        <span className="font-bold">{classif.sigla}</span> - {classif.descricao}
+                        <span className="font-bold">{classif.sigla}</span> -{" "}
+                        {classif.descricao}
                       </p>
                       <p className="text-xs opacity-75">{classif.faixa}</p>
                     </div>
@@ -565,8 +575,7 @@ export default function CriancaDetalhes() {
                 </div>
               </div>
             );
-          })()
-        )}
+          })()}
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">
@@ -596,11 +605,13 @@ export default function CriancaDetalhes() {
         </div>
 
         {/* Classificação por Peso */}
-        {crianca.pesoNascimentoGr && (
+        {crianca.pesoNascimentoGr &&
           (() => {
             const classif = classificarPesoNascimento(crianca.pesoNascimentoGr);
             return (
-              <div className={`col-span-full rounded-lg shadow-sm border-2 p-4 ${classif.cor}`}>
+              <div
+                className={`col-span-full rounded-lg shadow-sm border-2 p-4 ${classif.cor}`}
+              >
                 <div className="flex items-start gap-3">
                   <AlertCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
@@ -610,7 +621,8 @@ export default function CriancaDetalhes() {
                     <div className="space-y-1 text-sm">
                       <p>
                         <span className="font-medium">PN:</span>{" "}
-                        {crianca.pesoNascimentoGr} g ({formatarPeso(crianca.pesoNascimentoGr)})
+                        {crianca.pesoNascimentoGr} g (
+                        {formatarPeso(crianca.pesoNascimentoGr)})
                       </p>
                       <p>
                         <span className="font-medium">Classificação:</span>{" "}
@@ -622,8 +634,7 @@ export default function CriancaDetalhes() {
                 </div>
               </div>
             );
-          })()
-        )}
+          })()}
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">
@@ -685,6 +696,13 @@ export default function CriancaDetalhes() {
         >
           <Apple className="w-5 h-5" />
           Nova Dietoterapia
+        </button>
+        <button
+          onClick={() => navigate(`/criancas/${id}/ia-insights`)}
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+        >
+          <Brain className="w-5 h-5" />
+          Insights de IA
         </button>
       </div>
 
@@ -752,136 +770,137 @@ export default function CriancaDetalhes() {
               ) : (
                 <div>
                   <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Data/Hora
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Peso (kg)
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          Estatura (cm)
-                        </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                          PC (cm)
-                        </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                          Z-Scores
-                        </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                          Ações
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {consultas.map((consulta) => (
-                        <tr key={consulta.id} className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm">
-                            <div className="flex flex-col">
-                              <span>
-                                {new Date(consulta.dataHora).toLocaleString(
-                                  "pt-BR",
-                                  {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
-                                )}
-                              </span>
-                              <span className="text-xs text-gray-500">
-                                Idade:{" "}
-                                {formatarIdadeSemanasDias(
-                                  consulta.dataHora,
-                                  crianca.dataNascimento
-                                )}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm font-medium">
-                            {consulta.pesoKg.toFixed(3)}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {consulta.estaturaCm.toFixed(1)}
-                          </td>
-                          <td className="px-4 py-3 text-sm">
-                            {consulta.perimetroCefalicoCm.toFixed(1)}
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center justify-center gap-3">
-                              <div
-                                className="flex items-center gap-1"
-                                title="Z-Score Peso"
-                              >
-                                {getZScoreIcon(consulta.zScorePeso)}
-                                <span
-                                  className={`text-xs font-semibold ${getZScoreColor(
-                                    consulta.zScorePeso
-                                  )}`}
-                                >
-                                  {consulta.zScorePeso?.toFixed(1) || "-"}
-                                </span>
-                              </div>
-                              <div
-                                className="flex items-center gap-1"
-                                title="Z-Score Altura"
-                              >
-                                {getZScoreIcon(consulta.zScoreAltura)}
-                                <span
-                                  className={`text-xs font-semibold ${getZScoreColor(
-                                    consulta.zScoreAltura
-                                  )}`}
-                                >
-                                  {consulta.zScoreAltura?.toFixed(1) || "-"}
-                                </span>
-                              </div>
-                              <div
-                                className="flex items-center gap-1"
-                                title="Z-Score PC"
-                              >
-                                {getZScoreIcon(consulta.zScorePerimetro)}
-                                <span
-                                  className={`text-xs font-semibold ${getZScoreColor(
-                                    consulta.zScorePerimetro
-                                  )}`}
-                                >
-                                  {consulta.zScorePerimetro?.toFixed(1) || "-"}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                onClick={() =>
-                                  navigate(
-                                    `/criancas/${id}/consulta/${consulta.id}`
-                                  )
-                                }
-                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
-                                title="Editar"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  handleDeleteConsulta(consulta.id)
-                                }
-                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
-                                title="Excluir"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </td>
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Data/Hora
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Peso (kg)
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Estatura (cm)
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            PC (cm)
+                          </th>
+                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                            Z-Scores
+                          </th>
+                          <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                            Ações
+                          </th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {consultas.map((consulta) => (
+                          <tr key={consulta.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm">
+                              <div className="flex flex-col">
+                                <span>
+                                  {new Date(consulta.dataHora).toLocaleString(
+                                    "pt-BR",
+                                    {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  Idade:{" "}
+                                  {formatarIdadeSemanasDias(
+                                    consulta.dataHora,
+                                    crianca.dataNascimento
+                                  )}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm font-medium">
+                              {consulta.pesoKg.toFixed(3)}
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              {consulta.estaturaCm.toFixed(1)}
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              {consulta.perimetroCefalicoCm.toFixed(1)}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center justify-center gap-3">
+                                <div
+                                  className="flex items-center gap-1"
+                                  title="Z-Score Peso"
+                                >
+                                  {getZScoreIcon(consulta.zScorePeso)}
+                                  <span
+                                    className={`text-xs font-semibold ${getZScoreColor(
+                                      consulta.zScorePeso
+                                    )}`}
+                                  >
+                                    {consulta.zScorePeso?.toFixed(1) || "-"}
+                                  </span>
+                                </div>
+                                <div
+                                  className="flex items-center gap-1"
+                                  title="Z-Score Altura"
+                                >
+                                  {getZScoreIcon(consulta.zScoreAltura)}
+                                  <span
+                                    className={`text-xs font-semibold ${getZScoreColor(
+                                      consulta.zScoreAltura
+                                    )}`}
+                                  >
+                                    {consulta.zScoreAltura?.toFixed(1) || "-"}
+                                  </span>
+                                </div>
+                                <div
+                                  className="flex items-center gap-1"
+                                  title="Z-Score PC"
+                                >
+                                  {getZScoreIcon(consulta.zScorePerimetro)}
+                                  <span
+                                    className={`text-xs font-semibold ${getZScoreColor(
+                                      consulta.zScorePerimetro
+                                    )}`}
+                                  >
+                                    {consulta.zScorePerimetro?.toFixed(1) ||
+                                      "-"}
+                                  </span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  onClick={() =>
+                                    navigate(
+                                      `/criancas/${id}/consulta/${consulta.id}`
+                                    )
+                                  }
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                                  title="Editar"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() =>
+                                    handleDeleteConsulta(consulta.id)
+                                  }
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

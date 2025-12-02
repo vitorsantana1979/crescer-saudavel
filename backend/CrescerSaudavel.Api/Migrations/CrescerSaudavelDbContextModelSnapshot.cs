@@ -221,8 +221,23 @@ namespace CrescerSaudavel.Api.Migrations
                     b.Property<double>("FrequenciaHoras")
                         .HasColumnType("float");
 
+                    b.Property<double?>("MetaProteinaGKg")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Observacoes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("PesoReferenciaKg")
+                        .HasColumnType("float");
+
                     b.Property<Guid>("RecemNascidoId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<double?>("TaxaEnergeticaKcalKg")
+                        .HasColumnType("float");
+
+                    b.Property<string>("ViaAdministracao")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

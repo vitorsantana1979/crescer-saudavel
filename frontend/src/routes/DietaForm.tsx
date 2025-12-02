@@ -27,8 +27,19 @@ interface FormData {
   dataInicio: string;
   dataFim?: string;
   frequenciaHoras: number;
+  taxaEnergeticaKcalKg?: number;
+  metaProteinaGKg?: number;
+  pesoReferenciaKg?: number;
+  viaAdministracao?: string;
+  observacoes?: string;
   temDataFim: boolean;
   itens: DietaItem[];
+}
+
+interface RecemNascido {
+  id: string;
+  nome: string;
+  pesoNascimentoGr?: number;
 }
 
 export default function DietaForm() {
@@ -36,7 +47,8 @@ export default function DietaForm() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [alimentos, setAlimentos] = useState<Alimento[]>([]);
-  const [criancaNome, setCriancaNome] = useState("");
+  const [crianca, setCrianca] = useState<RecemNascido | null>(null);
+  const [pesoAtual, setPesoAtual] = useState<number | null>(null);
   const isEditing = !!dietaId;
 
   const {
@@ -51,6 +63,9 @@ export default function DietaForm() {
       recemNascidoId: criancaId,
       dataInicio: new Date().toISOString().split("T")[0],
       frequenciaHoras: 3,
+      taxaEnergeticaKcalKg: 120,
+      metaProteinaGKg: 3.0,
+      viaAdministracao: "Enteral",
       temDataFim: false,
       itens: [{ alimentoId: "", quantidade: 0 }],
     },
@@ -66,7 +81,7 @@ export default function DietaForm() {
 
   useEffect(() => {
     loadAlimentos();
-    loadCrianca();
+    loadCriancaAndLastDiet();
     if (isEditing) {
       loadDieta();
     }
@@ -81,10 +96,73 @@ export default function DietaForm() {
     }
   };
 
-  const loadCrianca = async () => {
+  const loadCriancaAndLastDiet = async () => {
     try {
-      const response = await api.get(`/recemnascido/${criancaId}`);
-      setCriancaNome(response.data.nome);
+      // Carregar dados da criança
+      const criancaResponse = await api.get(`/recemnascido/${criancaId}`);
+      setCrianca(criancaResponse.data);
+
+      // Carregar consultas para obter peso atual
+      try {
+        const consultasResponse = await api.get(`/consultas/crianca/${criancaId}`);
+        const consultas = consultasResponse.data;
+        if (consultas && consultas.length > 0) {
+          // Pegar a última consulta com peso
+          const ultimaConsulta = consultas
+            .filter((c: any) => c.pesoGr)
+            .sort((a: any, b: any) => new Date(b.dataConsulta).getTime() - new Date(a.dataConsulta).getTime())[0];
+          if (ultimaConsulta) {
+            setPesoAtual(ultimaConsulta.pesoGr / 1000); // Converter para kg
+            if (!isEditing) {
+              setValue("pesoReferenciaKg", ultimaConsulta.pesoGr / 1000);
+            }
+          }
+        }
+      } catch {
+        // Se não conseguir carregar consultas, usa peso de nascimento
+        if (criancaResponse.data.pesoNascimentoGr && !isEditing) {
+          setValue("pesoReferenciaKg", criancaResponse.data.pesoNascimentoGr / 1000);
+        }
+      }
+
+      // Se não estiver editando, carregar a última dieta para usar como base
+      if (!isEditing) {
+        try {
+          const dietasResponse = await api.get(`/dietas/crianca/${criancaId}`);
+          const dietas = dietasResponse.data;
+          if (dietas && dietas.length > 0) {
+            // Ordenar por data de início (mais recente primeiro)
+            const ultimaDieta = dietas.sort(
+              (a: any, b: any) => new Date(b.dataInicio).getTime() - new Date(a.dataInicio).getTime()
+            )[0];
+            
+            // Preencher campos com valores da última dieta
+            if (ultimaDieta.taxaEnergeticaKcalKg) {
+              setValue("taxaEnergeticaKcalKg", ultimaDieta.taxaEnergeticaKcalKg);
+            }
+            if (ultimaDieta.metaProteinaGKg) {
+              setValue("metaProteinaGKg", ultimaDieta.metaProteinaGKg);
+            }
+            if (ultimaDieta.viaAdministracao) {
+              setValue("viaAdministracao", ultimaDieta.viaAdministracao);
+            }
+            if (ultimaDieta.frequenciaHoras) {
+              setValue("frequenciaHoras", ultimaDieta.frequenciaHoras);
+            }
+            // Copiar itens da última dieta
+            if (ultimaDieta.itens && ultimaDieta.itens.length > 0) {
+              setValue("itens", ultimaDieta.itens.map((item: any) => ({
+                alimentoId: item.alimentoId,
+                quantidade: item.quantidade,
+                energiaTotalKcal: item.energiaTotalKcal,
+                proteinaTotalG: item.proteinaTotalG,
+              })));
+            }
+          }
+        } catch {
+          // Sem problema se não houver dietas anteriores
+        }
+      }
     } catch (error) {
       toast.error("Erro ao carregar dados da criança");
     }
@@ -96,6 +174,11 @@ export default function DietaForm() {
       const dieta = response.data;
       setValue("dataInicio", dieta.dataInicio.split("T")[0]);
       setValue("frequenciaHoras", dieta.frequenciaHoras || 3);
+      setValue("taxaEnergeticaKcalKg", dieta.taxaEnergeticaKcalKg);
+      setValue("metaProteinaGKg", dieta.metaProteinaGKg);
+      setValue("pesoReferenciaKg", dieta.pesoReferenciaKg);
+      setValue("viaAdministracao", dieta.viaAdministracao || "Enteral");
+      setValue("observacoes", dieta.observacoes);
 
       if (dieta.dataFim) {
         setValue("temDataFim", true);
@@ -144,6 +227,11 @@ export default function DietaForm() {
             ? new Date(data.dataFim).toISOString()
             : null,
         frequenciaHoras: data.frequenciaHoras,
+        taxaEnergeticaKcalKg: data.taxaEnergeticaKcalKg || null,
+        metaProteinaGKg: data.metaProteinaGKg || null,
+        pesoReferenciaKg: data.pesoReferenciaKg || null,
+        viaAdministracao: data.viaAdministracao || null,
+        observacoes: data.observacoes || null,
         itens: data.itens,
       };
 
@@ -175,7 +263,7 @@ export default function DietaForm() {
     <div>
       <PageHeader
         title={isEditing ? "Editar Dietoterapia" : "Nova Dietoterapia"}
-        subtitle={`Paciente: ${criancaNome}`}
+        subtitle={`Paciente: ${crianca?.nome || ''}`}
         icon={Apple}
       />
 
@@ -272,6 +360,144 @@ export default function DietaForm() {
                   </p>
                 )}
               </div>
+            </div>
+          </div>
+
+          {/* Parâmetros Nutricionais */}
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-amber-900 mb-4">Parâmetros Nutricionais</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Taxa Energética */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Taxa Energética *
+                </label>
+                <select
+                  {...register("taxaEnergeticaKcalKg", {
+                    required: "Taxa energética é obrigatória",
+                    valueAsNumber: true,
+                  })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                >
+                  <option value="">Selecione...</option>
+                  <option value={100}>100 kcal/kg/dia</option>
+                  <option value={110}>110 kcal/kg/dia</option>
+                  <option value={120}>120 kcal/kg/dia</option>
+                  <option value={130}>130 kcal/kg/dia</option>
+                  <option value={140}>140 kcal/kg/dia</option>
+                  <option value={150}>150 kcal/kg/dia</option>
+                </select>
+                {errors.taxaEnergeticaKcalKg && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.taxaEnergeticaKcalKg.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Meta Proteica */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Meta Proteica *
+                </label>
+                <select
+                  {...register("metaProteinaGKg", {
+                    required: "Meta proteica é obrigatória",
+                    valueAsNumber: true,
+                  })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                >
+                  <option value="">Selecione...</option>
+                  <option value={2.0}>2,0 g/kg/dia</option>
+                  <option value={2.5}>2,5 g/kg/dia</option>
+                  <option value={3.0}>3,0 g/kg/dia</option>
+                  <option value={3.5}>3,5 g/kg/dia</option>
+                  <option value={4.0}>4,0 g/kg/dia</option>
+                  <option value={4.5}>4,5 g/kg/dia</option>
+                </select>
+                {errors.metaProteinaGKg && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.metaProteinaGKg.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Peso de Referência */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Peso Referência (kg) *
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  {...register("pesoReferenciaKg", {
+                    required: "Peso de referência é obrigatório",
+                    valueAsNumber: true,
+                    min: { value: 0.1, message: "Peso mínimo 0,1 kg" },
+                  })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="Ex: 1.500"
+                />
+                {errors.pesoReferenciaKg && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.pesoReferenciaKg.message}
+                  </p>
+                )}
+                {pesoAtual && (
+                  <p className="text-xs text-amber-700 mt-1">
+                    Peso atual: {pesoAtual.toFixed(3).replace('.', ',')} kg
+                  </p>
+                )}
+              </div>
+
+              {/* Via de Administração */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Via de Administração
+                </label>
+                <select
+                  {...register("viaAdministracao")}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                >
+                  <option value="Oral">Oral</option>
+                  <option value="Enteral">Enteral (Sonda)</option>
+                  <option value="NPT">NPT (Nutrição Parenteral)</option>
+                  <option value="Mista">Mista</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Cálculo das Necessidades */}
+            {watch("taxaEnergeticaKcalKg") && watch("pesoReferenciaKg") && (
+              <div className="mt-4 pt-4 border-t border-amber-200">
+                <h4 className="text-sm font-semibold text-amber-800 mb-2">Necessidades Calculadas</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/50 rounded-lg p-3">
+                    <p className="text-xs text-amber-600">Necessidade Energética</p>
+                    <p className="text-lg font-bold text-amber-900">
+                      {((watch("taxaEnergeticaKcalKg") || 0) * (watch("pesoReferenciaKg") || 0)).toFixed(1).replace('.', ',')} kcal/dia
+                    </p>
+                  </div>
+                  <div className="bg-white/50 rounded-lg p-3">
+                    <p className="text-xs text-amber-600">Necessidade Proteica</p>
+                    <p className="text-lg font-bold text-amber-900">
+                      {((watch("metaProteinaGKg") || 0) * (watch("pesoReferenciaKg") || 0)).toFixed(2).replace('.', ',')} g/dia
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Observações */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Observações
+              </label>
+              <textarea
+                {...register("observacoes")}
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="Observações sobre a dietoterapia..."
+              />
             </div>
           </div>
 
@@ -390,20 +616,54 @@ export default function DietaForm() {
           {/* Totais */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <h3 className="text-lg font-semibold text-green-900 mb-2">
-              Totais Diários
+              Totais por Mamada e Diários
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-sm text-green-700">Energia Total</p>
-                <p className="text-2xl font-bold text-green-900">
-                  {totais.energia.toFixed(1)} kcal
+                <p className="text-sm text-green-700">Energia por Mamada</p>
+                <p className="text-xl font-bold text-green-900">
+                  {totais.energia.toFixed(1).replace('.', ',')} kcal
                 </p>
               </div>
               <div>
-                <p className="text-sm text-green-700">Proteína Total</p>
-                <p className="text-2xl font-bold text-green-900">
-                  {totais.proteina.toFixed(1)} g
+                <p className="text-sm text-green-700">Proteína por Mamada</p>
+                <p className="text-xl font-bold text-green-900">
+                  {totais.proteina.toFixed(2).replace('.', ',')} g
                 </p>
+              </div>
+              <div>
+                <p className="text-sm text-green-700">Energia Diária</p>
+                <p className="text-xl font-bold text-green-900">
+                  {(totais.energia * (24 / (watch("frequenciaHoras") || 3))).toFixed(1).replace('.', ',')} kcal
+                </p>
+                {watch("taxaEnergeticaKcalKg") && watch("pesoReferenciaKg") && (
+                  <p className={`text-xs font-semibold ${
+                    (totais.energia * (24 / (watch("frequenciaHoras") || 3))) >= 
+                    ((watch("taxaEnergeticaKcalKg") || 0) * (watch("pesoReferenciaKg") || 0) * 0.9)
+                      ? 'text-green-600' 
+                      : 'text-amber-600'
+                  }`}>
+                    {(((totais.energia * (24 / (watch("frequenciaHoras") || 3))) / 
+                      ((watch("taxaEnergeticaKcalKg") || 1) * (watch("pesoReferenciaKg") || 1))) * 100).toFixed(0)}% da necessidade
+                  </p>
+                )}
+              </div>
+              <div>
+                <p className="text-sm text-green-700">Proteína Diária</p>
+                <p className="text-xl font-bold text-green-900">
+                  {(totais.proteina * (24 / (watch("frequenciaHoras") || 3))).toFixed(2).replace('.', ',')} g
+                </p>
+                {watch("metaProteinaGKg") && watch("pesoReferenciaKg") && (
+                  <p className={`text-xs font-semibold ${
+                    (totais.proteina * (24 / (watch("frequenciaHoras") || 3))) >= 
+                    ((watch("metaProteinaGKg") || 0) * (watch("pesoReferenciaKg") || 0) * 0.9)
+                      ? 'text-green-600' 
+                      : 'text-amber-600'
+                  }`}>
+                    {(((totais.proteina * (24 / (watch("frequenciaHoras") || 3))) / 
+                      ((watch("metaProteinaGKg") || 1) * (watch("pesoReferenciaKg") || 1))) * 100).toFixed(0)}% da necessidade
+                  </p>
+                )}
               </div>
             </div>
           </div>

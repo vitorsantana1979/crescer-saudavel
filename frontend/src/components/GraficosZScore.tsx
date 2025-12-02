@@ -25,11 +25,11 @@ interface CurvaReferencia {
 }
 
 interface ConsultaItem {
-  id: string;
-  dataHora: string;
-  pesoKg: number;
-  estaturaCm: number;
-  perimetroCefalicoCm: number;
+    id: string;
+    dataHora: string;
+    pesoKg: number;
+    estaturaCm: number;
+    perimetroCefalicoCm: number;
   zScorePeso?: number;
   zScoreAltura?: number;
   zScorePerimetro?: number;
@@ -45,6 +45,8 @@ interface DietaItem {
     nome: string;
     categoria: string;
     unidade: string;
+    energiaKcalPor100?: number;
+    proteinaGPor100?: number;
   };
 }
 
@@ -53,6 +55,11 @@ interface DietaAtual {
   dataInicio: string;
   dataFim?: string;
   frequenciaHoras: number;
+  taxaEnergeticaKcalKg?: number;
+  metaProteinaGKg?: number;
+  pesoReferenciaKg?: number;
+  viaAdministracao?: string;
+  observacoes?: string;
   itens: DietaItem[];
 }
 
@@ -195,33 +202,87 @@ export default function GraficosZScore({
 
   // Calcular totais de energia e proteína da dieta
   const totaisDieta = useMemo(() => {
-    if (!dietaAtual || !dietaAtual.itens || dietaAtual.itens.length === 0) {
+    // Permitir mostrar mesmo sem itens, se tiver taxa/meta definida
+    if (!dietaAtual) {
       return null;
     }
     
-    const totalEnergia = dietaAtual.itens.reduce((acc, item) => acc + (item.energiaTotalKcal || 0), 0);
-    const totalProteina = dietaAtual.itens.reduce((acc, item) => acc + (item.proteinaTotalG || 0), 0);
+    // Peso de referência: usa o definido na dieta, ou peso atual, ou peso nascimento
+    const pesoKg = dietaAtual.pesoReferenciaKg 
+      || (pesoAtualInfo ? pesoAtualInfo.pesoGr / 1000 : null) 
+      || ((pesoNascimentoGr || 0) / 1000);
+    
+    // Necessidades definidas pelo profissional (taxa × peso)
+    const necessidadeEnergetica = (dietaAtual.taxaEnergeticaKcalKg && pesoKg) 
+      ? dietaAtual.taxaEnergeticaKcalKg * pesoKg 
+      : null;
+    const necessidadeProteica = (dietaAtual.metaProteinaGKg && pesoKg) 
+      ? dietaAtual.metaProteinaGKg * pesoKg 
+      : null;
+    
+    // Calcular energia e proteína fornecidas pelos itens da dieta
+    const totalEnergiaPorMamada = dietaAtual.itens?.reduce((acc, item) => {
+      if (item.energiaTotalKcal && item.energiaTotalKcal > 0) {
+        return acc + item.energiaTotalKcal;
+      }
+      if (item.alimento?.energiaKcalPor100 && item.quantidade) {
+        return acc + (item.quantidade * item.alimento.energiaKcalPor100 / 100);
+      }
+      return acc;
+    }, 0) || 0;
+    
+    const totalProteinaPorMamada = dietaAtual.itens?.reduce((acc, item) => {
+      if (item.proteinaTotalG && item.proteinaTotalG > 0) {
+        return acc + item.proteinaTotalG;
+      }
+      if (item.alimento?.proteinaGPor100 && item.quantidade) {
+        return acc + (item.quantidade * item.alimento.proteinaGPor100 / 100);
+      }
+      return acc;
+    }, 0) || 0;
     
     // Frequência por dia (24h / frequencia em horas)
     const frequenciaDia = 24 / dietaAtual.frequenciaHoras;
     
-    // Total diário
-    const energiaDiaria = totalEnergia * frequenciaDia;
-    const proteinaDiaria = totalProteina * frequenciaDia;
+    // Total diário fornecido pela dieta
+    const energiaDiariaFornecida = totalEnergiaPorMamada * frequenciaDia;
+    const proteinaDiariaFornecida = totalProteinaPorMamada * frequenciaDia;
     
-    // Por kg (usando peso atual se disponível, senão peso nascimento)
-    const pesoKg = pesoAtualInfo ? pesoAtualInfo.pesoGr / 1000 : (pesoNascimentoGr || 0) / 1000;
-    const energiaKgDia = pesoKg > 0 ? energiaDiaria / pesoKg : 0;
-    const proteinaKgDia = pesoKg > 0 ? proteinaDiaria / pesoKg : 0;
+    // Por kg fornecido
+    const energiaKgDiaFornecida = pesoKg > 0 ? energiaDiariaFornecida / pesoKg : 0;
+    const proteinaKgDiaFornecida = pesoKg > 0 ? proteinaDiariaFornecida / pesoKg : 0;
+    
+    // Percentuais de adequação (fornecido / necessidade × 100)
+    const adequacaoEnergia = necessidadeEnergetica && necessidadeEnergetica > 0 
+      ? (energiaDiariaFornecida / necessidadeEnergetica) * 100 
+      : null;
+    const adequacaoProteina = necessidadeProteica && necessidadeProteica > 0 
+      ? (proteinaDiariaFornecida / necessidadeProteica) * 100 
+      : null;
     
     return {
-      energiaPorMamada: totalEnergia,
-      proteinaPorMamada: totalProteina,
-      energiaDiaria,
-      proteinaDiaria,
-      energiaKgDia,
-      proteinaKgDia,
+      // Parâmetros definidos pelo profissional
+      taxaEnergetica: dietaAtual.taxaEnergeticaKcalKg,
+      metaProteica: dietaAtual.metaProteinaGKg,
+      pesoReferencia: pesoKg,
+      viaAdministracao: dietaAtual.viaAdministracao,
+      
+      // Necessidades calculadas (taxa × peso)
+      necessidadeEnergetica,
+      necessidadeProteica,
+      
+      // Valores fornecidos pela dieta
+      energiaPorMamada: totalEnergiaPorMamada,
+      proteinaPorMamada: totalProteinaPorMamada,
+      energiaDiaria: energiaDiariaFornecida,
+      proteinaDiaria: proteinaDiariaFornecida,
+      energiaKgDia: energiaKgDiaFornecida,
+      proteinaKgDia: proteinaKgDiaFornecida,
       frequenciaDia,
+      
+      // Adequação (%)
+      adequacaoEnergia,
+      adequacaoProteina,
     };
   }, [dietaAtual, pesoAtualInfo, pesoNascimentoGr]);
 
@@ -1122,8 +1183,8 @@ export default function GraficosZScore({
               <span className="text-xs text-gray-500 uppercase tracking-wide">Sexo</span>
               <p className="text-sm font-semibold text-gray-900">
                 {sexo === "M" ? "Masculino" : "Feminino"}
-              </p>
-            </div>
+            </p>
+          </div>
             
             {/* Peso Nascimento */}
             {pesoNascimentoGr && (
@@ -1132,7 +1193,7 @@ export default function GraficosZScore({
                 <p className="text-sm font-semibold text-gray-900">
                   {pesoNascimentoGr.toLocaleString("pt-BR")} g
                 </p>
-              </div>
+          </div>
             )}
             
             {/* Peso Atual */}
@@ -1143,7 +1204,7 @@ export default function GraficosZScore({
                   {Math.round(pesoAtualInfo.pesoGr).toLocaleString("pt-BR")} g
                   <span className={`ml-2 text-xs font-bold ${pesoAtualInfo.diferenca >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     ({pesoAtualInfo.diferenca >= 0 ? '+' : ''}{Math.round(pesoAtualInfo.diferenca)} g)
-                  </span>
+                </span>
                 </p>
               </div>
             )}
@@ -1154,7 +1215,7 @@ export default function GraficosZScore({
               <p className="text-sm font-semibold text-gray-900">
                 {idadeGestacionalSemanas} sem{idadeGestacionalDias ? ` e ${idadeGestacionalDias} dia${idadeGestacionalDias > 1 ? 's' : ''}` : ''}
               </p>
-            </div>
+                </div>
             
             {/* IGC Atual */}
             {ehPretermo && calcularIGCAtual && (
@@ -1214,9 +1275,9 @@ export default function GraficosZScore({
               </div>
             )}
           </div>
-        </div>
-      </div>
-
+              </div>
+            </div>
+            
       {/* Seção 2: CURVAS DE CRESCIMENTO */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div 
@@ -1230,7 +1291,7 @@ export default function GraficosZScore({
             {ehPretermo ? "INTERGROWTH-21st" : "WHO Child Growth Standards"}
             {ehPretermo && <span className="ml-2 text-orange-600">(Pré-termo - Idade corrigida)</span>}
           </p>
-        </div>
+            </div>
         
         <div className="p-6">
           {/* Dados de nascimento resumidos */}
@@ -1241,7 +1302,7 @@ export default function GraficosZScore({
                 <span className="text-sm font-bold" style={{ color: cores.primaria }}>
                   {(pesoNascimentoGr / 1000).toFixed(3).replace('.', ',')} kg / {idadeGestacionalSemanas}S {idadeGestacionalDias || 0}D
                 </span>
-              </div>
+          </div>
             )}
             {comprimentoCm && (
               <div className="flex items-center gap-2">
@@ -1259,8 +1320,8 @@ export default function GraficosZScore({
                 </span>
               </div>
             )}
-          </div>
-          <div className="flex flex-col lg:flex-row gap-6" ref={areaGraficoRef}>
+        </div>
+        <div className="flex flex-col lg:flex-row gap-6" ref={areaGraficoRef}>
           <div className="flex-1">
             <div
               className="mx-auto rounded-lg overflow-hidden relative"
@@ -1735,7 +1796,7 @@ export default function GraficosZScore({
                 </button>
               )}
             </div>
-          </div>
+      </div>
           
           {/* Slider de Início */}
           <div className="flex items-center gap-3">
@@ -1924,43 +1985,109 @@ export default function GraficosZScore({
       </div>
 
       {/* Seção 3: NECESSIDADES NUTRICIONAIS E DIETOTERAPIA */}
-      {dietaAtual && totaisDieta && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div 
-            className="px-6 py-4 border-b-2"
-            style={{ backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }}
-          >
-            <h3 className="text-lg font-bold text-amber-800">NECESSIDADES NUTRICIONAIS</h3>
-          </div>
-          
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Energia Diária */}
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <span className="text-xs text-blue-600 uppercase tracking-wide font-semibold">Energia Diária</span>
-                <div className="mt-2">
-                  <p className="text-2xl font-bold text-blue-800">
-                    {totaisDieta.energiaDiaria.toFixed(2).replace('.', ',')} kcal/dia
-                  </p>
-                  <p className="text-sm text-blue-600 mt-1">
-                    {totaisDieta.energiaKgDia.toFixed(1).replace('.', ',')} kcal/kg/dia
-                  </p>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div 
+          className="px-6 py-4 border-b-2"
+          style={{ backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }}
+        >
+          <h3 className="text-lg font-bold text-amber-800">NECESSIDADES NUTRICIONAIS</h3>
+        </div>
+        
+        <div className="p-6">
+          {dietaAtual && totaisDieta ? (
+            <>
+              {/* Parâmetros definidos pelo profissional */}
+              {(totaisDieta.taxaEnergetica || totaisDieta.metaProteica) && (
+                <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                  <h4 className="text-sm font-bold text-amber-800 mb-3">Parâmetros Nutricionais (Definidos pelo Profissional)</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {totaisDieta.taxaEnergetica && (
+                      <div>
+                        <span className="text-xs text-amber-600">Taxa Energética</span>
+                        <p className="text-sm font-bold text-amber-900">{totaisDieta.taxaEnergetica} kcal/kg/dia</p>
+                      </div>
+                    )}
+                    {totaisDieta.metaProteica && (
+                      <div>
+                        <span className="text-xs text-amber-600">Meta Proteica</span>
+                        <p className="text-sm font-bold text-amber-900">{totaisDieta.metaProteica} g/kg/dia</p>
+                      </div>
+                    )}
+                    {totaisDieta.pesoReferencia && (
+                      <div>
+                        <span className="text-xs text-amber-600">Peso Referência</span>
+                        <p className="text-sm font-bold text-amber-900">{totaisDieta.pesoReferencia.toFixed(3).replace('.', ',')} kg</p>
+                      </div>
+                    )}
+                    {totaisDieta.viaAdministracao && (
+                      <div>
+                        <span className="text-xs text-amber-600">Via</span>
+                        <p className="text-sm font-bold text-amber-900">{totaisDieta.viaAdministracao}</p>
+                      </div>
+                    )}
+                  </div>
+                  {/* Necessidades calculadas */}
+                  {(totaisDieta.necessidadeEnergetica || totaisDieta.necessidadeProteica) && (
+                    <div className="mt-3 pt-3 border-t border-amber-200 grid grid-cols-2 gap-4">
+                      {totaisDieta.necessidadeEnergetica && (
+                        <div>
+                          <span className="text-xs text-amber-600">Necessidade Energética</span>
+                          <p className="text-lg font-bold text-amber-900">
+                            {totaisDieta.necessidadeEnergetica.toFixed(1).replace('.', ',')} kcal/dia
+                          </p>
+                        </div>
+                      )}
+                      {totaisDieta.necessidadeProteica && (
+                        <div>
+                          <span className="text-xs text-amber-600">Necessidade Proteica</span>
+                          <p className="text-lg font-bold text-amber-900">
+                            {totaisDieta.necessidadeProteica.toFixed(2).replace('.', ',')} g/dia
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Fornecido pela Dieta */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Energia Diária Fornecida */}
+                <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                  <span className="text-xs text-blue-600 uppercase tracking-wide font-semibold">Energia Fornecida</span>
+                  <div className="mt-2">
+                    <p className="text-2xl font-bold text-blue-800">
+                      {totaisDieta.energiaDiaria.toFixed(2).replace('.', ',')} kcal/dia
+                    </p>
+                    <p className="text-sm text-blue-600 mt-1">
+                      {totaisDieta.energiaKgDia.toFixed(1).replace('.', ',')} kcal/kg/dia
+                    </p>
+                    {totaisDieta.adequacaoEnergia !== null && (
+                      <p className={`text-sm font-bold mt-2 ${totaisDieta.adequacaoEnergia >= 90 ? 'text-green-600' : totaisDieta.adequacaoEnergia >= 70 ? 'text-amber-600' : 'text-red-600'}`}>
+                        Adequação: {totaisDieta.adequacaoEnergia.toFixed(1).replace('.', ',')}%
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Proteína Diária Fornecida */}
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <span className="text-xs text-green-600 uppercase tracking-wide font-semibold">Proteína Fornecida</span>
+                  <div className="mt-2">
+                    <p className="text-2xl font-bold text-green-800">
+                      {totaisDieta.proteinaDiaria.toFixed(2).replace('.', ',')} g/dia
+                    </p>
+                    <p className="text-sm text-green-600 mt-1">
+                      {totaisDieta.proteinaKgDia.toFixed(2).replace('.', ',')} g/kg/dia
+                    </p>
+                    {totaisDieta.adequacaoProteina !== null && (
+                      <p className={`text-sm font-bold mt-2 ${totaisDieta.adequacaoProteina >= 90 ? 'text-green-600' : totaisDieta.adequacaoProteina >= 70 ? 'text-amber-600' : 'text-red-600'}`}>
+                        Adequação: {totaisDieta.adequacaoProteina.toFixed(1).replace('.', ',')}%
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-              
-              {/* Proteína Diária */}
-              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                <span className="text-xs text-green-600 uppercase tracking-wide font-semibold">Proteína Diária</span>
-                <div className="mt-2">
-                  <p className="text-2xl font-bold text-green-800">
-                    {totaisDieta.proteinaDiaria.toFixed(2).replace('.', ',')} g/dia
-                  </p>
-                  <p className="text-sm text-green-600 mt-1">
-                    {totaisDieta.proteinaKgDia.toFixed(2).replace('.', ',')} g/kg/dia
-                  </p>
-                </div>
-              </div>
-            </div>
             
             {/* Detalhes da Dietoterapia */}
             <div className="mt-6 pt-6 border-t border-gray-200">
@@ -1969,7 +2096,7 @@ export default function GraficosZScore({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div>
                   <span className="text-xs text-gray-500">Via</span>
-                  <p className="text-sm font-semibold text-gray-900">Enteral</p>
+                  <p className="text-sm font-semibold text-gray-900">{totaisDieta.viaAdministracao || 'Enteral'}</p>
                 </div>
                 <div>
                   <span className="text-xs text-gray-500">Frequência</span>
@@ -1992,7 +2119,7 @@ export default function GraficosZScore({
               </div>
               
               {/* Itens da dieta */}
-              {dietaAtual.itens.length > 0 && (
+              {dietaAtual.itens && dietaAtual.itens.length > 0 && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <span className="text-xs text-gray-500 uppercase tracking-wide">Composição</span>
                   <div className="mt-2 space-y-2">
@@ -2072,9 +2199,20 @@ export default function GraficosZScore({
                 </div>
               </div>
             </div>
-          </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <div className="text-gray-400 mb-3">
+                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <p className="text-gray-500 font-medium">Nenhuma dietoterapia cadastrada</p>
+              <p className="text-sm text-gray-400 mt-1">Cadastre uma dieta para visualizar as necessidades nutricionais</p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
       </div>
       {/* Fim do Card Completo para exportação */}
 

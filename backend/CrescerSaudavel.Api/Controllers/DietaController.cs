@@ -95,6 +95,11 @@ public class DietaController : ControllerBase
             DataInicio = request.DataInicio,
             DataFim = request.DataFim,
             FrequenciaHoras = request.FrequenciaHoras,
+            TaxaEnergeticaKcalKg = request.TaxaEnergeticaKcalKg,
+            MetaProteinaGKg = request.MetaProteinaGKg,
+            PesoReferenciaKg = request.PesoReferenciaKg,
+            ViaAdministracao = request.ViaAdministracao,
+            Observacoes = request.Observacoes,
             Itens = request.Itens.Select(i => new DietaItem
             {
                 AlimentoId = i.AlimentoId,
@@ -134,6 +139,11 @@ public class DietaController : ControllerBase
         dieta.DataInicio = request.DataInicio;
         dieta.DataFim = request.DataFim;
         dieta.FrequenciaHoras = request.FrequenciaHoras;
+        dieta.TaxaEnergeticaKcalKg = request.TaxaEnergeticaKcalKg;
+        dieta.MetaProteinaGKg = request.MetaProteinaGKg;
+        dieta.PesoReferenciaKg = request.PesoReferenciaKg;
+        dieta.ViaAdministracao = request.ViaAdministracao;
+        dieta.Observacoes = request.Observacoes;
 
         // Remove itens antigos
         _context.DietaItens.RemoveRange(dieta.Itens);
@@ -182,6 +192,11 @@ public record CreateDietaRequest(
     DateTime DataInicio,
     DateTime? DataFim,
     double FrequenciaHoras,
+    double? TaxaEnergeticaKcalKg,
+    double? MetaProteinaGKg,
+    double? PesoReferenciaKg,
+    string? ViaAdministracao,
+    string? Observacoes,
     List<DietaItemRequest> Itens
 );
 
@@ -189,6 +204,11 @@ public record UpdateDietaRequest(
     DateTime DataInicio,
     DateTime? DataFim,
     double FrequenciaHoras,
+    double? TaxaEnergeticaKcalKg,
+    double? MetaProteinaGKg,
+    double? PesoReferenciaKg,
+    string? ViaAdministracao,
+    string? Observacoes,
     List<DietaItemRequest> Itens
 );
 

@@ -12,12 +12,14 @@ import CriancaDetalhes from "./routes/CriancaDetalhes";
 import Pacientes from "./routes/Pacientes";
 import Alimentos from "./routes/Alimentos";
 import AlimentoForm from "./routes/AlimentoForm";
+import AlimentosAnalytics from "./routes/AlimentosAnalytics";
 import Profissionais from "./routes/Profissionais";
 import ProfissionalForm from "./routes/ProfissionalForm";
 import DietaForm from "./routes/DietaForm";
 import ConsultaForm from "./routes/ConsultaForm";
 import GruposSaude from "./routes/GruposSaude";
 import UnidadesSaude from "./routes/UnidadesSaude";
+import IAInsights from "./routes/IAInsights";
 import { AuthProvider } from "./contexts/AuthContext";
 import RequireAuth from "./components/RequireAuth";
 import "./styles/globals.css";
@@ -88,6 +90,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <RequireAuth>
               <Layout>
                 <CriancaDetalhes />
+              </Layout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/criancas/:id/ia-insights"
+          element={
+            <RequireAuth>
+              <Layout>
+                <IAInsights />
               </Layout>
             </RequireAuth>
           }
@@ -168,6 +180,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <RequireAuth>
               <Layout>
                 <AlimentoForm />
+              </Layout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/alimentos/analytics"
+          element={
+            <RequireAuth>
+              <Layout>
+                <AlimentosAnalytics />
               </Layout>
             </RequireAuth>
           }

@@ -147,6 +147,25 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<ZScoreService>();
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+
+// Registrar HttpClient para MLService
+builder.Services.AddHttpClient<MLService>(client =>
+{
+    var baseUrl = builder.Configuration["MLService:BaseUrl"] ?? "http://ml-service:8000";
+    client.BaseAddress = new Uri(baseUrl);
+    var timeout = builder.Configuration.GetValue<int>("MLService:Timeout", 60);
+    client.Timeout = TimeSpan.FromSeconds(timeout);
+});
+
+// Registrar HttpClient para OpenAI
+builder.Services.AddHttpClient("OpenAI", client =>
+{
+    client.BaseAddress = new Uri("https://api.openai.com/");
+    client.Timeout = TimeSpan.FromSeconds(60);
+});
+
+// Registrar ChatService
+builder.Services.AddScoped<ChatService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ILocationService, LocationService>();
 

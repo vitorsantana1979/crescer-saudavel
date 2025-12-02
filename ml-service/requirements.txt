@@ -1,0 +1,30 @@
+# FastAPI e servidor
+fastapi==0.115.5
+uvicorn[standard]==0.34.0
+python-multipart==0.0.18
+
+# Conexão com banco de dados
+sqlalchemy==2.0.36
+pyodbc==5.2.0
+pymssql==2.3.1
+
+# Machine Learning
+scikit-learn==1.6.0
+xgboost==2.1.3
+pandas==2.2.3
+numpy==2.2.1
+
+# Validação e utilidades
+pydantic==2.10.3
+pydantic-settings==2.7.0
+python-dotenv==1.0.1
+
+# Monitoramento e logs
+python-json-logger==3.2.1
+
+# HTTP Client
+httpx==0.28.1
+
+# OpenAI para LLM (Fase 2)
+openai==1.57.4
+

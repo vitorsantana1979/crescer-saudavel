@@ -1,4 +1,24 @@
 services:
+  ml-service:
+    build:
+      context: ./ml-service
+    volumes:
+      - ./ml-service/app:/app/app
+      - ml-models:/models
+    environment:
+      - DATABASE_SERVER=sql.vsantana.com.br,1279
+      - DATABASE_NAME=crescer
+      - DATABASE_USER=crescer
+      - DATABASE_PASSWORD=QSSmFTgRS7B3rsdl
+      - DATABASE_DRIVER=ODBC Driver 18 for SQL Server
+      - DATABASE_TRUST_CERTIFICATE=True
+      - MODEL_PATH=/models
+      - CORS_ORIGINS=["http://localhost:5173","http://localhost:5174","http://localhost:5280"]
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+
   api:
     build:
       context: ./backend
@@ -9,10 +29,15 @@ services:
       - /src/obj
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://0.0.0.0:5280   # <— garante bind correto
+      - ASPNETCORE_URLS=http://0.0.0.0:5280
       - URLS=http://0.0.0.0:5280
+      - MLService__BaseUrl=http://ml-service:8000
     ports:
       - "5280:5280"
+    networks:
+      - app-network
+    depends_on:
+      - ml-service
 
   web:
     build:
@@ -23,5 +48,14 @@ services:
       - /app/node_modules
     ports:
       - "5174:5173"
+    networks:
+      - app-network
     depends_on:
       - api
+
+volumes:
+  ml-models:
+
+networks:
+  app-network:
+    driver: bridge
