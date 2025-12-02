@@ -11,6 +11,7 @@ import {
   Users,
   Building2,
   Building,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
@@ -69,6 +70,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       { path: "/pacientes", label: "Prontuários", icon: Users },
       { path: "/profissionais", label: "Profissionais", icon: UserPlus },
       { path: "/alimentos", label: "Alimentos", icon: Apple },
+      { path: "/alimentos/analytics", label: "Analytics Alimentos", icon: BarChart3 },
     ];
 
     if (roles.includes("AdminGrupo") || roles.includes("SuperAdmin")) {
@@ -129,7 +131,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 p-4 space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+            const isActive = location.pathname === item.path || 
+                             (item.path !== "/dashboard" && location.pathname.startsWith(item.path));
 
             return (
               <Link
@@ -154,8 +157,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Header */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
           <h2 className="text-lg font-semibold text-gray-800">
-            {menuItems.find((item) => item.path === location.pathname)?.label ||
-              "Dashboard"}
+            {menuItems.find((item) => 
+              item.path === location.pathname || 
+              (item.path !== "/dashboard" && location.pathname.startsWith(item.path))
+            )?.label || "Dashboard"}
           </h2>
 
           {/* User Menu */}
