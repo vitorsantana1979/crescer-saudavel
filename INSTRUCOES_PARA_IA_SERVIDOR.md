@@ -3,8 +3,9 @@
 ## 📋 CONTEXTO
 
 O sistema Crescer Saudável tem 3 serviços Docker:
+
 1. **Backend C# (.NET 8)** - API REST na porta 5280
-2. **ML Service Python (FastAPI)** - Serviço de Machine Learning na porta 8000  
+2. **ML Service Python (FastAPI)** - Serviço de Machine Learning na porta 8000
 3. **Frontend React (Vite)** - SPA na porta 80
 
 **Domínio**: cs.quasarai.co  
@@ -15,11 +16,13 @@ O sistema Crescer Saudável tem 3 serviços Docker:
 ## 🚨 PROBLEMAS ATUAIS
 
 ### Problema 1: API retorna 404 para `/api/analytics/*`
+
 - **Sintoma**: `GET /api/analytics/predict-growth/{id}` retorna 404
 - **Causa**: Backend não foi atualizado com novos controllers
 - **Solução**: Rebuild dos containers Docker
 
 ### Problema 2: SPA retorna 404 ao recarregar página (F5)
+
 - **Sintoma**: Ao recarregar `/ia-insights/{id}` → 404
 - **Causa**: Caddy não está configurado para SPA routing
 - **Solução**: Configurar Caddy para fallback no index.html
@@ -55,11 +58,13 @@ git pull origin main
 ```
 
 **IMPORTANTE**: Verificar se o código foi atualizado:
+
 ```bash
 git log --oneline -5
 ```
 
 Deve conter commits recentes como:
+
 - "feat: Chat IA com busca por nome e formato tools OpenAI"
 - "feat: Configuração Docker Compose para produção"
 
@@ -70,6 +75,7 @@ cat .env | grep -E "OpenAI|DATABASE"
 ```
 
 **Deve conter**:
+
 ```env
 DATABASE_SERVER=sql.vsantana.com.br:1279
 DATABASE_NAME=crescer
@@ -132,6 +138,7 @@ docker-compose -f docker-compose.production.yml logs | grep -i error
 ## ✅ SOLUÇÃO 2: CONFIGURAR CADDY PARA SPA ROUTING
 
 ### Problema
+
 Quando o usuário acessa `/ia-insights/{id}` e aperta F5, o Caddy tenta buscar esse arquivo no servidor e retorna 404.
 
 ### Solução: Fallback para index.html
@@ -166,10 +173,10 @@ cs.quasarai.co {
     handle {
         # Tentar servir arquivo estático primeiro
         root * /caminho/do/frontend/dist
-        
+
         # Se não existir, retornar index.html (SPA routing)
         try_files {path} /index.html
-        
+
         file_server
     }
 
@@ -420,4 +427,3 @@ journalctl -u caddy --since "5 minutes ago"
 **Data**: 2025-12-03  
 **Versão**: 1.0  
 **Sistema**: Crescer Saudável - Módulo IA/ML
-
