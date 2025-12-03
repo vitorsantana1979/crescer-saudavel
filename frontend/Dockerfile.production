@@ -1,0 +1,80 @@
+# ============================================
+# Multi-stage build para produção otimizada
+# ============================================
+
+# Stage 1: Build do React/Vite
+FROM node:18-alpine AS build
+
+WORKDIR /app
+
+# Copiar package files
+COPY package*.json ./
+
+# Instalar dependências
+RUN npm ci --only=production
+
+# Copiar código fonte
+COPY . .
+
+# Build do projeto (gera /app/dist)
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+RUN npm run build
+
+# ============================================
+# Stage 2: Nginx para servir SPA
+# ============================================
+
+FROM nginx:alpine
+
+# Copiar build do React
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Configurar Nginx para SPA routing
+RUN echo 'server { \
+    listen 80; \
+    server_name _; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    \
+    # SPA routing - fallback para index.html \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+    \
+    # Cache para assets estáticos \
+    location ~* \\.(?:css|js|jpg|jpeg|gif|png|svg|ico|woff|woff2|ttf|eot)$ { \
+        expires 1y; \
+        add_header Cache-Control "public, immutable"; \
+    } \
+    \
+    # API proxy (opcional - Caddy já faz isso) \
+    # location /api/ { \
+    #     proxy_pass http://backend:5280; \
+    #     proxy_set_header Host $host; \
+    #     proxy_set_header X-Real-IP $remote_addr; \
+    # } \
+    \
+    # Segurança \
+    add_header X-Frame-Options "SAMEORIGIN" always; \
+    add_header X-Content-Type-Options "nosniff" always; \
+    add_header X-XSS-Protection "1; mode=block" always; \
+    \
+    # Desabilitar listagem de diretórios \
+    autoindex off; \
+    \
+    # Logs \
+    access_log /var/log/nginx/access.log; \
+    error_log /var/log/nginx/error.log warn; \
+}' > /etc/nginx/conf.d/default.conf
+
+# Expor porta 80
+EXPOSE 80
+
+# Healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --quiet --tries=1 --spider http://localhost/ || exit 1
+
+# Iniciar Nginx
+CMD ["nginx", "-g", "daemon off;"]
+

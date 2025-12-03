@@ -1,0 +1,107 @@
+# ============================================
+# Caddyfile para Produção - Crescer Saudável
+# ============================================
+# Este arquivo deve estar em /etc/caddy/Caddyfile no servidor
+
+cs.quasarai.co {
+    # ============================================
+    # LOGS
+    # ============================================
+    log {
+        output file /var/log/caddy/crescer-saudavel.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+        format json
+        level INFO
+    }
+
+    # ============================================
+    # API BACKEND (C# .NET)
+    # ============================================
+    handle /api/* {
+        reverse_proxy localhost:5280 {
+            # Headers importantes para o backend
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+            
+            # Timeout aumentado para ML predictions
+            transport http {
+                read_timeout 60s
+                write_timeout 60s
+            }
+        }
+    }
+
+    # ============================================
+    # FRONTEND SPA (React + Vite)
+    # ============================================
+    # O Nginx no container já faz o try_files interno
+    # Caddy apenas faz proxy reverso
+    handle {
+        reverse_proxy localhost:80 {
+            header_up Host {host}
+            header_up X-Real-IP {remote}
+            header_up X-Forwarded-For {remote}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # ============================================
+    # HEADERS DE SEGURANÇA
+    # ============================================
+    header {
+        # Proteção contra clickjacking
+        X-Frame-Options "SAMEORIGIN"
+        
+        # Proteção contra MIME type sniffing
+        X-Content-Type-Options "nosniff"
+        
+        # Proteção XSS
+        X-XSS-Protection "1; mode=block"
+        
+        # Política de referrer
+        Referrer-Policy "strict-origin-when-cross-origin"
+        
+        # CSP (Content Security Policy) - ajustar conforme necessário
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+        
+        # Remover header Server
+        -Server
+    }
+
+    # ============================================
+    # COMPRESSÃO
+    # ============================================
+    encode {
+        gzip 6
+        zstd
+        match {
+            header Content-Type application/json*
+            header Content-Type application/javascript*
+            header Content-Type text/*
+        }
+    }
+
+    # ============================================
+    # RATE LIMITING (OPCIONAL)
+    # ============================================
+    # Descomentar se quiser limitar requisições
+    # rate_limit {
+    #     zone static_zone {
+    #         key {remote}
+    #         events 100
+    #         window 1m
+    #     }
+    # }
+}
+
+# ============================================
+# REDIRECT HTTP → HTTPS (se necessário)
+# ============================================
+# http://cs.quasarai.co {
+#     redir https://{host}{uri} permanent
+# }
+
