@@ -5,10 +5,11 @@ namespace CrescerSaudavel.Api.Models.ML;
 /// </summary>
 public class ChatMessage
 {
-    public string Role { get; set; } = "user"; // user, assistant, system, function
+    public string Role { get; set; } = "user"; // user, assistant, system, tool
     public string Content { get; set; } = string.Empty;
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     public List<FunctionCall>? FunctionCalls { get; set; }
+    public string? ToolCallId { get; set; } // ID da chamada de tool (para respostas)
 }
 
 /// <summary>

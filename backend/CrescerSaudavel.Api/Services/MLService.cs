@@ -17,7 +17,7 @@ public class MLService
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNamingPolicy = null, // Não converter - manter snake_case para Python
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 

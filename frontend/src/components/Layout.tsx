@@ -12,6 +12,7 @@ import {
   Building2,
   Building,
   BarChart3,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import api from "@/lib/api";
@@ -71,6 +72,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       { path: "/profissionais", label: "Profissionais", icon: UserPlus },
       { path: "/alimentos", label: "Alimentos", icon: Apple },
       { path: "/alimentos/analytics", label: "Analytics Alimentos", icon: BarChart3 },
+      { path: "/chat-ia", label: "Chat IA Clínico", icon: Sparkles },
     ];
 
     if (roles.includes("AdminGrupo") || roles.includes("SuperAdmin")) {
@@ -203,7 +205,167 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
+
+        {/* Footer com informações de versão */}
+        <footer className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center gap-4">
+              <span>© 2024 Crescer Saudável</span>
+              <VersionInfo />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-gray-400">•</span>
+              <a
+                href="#"
+                className="hover:text-primary transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  window.open('/docs', '_blank');
+                }}
+              >
+                Documentação
+              </a>
+            </div>
+          </div>
+        </footer>
       </div>
+    </div>
+  );
+}
+
+// Componente de informações de versão
+function VersionInfo() {
+  const [buildInfo, setBuildInfo] = useState<{
+    version: string;
+    gitCommit: string;
+    gitBranch: string;
+    buildDate: string;
+    environment: string;
+  } | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+
+  useEffect(() => {
+    // Importar dinamicamente as informações de build
+    import('@/generated/build-info')
+      .then((module) => {
+        setBuildInfo(module.BUILD_INFO);
+      })
+      .catch(() => {
+        // Se não conseguir importar, usar valores padrão
+        setBuildInfo({
+          version: '1.1.0',
+          gitCommit: 'dev',
+          gitBranch: 'dev',
+          buildDate: new Date().toISOString(),
+          environment: 'development'
+        });
+      });
+  }, []);
+
+  if (!buildInfo) return null;
+
+  const formatDate = (isoDate: string) => {
+    const date = new Date(isoDate);
+    return date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setShowDetails(!showDetails)}
+        className="hover:text-primary transition-colors font-mono"
+        title="Clique para ver detalhes da versão"
+      >
+        v{buildInfo.version} ({buildInfo.gitCommit})
+      </button>
+
+      {showDetails && (
+        <>
+          {/* Overlay para fechar ao clicar fora */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setShowDetails(false)}
+          />
+          
+          {/* Card de detalhes */}
+          <div className="absolute bottom-full left-0 mb-2 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-[300px]">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+                <h4 className="font-semibold text-gray-900 text-sm">
+                  Informações da Build
+                </h4>
+                <button
+                  onClick={() => setShowDetails(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-1.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Versão:</span>
+                  <span className="font-mono font-semibold text-gray-900">
+                    {buildInfo.version}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Commit:</span>
+                  <span className="font-mono text-gray-900">
+                    {buildInfo.gitCommit}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Branch:</span>
+                  <span className="font-mono text-gray-900">
+                    {buildInfo.gitBranch}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Build:</span>
+                  <span className="text-gray-900">
+                    {formatDate(buildInfo.buildDate)}
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Ambiente:</span>
+                  <span className={`font-semibold ${
+                    buildInfo.environment === 'production' 
+                      ? 'text-green-600' 
+                      : 'text-yellow-600'
+                  }`}>
+                    {buildInfo.environment}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      `v${buildInfo.version} (${buildInfo.gitCommit})`
+                    );
+                    alert('Versão copiada para área de transferência!');
+                  }}
+                  className="text-xs text-primary hover:text-primary/80 transition-colors"
+                >
+                  📋 Copiar versão
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

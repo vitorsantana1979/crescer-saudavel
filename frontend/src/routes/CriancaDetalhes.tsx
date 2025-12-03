@@ -18,6 +18,7 @@ import {
   Search,
   AlertCircle,
   Brain,
+  Sparkles,
 } from "lucide-react";
 import {
   classificarIdadeGestacional,
@@ -703,6 +704,13 @@ export default function CriancaDetalhes() {
         >
           <Brain className="w-5 h-5" />
           Insights de IA
+        </button>
+        <button
+          onClick={() => navigate(`/chat-ia?criancaId=${id}`)}
+          className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 shadow-lg"
+        >
+          <Sparkles className="w-5 h-5" />
+          Chat IA
         </button>
       </div>
 

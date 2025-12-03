@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CrescerSaudavel.Api.Data;
+using CrescerSaudavel.Api.Models;
 using CrescerSaudavel.Api.Models.ML;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,10 +18,10 @@ public class ChatService
     private readonly CrescerSaudavelDbContext _context;
     private readonly ILogger<ChatService> _logger;
     private readonly IConfiguration _config;
-    
+
     // Cache de conversas em memória (produção deveria usar Redis ou similar)
     private static readonly Dictionary<Guid, Conversation> _conversations = new();
-    
+
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true,
@@ -40,7 +41,7 @@ public class ChatService
         _context = context;
         _logger = logger;
         _config = config;
-        
+
         // Configurar OpenAI client
         var apiKey = _config["OpenAI:ApiKey"];
         if (!string.IsNullOrEmpty(apiKey))
@@ -62,7 +63,7 @@ public class ChatService
         {
             // Obter ou criar conversa
             var conversation = GetOrCreateConversation(conversationId, criancaId);
-            
+
             // Adicionar mensagem do usuário
             conversation.Messages.Add(new ChatMessage
             {
@@ -70,75 +71,101 @@ public class ChatService
                 Content = userMessage,
                 Timestamp = DateTime.UtcNow
             });
-            
+
             // Preparar mensagens para OpenAI
             var messages = BuildMessagesForOpenAI(conversation, criancaId);
-            
+
             // Definir funções disponíveis
             var functions = GetAvailableFunctions();
-            
-            // Chamar OpenAI
+
+            // Chamar OpenAI (novo formato com tools)
             var model = _config["OpenAI:Model"] ?? "gpt-4";
+
+            // Converter functions para tools (novo formato OpenAI)
+            var tools = functions.Select(f => new
+            {
+                type = "function",
+                function = f
+            }).ToList();
+
             var requestBody = new
             {
                 model,
                 messages,
-                functions,
-                function_call = "auto",
+                tools,
+                tool_choice = "auto",
                 temperature = 0.7,
                 max_tokens = _config.GetValue<int>("OpenAI:MaxTokens", 1000)
             };
-            
+
             var json = JsonSerializer.Serialize(requestBody, _jsonOptions);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            
+
             var response = await _openAIClient.PostAsync(
                 "https://api.openai.com/v1/chat/completions",
                 content,
                 cancellationToken);
-            
+
             response.EnsureSuccessStatusCode();
-            
+
             var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
             var result = JsonSerializer.Deserialize<OpenAIResponse>(responseJson, _jsonOptions);
-            
+
             if (result?.Choices == null || result.Choices.Count == 0)
                 throw new Exception("Resposta inválida da OpenAI");
-            
+
             var choice = result.Choices[0];
             var assistantMessage = choice.Message;
-            
-            // Se LLM solicitou chamada de função
-            if (assistantMessage.FunctionCall != null)
+
+            // Processar tool_calls (novo formato) ou function_call (formato antigo)
+            var toolCall = assistantMessage.ToolCalls?.FirstOrDefault() ??
+                          (assistantMessage.FunctionCall != null
+                              ? new OpenAIToolCall { Function = assistantMessage.FunctionCall }
+                              : null);
+
+            if (toolCall != null)
             {
                 // Executar função
                 var functionResult = await ExecuteFunctionAsync(
-                    assistantMessage.FunctionCall.Name,
-                    assistantMessage.FunctionCall.Arguments,
+                    toolCall.Function.Name,
+                    toolCall.Function.Arguments,
                     criancaId,
                     cancellationToken);
-                
-                // Adicionar resultado como mensagem
+
+                // Gerar tool_call_id
+                var toolCallId = toolCall.Id ?? $"call_{Guid.NewGuid().ToString().Substring(0, 8)}";
+
+                // Adicionar chamada do assistente (tool_call)
                 conversation.Messages.Add(new ChatMessage
                 {
-                    Role = "function",
-                    Content = functionResult,
+                    Role = "assistant",
+                    Content = assistantMessage.Content ?? "",
                     Timestamp = DateTime.UtcNow,
+                    ToolCallId = toolCallId,
                     FunctionCalls = new List<FunctionCall>
                     {
                         new()
                         {
-                            Name = assistantMessage.FunctionCall.Name,
-                            Arguments = assistantMessage.FunctionCall.Arguments,
+                            Name = toolCall.Function.Name,
+                            Arguments = toolCall.Function.Arguments,
                             Result = functionResult
                         }
                     }
                 });
-                
+
+                // Adicionar resultado da função (tool response)
+                conversation.Messages.Add(new ChatMessage
+                {
+                    Role = "tool",
+                    Content = functionResult,
+                    Timestamp = DateTime.UtcNow,
+                    ToolCallId = toolCallId
+                });
+
                 // Chamar OpenAI novamente com o resultado da função
                 return await ProcessQueryAsync("", criancaId, conversation.Id, cancellationToken);
             }
-            
+
             // Adicionar resposta do assistente
             var finalMessage = new ChatMessage
             {
@@ -146,10 +173,10 @@ public class ChatService
                 Content = assistantMessage.Content ?? string.Empty,
                 Timestamp = DateTime.UtcNow
             };
-            
+
             conversation.Messages.Add(finalMessage);
             conversation.UpdatedAt = DateTime.UtcNow;
-            
+
             return new ChatResponse(
                 finalMessage,
                 conversation.Id,
@@ -169,13 +196,13 @@ public class ChatService
         {
             return _conversations[conversationId.Value];
         }
-        
+
         var conversation = new Conversation
         {
             Id = conversationId ?? Guid.NewGuid(),
             CriancaId = criancaId
         };
-        
+
         _conversations[conversation.Id] = conversation;
         return conversation;
     }
@@ -183,7 +210,7 @@ public class ChatService
     private List<object> BuildMessagesForOpenAI(Conversation conversation, Guid? criancaId)
     {
         var messages = new List<object>();
-        
+
         // Mensagem do sistema com contexto
         var systemMessage = @"Você é um assistente especializado em nutrição neonatal e pediátrica.
 Seu papel é ajudar profissionais de saúde a analisar dados de crescimento de recém-nascidos e crianças,
@@ -200,15 +227,50 @@ Você tem acesso às seguintes funções para consultar dados:
 - get_growth_prediction: Faz predição de crescimento para um cenário
 - get_similar_cases: Busca casos similares com bons resultados
 - query_statistics: Consulta estatísticas gerais do sistema";
-        
+
         messages.Add(new { role = "system", content = systemMessage });
-        
+
         // Adicionar mensagens da conversa
         foreach (var msg in conversation.Messages)
         {
-            messages.Add(new { role = msg.Role, content = msg.Content });
+            if (msg.Role == "tool")
+            {
+                // Mensagem de resposta de função (formato tools)
+                messages.Add(new
+                {
+                    role = "tool",
+                    content = msg.Content,
+                    tool_call_id = msg.ToolCallId ?? "call_temp"
+                });
+            }
+            else if (msg.Role == "assistant" && msg.FunctionCalls != null && msg.FunctionCalls.Count > 0)
+            {
+                // Mensagem do assistente com chamada de função
+                var toolCalls = msg.FunctionCalls.Select(fc => new
+                {
+                    id = msg.ToolCallId ?? $"call_{Guid.NewGuid().ToString().Substring(0, 8)}",
+                    type = "function",
+                    function = new
+                    {
+                        name = fc.Name,
+                        arguments = fc.Arguments
+                    }
+                }).ToList();
+
+                messages.Add(new
+                {
+                    role = "assistant",
+                    content = msg.Content,
+                    tool_calls = toolCalls
+                });
+            }
+            else
+            {
+                // Mensagem normal
+                messages.Add(new { role = msg.Role, content = msg.Content });
+            }
         }
-        
+
         return messages;
     }
 
@@ -287,9 +349,9 @@ Você tem acesso às seguintes funções para consultar dados:
         try
         {
             _logger.LogInformation("Executando função: {FunctionName}", functionName);
-            
+
             var arguments = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(argumentsJson);
-            
+
             return functionName switch
             {
                 "get_patient_data" => await GetPatientDataFunction(arguments, cancellationToken),
@@ -312,16 +374,30 @@ Você tem acesso às seguintes funções para consultar dados:
     {
         if (args == null || !args.ContainsKey("crianca_id"))
             return JsonSerializer.Serialize(new { error = "crianca_id não fornecido" });
-        
-        var criancaId = Guid.Parse(args["crianca_id"].GetString() ?? "");
-        
-        var crianca = await _context.RecemNascidos
-            .Include(r => r.Consultas.OrderByDescending(c => c.DataHora).Take(5))
-            .FirstOrDefaultAsync(r => r.Id == criancaId, cancellationToken);
-        
+
+        var criancaIdStr = args["crianca_id"].GetString() ?? "";
+
+        RecemNascido? crianca = null;
+
+        // Tentar como GUID primeiro
+        if (Guid.TryParse(criancaIdStr, out var criancaId))
+        {
+            crianca = await _context.RecemNascidos
+                .Include(r => r.Consultas.OrderByDescending(c => c.DataHora).Take(5))
+                .FirstOrDefaultAsync(r => r.Id == criancaId, cancellationToken);
+        }
+
+        // Se não encontrou, tentar buscar por nome
         if (crianca == null)
-            return JsonSerializer.Serialize(new { error = "Paciente não encontrado" });
-        
+        {
+            crianca = await _context.RecemNascidos
+                .Include(r => r.Consultas.OrderByDescending(c => c.DataHora).Take(5))
+                .FirstOrDefaultAsync(r => r.Nome.Contains(criancaIdStr), cancellationToken);
+        }
+
+        if (crianca == null)
+            return JsonSerializer.Serialize(new { error = $"Paciente '{criancaIdStr}' não encontrado" });
+
         var result = new
         {
             id = crianca.Id,
@@ -338,7 +414,7 @@ Você tem acesso às seguintes funções para consultar dados:
                 zscore_peso = c.ZScorePeso
             })
         };
-        
+
         return JsonSerializer.Serialize(result, _jsonOptions);
     }
 
@@ -348,20 +424,20 @@ Você tem acesso às seguintes funções para consultar dados:
     {
         if (args == null || !args.ContainsKey("crianca_id"))
             return JsonSerializer.Serialize(new { error = "Parâmetros inválidos" });
-        
+
         var criancaId = Guid.Parse(args["crianca_id"].GetString() ?? "");
         var taxaEnergia = args["taxa_energia"].GetDouble();
         var metaProteina = args["meta_proteina"].GetDouble();
-        
+
         var cenario = new DietScenario
         {
             TaxaEnergeticaKcalKg = taxaEnergia,
             MetaProteinaGKg = metaProteina,
             FrequenciaHoras = 3.0
         };
-        
+
         var prediction = await _mlService.PredictGrowthAsync(criancaId, cenario, 14, cancellationToken);
-        
+
         return JsonSerializer.Serialize(prediction, _jsonOptions);
     }
 
@@ -371,12 +447,12 @@ Você tem acesso às seguintes funções para consultar dados:
     {
         if (args == null || !args.ContainsKey("crianca_id"))
             return JsonSerializer.Serialize(new { error = "crianca_id não fornecido" });
-        
+
         var criancaId = Guid.Parse(args["crianca_id"].GetString() ?? "");
         var limit = args.ContainsKey("limit") ? args["limit"].GetInt32() : 10;
-        
+
         var cases = await _mlService.GetSimilarCasesAsync(criancaId, limit, cancellationToken);
-        
+
         return JsonSerializer.Serialize(cases, _jsonOptions);
     }
 
@@ -402,8 +478,20 @@ internal class OpenAIChoice
 internal class OpenAIMessage
 {
     public string? Content { get; set; }
+
+    [JsonPropertyName("tool_calls")]
+    public List<OpenAIToolCall>? ToolCalls { get; set; }
+
+    // Manter compatibilidade com formato antigo (deprecated)
     [JsonPropertyName("function_call")]
     public OpenAIFunctionCall? FunctionCall { get; set; }
+}
+
+internal class OpenAIToolCall
+{
+    public string Id { get; set; } = string.Empty;
+    public string Type { get; set; } = "function";
+    public OpenAIFunctionCall Function { get; set; } = new();
 }
 
 internal class OpenAIFunctionCall

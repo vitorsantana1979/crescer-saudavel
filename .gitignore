@@ -42,6 +42,11 @@ dist-ssr/
 .env.local
 .env.*.local
 
+# Configuration with secrets
+**/appsettings.Development.json
+**/appsettings.*.json
+!**/appsettings.json
+
 # IDE
 .vscode/
 .idea/
@@ -60,4 +65,7 @@ dist-ssr/
 # Temporary files
 *.tmp
 *.temp
+
+# Generated files
+frontend/src/generated/
 

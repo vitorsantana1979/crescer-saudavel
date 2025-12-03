@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CrescerSaudavel.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c6c55d9ae2ca9106313c88d9031ec94bdea162ba")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+22a28069f873db28cc54101da654c160778c2944")]
 [assembly: System.Reflection.AssemblyProductAttribute("CrescerSaudavel.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CrescerSaudavel.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

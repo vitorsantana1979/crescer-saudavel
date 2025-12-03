@@ -20,6 +20,7 @@ import ConsultaForm from "./routes/ConsultaForm";
 import GruposSaude from "./routes/GruposSaude";
 import UnidadesSaude from "./routes/UnidadesSaude";
 import IAInsights from "./routes/IAInsights";
+import ChatIA from "./routes/ChatIA";
 import { AuthProvider } from "./contexts/AuthContext";
 import RequireAuth from "./components/RequireAuth";
 import "./styles/globals.css";
@@ -250,6 +251,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <RequireAuth>
               <Layout>
                 <Acompanhamento />
+              </Layout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/chat-ia"
+          element={
+            <RequireAuth>
+              <Layout>
+                <ChatIA />
               </Layout>
             </RequireAuth>
           }
