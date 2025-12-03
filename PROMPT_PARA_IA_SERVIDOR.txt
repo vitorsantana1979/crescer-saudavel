@@ -1,0 +1,61 @@
+CONTEXTO:
+Sou o sistema Crescer Saudável com 3 containers Docker (backend C#, ml-service Python, frontend React) rodando no domínio cs.quasarai.co com Caddy como proxy reverso.
+
+PROBLEMAS:
+1. API retorna 404 para /api/analytics/* (backend não tem novos endpoints)
+2. SPA retorna 404 ao recarregar página (Caddy precisa de fallback para index.html)
+
+TAREFAS:
+
+1. ATUALIZAR BACKEND:
+cd /caminho/do/crescer-saudavel
+docker-compose -f docker-compose.production.yml down
+git pull origin main
+docker-compose -f docker-compose.production.yml build --no-cache
+docker-compose -f docker-compose.production.yml up -d
+
+2. VERIFICAR:
+curl http://localhost:5280/api/health
+curl http://localhost:8000/health
+curl http://localhost:5280/api/analytics/stats
+
+3. CONFIGURAR CADDY PARA SPA:
+Editar /etc/caddy/Caddyfile e adicionar:
+
+cs.quasarai.co {
+    handle /api/* {
+        reverse_proxy localhost:5280
+    }
+    
+    handle {
+        reverse_proxy localhost:80
+    }
+    
+    encode gzip
+}
+
+E no Dockerfile do frontend (se aplicável), garantir que o Nginx tenha:
+
+location / {
+    try_files $uri $uri/ /index.html;
+}
+
+4. RECARREGAR CADDY:
+caddy reload --config /etc/caddy/Caddyfile
+
+5. TESTAR:
+- https://cs.quasarai.co → deve carregar
+- Apertar F5 em qualquer rota → NÃO deve dar 404
+- https://cs.quasarai.co/api/analytics/stats → deve retornar JSON
+
+ARQUIVO .env DEVE CONTER:
+DATABASE_SERVER=sql.vsantana.com.br:1279
+DATABASE_NAME=crescer
+DATABASE_USER=crescer
+DATABASE_PASSWORD=Cr35c3r@2024
+OPENAI_API_KEY=sk-proj-z7BCuAqti...
+OpenAI__ApiKey=sk-proj-z7BCuAqti...
+
+Execute e me informe se há erros nos logs:
+docker-compose -f docker-compose.production.yml logs --tail=100
+
