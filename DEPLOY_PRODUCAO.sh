@@ -7,7 +7,7 @@ echo "🚀 Iniciando deploy em produção..."
 
 # 1. Parar containers
 echo "⏸️  Parando containers..."
-docker-compose down
+docker-compose -f docker-compose.production.yml down
 
 # 2. Atualizar código do GitHub
 echo "📥 Puxando código do GitHub..."
@@ -15,11 +15,11 @@ git pull origin main
 
 # 3. Rebuild das imagens (incluindo ML Service)
 echo "🔨 Rebuilding containers..."
-docker-compose build --no-cache
+docker-compose -f docker-compose.production.yml build --no-cache
 
 # 4. Subir containers
 echo "▶️  Iniciando containers..."
-docker-compose up -d
+docker-compose -f docker-compose.production.yml up -d
 
 # 5. Aguardar inicialização
 echo "⏳ Aguardando serviços iniciarem..."
@@ -28,7 +28,7 @@ sleep 15
 # 6. Verificar status
 echo ""
 echo "📊 Status dos containers:"
-docker-compose ps
+docker-compose -f docker-compose.production.yml ps
 
 echo ""
 echo "🔍 Verificando saúde dos serviços..."
@@ -56,11 +56,11 @@ fi
 
 echo ""
 echo "📋 Logs recentes do backend:"
-docker-compose logs backend --tail=10
+docker-compose -f docker-compose.production.yml logs backend --tail=10
 
 echo ""
 echo "📋 Logs recentes do ml-service:"
-docker-compose logs ml-service --tail=10
+docker-compose -f docker-compose.production.yml logs ml-service --tail=10
 
 echo ""
 echo "✅ Deploy concluído!"

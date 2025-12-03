@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    volumes:
+      - ml-models:/models
+    environment:
+      - DATABASE_SERVER=${DATABASE_SERVER}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_DRIVER=ODBC Driver 18 for SQL Server
+      - DATABASE_TRUST_CERTIFICATE=True
+      - MODEL_PATH=${MODEL_PATH:-/models}
+      - CORS_ORIGINS=${CORS_ORIGINS}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports:
+      - "8000:8000"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS:-http://0.0.0.0:5280}
+      - ConnectionStrings__DefaultConnection=Server=${DATABASE_SERVER};Database=${DATABASE_NAME};User Id=${DATABASE_USER};Password=${DATABASE_PASSWORD};TrustServerCertificate=True;
+      - MLService__BaseUrl=http://ml-service:8000
+      - OpenAI__ApiKey=${OpenAI__ApiKey}
+      - OpenAI__Model=gpt-4
+      - OpenAI__MaxTokens=1500
+    ports:
+      - "5280:5280"
+    networks:
+      - app-network
+    depends_on:
+      - ml-service
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL}
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  ml-models:
+
+networks:
+  app-network:
+    driver: bridge
+
