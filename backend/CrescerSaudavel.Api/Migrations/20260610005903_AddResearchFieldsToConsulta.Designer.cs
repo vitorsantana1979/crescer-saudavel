@@ -4,6 +4,7 @@ using CrescerSaudavel.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CrescerSaudavel.Api.Migrations
 {
     [DbContext(typeof(CrescerSaudavelDbContext))]
-    partial class CrescerSaudavelDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260610005903_AddResearchFieldsToConsulta")]
+    partial class AddResearchFieldsToConsulta
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -183,9 +186,6 @@ namespace CrescerSaudavel.Api.Migrations
 
                     b.Property<Guid>("RecemNascidoId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal?>("VelocidadeGanhoPonderal")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal?>("ZScoreAltura")
                         .HasPrecision(6, 3)

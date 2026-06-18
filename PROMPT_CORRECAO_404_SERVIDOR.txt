@@ -1,0 +1,81 @@
+# CORREÇÃO: Erro 404 ao recarregar página (F5/Command+R) em Produção
+
+## PROBLEMA:
+Ao recarregar a página (F5) em qualquer rota do React (ex: /criancas, /ia-insights), o servidor retorna 404.
+
+## CAUSA:
+Nginx não está configurado para fazer fallback para index.html (SPA routing).
+
+## SOLUÇÃO:
+Execute os comandos abaixo para aplicar a correção:
+
+```bash
+# 1. Ir para o diretório do projeto
+cd ~/stack-n8n/crescer-saudavel
+
+# 2. Fazer pull das atualizações do GitHub
+git pull origin main
+
+# 3. Ver o que foi atualizado
+git log --oneline -1
+# Deve mostrar: "fix: Adicionar configuração Nginx para SPA routing"
+
+# 4. Parar e remover o container do frontend
+docker compose -f docker-compose.stack.yml stop crescer-web
+docker compose -f docker-compose.stack.yml rm -f crescer-web
+
+# 5. Rebuild do frontend SEM CACHE (importante!)
+docker compose -f docker-compose.stack.yml build --no-cache crescer-web
+
+# 6. Iniciar o container
+docker compose -f docker-compose.stack.yml up -d crescer-web
+
+# 7. Aguardar inicialização
+sleep 10
+
+# 8. Verificar se o Nginx tem a configuração correta
+echo "=== VERIFICANDO CONFIGURAÇÃO NGINX ==="
+docker exec crescer-saudavel-web cat /etc/nginx/conf.d/default.conf | grep -A 3 "location /"
+
+# Deve mostrar:
+#     location / {
+#         try_files $uri $uri/ /index.html;
+#     }
+
+# 9. Verificar se o container está rodando
+docker compose -f docker-compose.stack.yml ps crescer-web
+
+# 10. Testar no navegador
+echo ""
+echo "✅ TESTES:"
+echo "1. Acesse: https://cs.quasarai.co"
+echo "2. Navegue para /criancas ou qualquer outra rota"
+echo "3. Aperte F5 (recarregar página)"
+echo "4. NÃO deve mais dar 404!"
+echo ""
+echo "Se tudo acima funcionou, o problema está RESOLVIDO!"
+```
+
+## O QUE FOI MUDADO:
+1. Criado arquivo `frontend/nginx.conf` com configuração correta de SPA
+2. Atualizado `frontend/Dockerfile` para usar essa configuração
+3. Atualizado `frontend/Dockerfile.production` (já estava correto)
+
+## CONFIGURAÇÃO APLICADA:
+```nginx
+location / {
+    try_files $uri $uri/ /index.html;
+}
+```
+
+Essa linha faz com que o Nginx:
+1. Tente buscar o arquivo (ex: /criancas)
+2. Se não existir, tente como diretório (/criancas/)
+3. Se não existir, sirva /index.html (que carrega o React Router)
+
+## RESULTADO ESPERADO:
+✅ Qualquer rota pode ser recarregada (F5) sem erro 404
+✅ Links diretos funcionam (ex: https://cs.quasarai.co/criancas)
+✅ Navegação por botões e menu continua funcionando
+✅ React Router gerencia todas as rotas corretamente
+

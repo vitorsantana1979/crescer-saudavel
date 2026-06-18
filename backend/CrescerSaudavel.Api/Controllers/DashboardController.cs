@@ -80,7 +80,9 @@ public class DashboardController : ControllerBase
         var alertas = consultasRecentes
             .Count(c => (c.ZScorePeso.HasValue && (c.ZScorePeso < -2 || c.ZScorePeso > 2)) ||
                        (c.ZScoreAltura.HasValue && (c.ZScoreAltura < -2 || c.ZScoreAltura > 2)) ||
-                       (c.ZScorePerimetro.HasValue && (c.ZScorePerimetro < -2 || c.ZScorePerimetro > 2)));
+                       (c.ZScorePerimetro.HasValue && (c.ZScorePerimetro < -2 || c.ZScorePerimetro > 2)) ||
+                       c.AlertaQuedaPonderal ||
+                       c.AlertaRCEU);
 
         // Total de alimentos
         var totalAlimentos = await _context.Alimentos
@@ -158,7 +160,9 @@ public class DashboardController : ControllerBase
             .Where(x => tenantIds.Contains(x.RecemNascido.TenantId))
             .Where(x => (x.Consulta.ZScorePeso.HasValue && (x.Consulta.ZScorePeso < -2 || x.Consulta.ZScorePeso > 2)) ||
                        (x.Consulta.ZScoreAltura.HasValue && (x.Consulta.ZScoreAltura < -2 || x.Consulta.ZScoreAltura > 2)) ||
-                       (x.Consulta.ZScorePerimetro.HasValue && (x.Consulta.ZScorePerimetro < -2 || x.Consulta.ZScorePerimetro > 2)))
+                       (x.Consulta.ZScorePerimetro.HasValue && (x.Consulta.ZScorePerimetro < -2 || x.Consulta.ZScorePerimetro > 2)) ||
+                       x.Consulta.AlertaQuedaPonderal ||
+                       x.Consulta.AlertaRCEU)
             .OrderByDescending(x => x.Consulta.DataHora)
             .Take(limit)
             .Select(x => new
@@ -173,20 +177,27 @@ public class DashboardController : ControllerBase
                     id = x.RecemNascido.Id,
                     nome = x.RecemNascido.Nome
                 },
-                tipoAlerta = GetTipoAlerta(x.Consulta.ZScorePeso, x.Consulta.ZScoreAltura, x.Consulta.ZScorePerimetro),
-                severidade = GetSeveridade(x.Consulta.ZScorePeso, x.Consulta.ZScoreAltura, x.Consulta.ZScorePerimetro)
+                tipoAlerta = GetTipoAlerta(x.Consulta.ZScorePeso, x.Consulta.ZScoreAltura, x.Consulta.ZScorePerimetro, x.Consulta.AlertaQuedaPonderal, x.Consulta.AlertaRCEU),
+                severidade = GetSeveridade(x.Consulta.ZScorePeso, x.Consulta.ZScoreAltura, x.Consulta.ZScorePerimetro, x.Consulta.AlertaQuedaPonderal, x.Consulta.AlertaRCEU)
             })
             .ToListAsync();
 
         return Ok(consultasComAlerta);
     }
 
-    private static string GetTipoAlerta(decimal? zPeso, decimal? zAltura, decimal? zPerimetro)
+    private static string GetTipoAlerta(decimal? zPeso, decimal? zAltura, decimal? zPerimetro, bool alertaQuedaPonderal, bool alertaRceu)
     {
         var alertas = new List<string>();
         
-        if (zPeso.HasValue && (zPeso < -2 || zPeso > 2))
-            alertas.Add(zPeso < -2 ? "Peso abaixo do esperado" : "Peso acima do esperado");
+        if (alertaRceu)
+            alertas.Add("RCEU (Restrição de Crescimento Extrauterino)");
+        else if (zPeso.HasValue && zPeso < -2)
+            alertas.Add("Peso abaixo do esperado");
+        else if (zPeso.HasValue && zPeso > 2)
+            alertas.Add("Peso acima do esperado");
+
+        if (alertaQuedaPonderal)
+            alertas.Add("Queda Ponderal Detectada (> 0,5 DP)");
         
         if (zAltura.HasValue && (zAltura < -2 || zAltura > 2))
             alertas.Add(zAltura < -2 ? "Altura abaixo do esperado" : "Altura acima do esperado");
@@ -197,8 +208,11 @@ public class DashboardController : ControllerBase
         return string.Join(", ", alertas);
     }
 
-    private static string GetSeveridade(decimal? zPeso, decimal? zAltura, decimal? zPerimetro)
+    private static string GetSeveridade(decimal? zPeso, decimal? zAltura, decimal? zPerimetro, bool alertaQuedaPonderal, bool alertaRceu)
     {
+        if (alertaRceu || alertaQuedaPonderal)
+            return "critico";
+
         var scores = new[] { zPeso, zAltura, zPerimetro }
             .Where(z => z.HasValue)
             .Select(z => Math.Abs(z!.Value))

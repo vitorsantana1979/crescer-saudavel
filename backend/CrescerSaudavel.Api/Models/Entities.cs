@@ -138,6 +138,18 @@ public class Consulta : EntidadeAuditavel
     public decimal? ZScorePeso { get; set; }
     public decimal? ZScoreAltura { get; set; }
     public decimal? ZScorePerimetro { get; set; }
+    
+    // Dados de pesquisa (Comparação Manual vs Automático)
+    public string? ClassificacaoManualEquipe { get; set; }
+    public decimal? ZScoreManualEquipe { get; set; }
+    
+    // Alertas automatizados para pesquisa e acompanhamento
+    public bool AlertaQuedaPonderal { get; set; } = false; // Queda > 0.5 SD
+    public bool AlertaRCEU { get; set; } = false; // ZScore <= -1.28
+    
+    // Velocidade de Ganho Ponderal (g/kg/dia) - Método Exponencial de Patel et al. (2005)
+    // VGP = 1000 × ln(P2/P1) / (D2 - D1)
+    public decimal? VelocidadeGanhoPonderal { get; set; }
 }
 
 public class Alimento : EntidadeAuditavel

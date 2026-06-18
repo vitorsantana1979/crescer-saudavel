@@ -162,6 +162,42 @@ public class ConsultaController : ControllerBase
             Console.WriteLine($"Erro ao calcular Z-Score: {ex.Message}");
         }
 
+        // Alerta RCEU
+        bool alertaRceu = false;
+        if (zScorePeso.HasValue && zScorePeso.Value <= -1.28m)
+        {
+            alertaRceu = true;
+        }
+
+        // Alerta Queda Ponderal > 0.5 SD
+        bool alertaQuedaPonderal = false;
+        var ultimaConsulta = await _context.Consultas
+            .Where(c => c.RecemNascidoId == request.RecemNascidoId)
+            .OrderByDescending(c => c.DataHora)
+            .FirstOrDefaultAsync();
+
+        if (ultimaConsulta != null && ultimaConsulta.ZScorePeso.HasValue && zScorePeso.HasValue)
+        {
+            if ((zScorePeso.Value - ultimaConsulta.ZScorePeso.Value) <= -0.5m)
+            {
+                alertaQuedaPonderal = true;
+            }
+        }
+
+        // Velocidade de Ganho Ponderal (VGP) - Método Exponencial de Patel et al. (2005)
+        // VGP = 1000 × ln(P2/P1) / (D2 - D1)
+        decimal? vgp = null;
+        if (ultimaConsulta != null && ultimaConsulta.PesoKg > 0 && request.PesoKg > 0)
+        {
+            var intervaloDias = (request.DataHora.Date - ultimaConsulta.DataHora.Date).Days;
+            if (intervaloDias > 0)
+            {
+                var p1 = (double)ultimaConsulta.PesoKg;
+                var p2 = (double)request.PesoKg;
+                vgp = (decimal)(1000.0 * Math.Log(p2 / p1) / intervaloDias);
+            }
+        }
+
         var consulta = new Consulta
         {
             RecemNascidoId = request.RecemNascidoId,
@@ -171,7 +207,12 @@ public class ConsultaController : ControllerBase
             PerimetroCefalicoCm = request.PerimetroCefalicoCm,
             ZScorePeso = zScorePeso,
             ZScoreAltura = zScoreAltura,
-            ZScorePerimetro = zScorePerimetro
+            ZScorePerimetro = zScorePerimetro,
+            ClassificacaoManualEquipe = request.ClassificacaoManualEquipe,
+            ZScoreManualEquipe = request.ZScoreManualEquipe,
+            AlertaRCEU = alertaRceu,
+            AlertaQuedaPonderal = alertaQuedaPonderal,
+            VelocidadeGanhoPonderal = vgp
         };
 
         _context.Consultas.Add(consulta);
@@ -267,6 +308,39 @@ public class ConsultaController : ControllerBase
         consulta.PesoKg = request.PesoKg;
         consulta.EstaturaCm = request.EstaturaCm;
         consulta.PerimetroCefalicoCm = request.PerimetroCefalicoCm;
+        consulta.ClassificacaoManualEquipe = request.ClassificacaoManualEquipe;
+        consulta.ZScoreManualEquipe = request.ZScoreManualEquipe;
+
+        // Alerta RCEU
+        consulta.AlertaRCEU = consulta.ZScorePeso.HasValue && consulta.ZScorePeso.Value <= -1.28m;
+
+        // Alerta Queda Ponderal > 0.5 SD
+        var consultaAnterior = await _context.Consultas
+            .Where(c => c.RecemNascidoId == consulta.RecemNascidoId && c.DataHora < request.DataHora && c.Id != consulta.Id)
+            .OrderByDescending(c => c.DataHora)
+            .FirstOrDefaultAsync();
+
+        if (consultaAnterior != null && consultaAnterior.ZScorePeso.HasValue && consulta.ZScorePeso.HasValue)
+        {
+            consulta.AlertaQuedaPonderal = (consulta.ZScorePeso.Value - consultaAnterior.ZScorePeso.Value) <= -0.5m;
+        }
+        else
+        {
+            consulta.AlertaQuedaPonderal = false;
+        }
+
+        // Velocidade de Ganho Ponderal (VGP) - Método Exponencial de Patel et al. (2005)
+        consulta.VelocidadeGanhoPonderal = null;
+        if (consultaAnterior != null && consultaAnterior.PesoKg > 0 && request.PesoKg > 0)
+        {
+            var intervaloDias = (request.DataHora.Date - consultaAnterior.DataHora.Date).Days;
+            if (intervaloDias > 0)
+            {
+                var p1 = (double)consultaAnterior.PesoKg;
+                var p2 = (double)request.PesoKg;
+                consulta.VelocidadeGanhoPonderal = (decimal)(1000.0 * Math.Log(p2 / p1) / intervaloDias);
+            }
+        }
 
         await _context.SaveChangesAsync();
         return NoContent();
@@ -302,12 +376,16 @@ public record CreateConsultaRequest(
     DateTime DataHora,
     decimal PesoKg,
     decimal EstaturaCm,
-    decimal PerimetroCefalicoCm
+    decimal PerimetroCefalicoCm,
+    string? ClassificacaoManualEquipe = null,
+    decimal? ZScoreManualEquipe = null
 );
 
 public record UpdateConsultaRequest(
     DateTime DataHora,
     decimal PesoKg,
     decimal EstaturaCm,
-    decimal PerimetroCefalicoCm
+    decimal PerimetroCefalicoCm,
+    string? ClassificacaoManualEquipe = null,
+    decimal? ZScoreManualEquipe = null
 );

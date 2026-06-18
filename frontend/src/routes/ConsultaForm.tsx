@@ -14,6 +14,8 @@ interface FormData {
   pesoKg: number;
   estaturaCm: number;
   perimetroCefalicoCm: number;
+  classificacaoManualEquipe?: string;
+  zScoreManualEquipe?: number;
 }
 
 interface Consulta extends FormData {
@@ -21,6 +23,7 @@ interface Consulta extends FormData {
   zScorePeso?: number;
   zScoreAltura?: number;
   zScorePerimetro?: number;
+  velocidadeGanhoPonderal?: number;
 }
 
 export default function ConsultaForm() {
@@ -72,6 +75,8 @@ export default function ConsultaForm() {
       setValue("pesoKg", data.pesoKg);
       setValue("estaturaCm", data.estaturaCm);
       setValue("perimetroCefalicoCm", data.perimetroCefalicoCm);
+      if (data.classificacaoManualEquipe) setValue("classificacaoManualEquipe", data.classificacaoManualEquipe);
+      if (data.zScoreManualEquipe) setValue("zScoreManualEquipe", data.zScoreManualEquipe);
     } catch (error) {
       toast.error("Erro ao carregar consulta");
     }
@@ -89,6 +94,8 @@ export default function ConsultaForm() {
         pesoKg: data.pesoKg,
         estaturaCm: data.estaturaCm,
         perimetroCefalicoCm: data.perimetroCefalicoCm,
+        classificacaoManualEquipe: data.classificacaoManualEquipe || null,
+        zScoreManualEquipe: data.zScoreManualEquipe || null,
       };
 
       if (isEditing) {
@@ -212,6 +219,22 @@ export default function ConsultaForm() {
                   </p>
                 </div>
               )}
+              {consulta?.velocidadeGanhoPonderal != null && (
+                <div className="mt-2 p-2 rounded-lg bg-gray-50">
+                  <p className="text-xs text-gray-500">VGP (Patel et al.)</p>
+                  <p
+                    className={`text-sm font-bold ${
+                      consulta.velocidadeGanhoPonderal >= 15
+                        ? 'text-green-600'
+                        : consulta.velocidadeGanhoPonderal >= 10
+                        ? 'text-orange-600'
+                        : 'text-red-600'
+                    }`}
+                  >
+                    {consulta.velocidadeGanhoPonderal.toFixed(1)} g/kg/dia
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Estatura/Comprimento */}
@@ -287,6 +310,55 @@ export default function ConsultaForm() {
                   </p>
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Dados Analógicos (Pesquisa) */}
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-4">
+              <input 
+                type="checkbox" 
+                id="showResearchFields" 
+                className="rounded border-orange-300 text-orange-600 focus:ring-orange-500"
+                onChange={(e) => {
+                  const el = document.getElementById('researchFieldsContainer');
+                  if (el) el.style.display = e.target.checked ? 'block' : 'none';
+                }}
+              />
+              <label htmlFor="showResearchFields" className="text-sm font-semibold text-orange-900 cursor-pointer">
+                Adicionar Dados da Caderneta Física (Apenas para Pesquisa Clínica)
+              </label>
+            </div>
+            
+            <div id="researchFieldsContainer" style={{ display: 'none' }} className="space-y-4 pt-2 border-t border-orange-200">
+              <p className="text-xs text-orange-800 mb-3">
+                Preencha estes campos exatamente como estão anotados no papel para fins de validação de concordância (Estudo Kappa/ICC).
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Classificação Manual (Caderneta)
+                  </label>
+                  <input
+                    type="text"
+                    {...register("classificacaoManualEquipe")}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="Ex: Peso Adequado, Risco, etc."
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Z-Score Calculado Manualmente
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    {...register("zScoreManualEquipe", { valueAsNumber: true })}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    placeholder="-1.25"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 

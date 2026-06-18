@@ -55,6 +55,7 @@ interface Consulta {
   zScorePeso?: number;
   zScoreAltura?: number;
   zScorePerimetro?: number;
+  velocidadeGanhoPonderal?: number;
 }
 
 interface DietaItem {
@@ -827,8 +828,24 @@ export default function CriancaDetalhes() {
                                 </span>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-sm font-medium">
-                              {consulta.pesoKg.toFixed(3)}
+                            <td className="px-4 py-3 text-sm">
+                              <div className="flex flex-col">
+                                <span className="font-medium">{consulta.pesoKg.toFixed(3)}</span>
+                                {consulta.velocidadeGanhoPonderal != null && (
+                                  <span
+                                    className={`text-xs font-semibold ${
+                                      consulta.velocidadeGanhoPonderal >= 15
+                                        ? 'text-green-600'
+                                        : consulta.velocidadeGanhoPonderal >= 10
+                                        ? 'text-orange-600'
+                                        : 'text-red-600'
+                                    }`}
+                                    title="Velocidade de Ganho Ponderal (Patel et al., 2005) — g/kg/dia"
+                                  >
+                                    VGP: {consulta.velocidadeGanhoPonderal.toFixed(1)} g/kg/dia
+                                  </span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3 text-sm">
                               {consulta.estaturaCm.toFixed(1)}
