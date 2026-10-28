@@ -191,19 +191,82 @@ export function interpolarZ(valor: number, valoresPorZ: number[]): number {
   return Z_LINHAS[n - 1];
 }
 
+export type IndicadorZ = "peso" | "estatura" | "perimetro";
+export type NivelClassificacao = "Otimo" | "Atencao" | "Cuidado";
+
 export interface ClassificacaoZ {
+  codigo: string;
+  indicador: IndicadorZ;
+  nivel: NivelClassificacao;
   rotulo: string;
+  faixa: string;
   cor: string; // classe de texto Tailwind
 }
 
-// Pontos de corte da tabela "Como interpretar os gráficos" (MS 2008 / OMS 2006)
-export function classificarZ(z: number | null | undefined): ClassificacaoZ | null {
+export const COR_TEXTO_NIVEL: Record<NivelClassificacao, string> = {
+  Otimo: "text-green-700",
+  Atencao: "text-amber-600",
+  Cuidado: "text-red-600",
+};
+
+export const COR_BADGE_NIVEL: Record<NivelClassificacao, string> = {
+  Otimo: "bg-green-100 text-green-800 border-green-300",
+  Atencao: "bg-amber-100 text-amber-800 border-amber-300",
+  Cuidado: "bg-red-100 text-red-800 border-red-300",
+};
+
+function classificacao(
+  codigo: string,
+  indicador: IndicadorZ,
+  nivel: NivelClassificacao,
+  rotulo: string,
+  faixa: string
+): ClassificacaoZ {
+  return { codigo, indicador, nivel, rotulo, faixa, cor: COR_TEXTO_NIVEL[nivel] };
+}
+
+// Espelha ClassificacaoCrescimento.Tabela do backend: tabela "Como interpretar os gráficos"
+// (Brasil 2008 / OMS 2006) para peso e estatura; perímetro cefálico pelo corte de ±2 DP (OMS/SBP).
+export const CLASSIFICACOES_Z: ClassificacaoZ[] = [
+  classificacao("PesoMuitoBaixo", "peso", "Cuidado", "Muito baixo peso para a idade", "z < −3"),
+  classificacao("PesoBaixo", "peso", "Cuidado", "Baixo peso para a idade", "−3 ≤ z < −2"),
+  classificacao("PesoVigilanciaBaixo", "peso", "Atencao", "Peso adequado — vigilância para baixo peso", "−2 ≤ z < −1"),
+  classificacao("PesoAdequado", "peso", "Otimo", "Peso adequado para a idade", "−1 ≤ z ≤ +1"),
+  classificacao("PesoVigilanciaElevado", "peso", "Atencao", "Peso adequado — vigilância para peso elevado", "+1 < z ≤ +2"),
+  classificacao("PesoElevado", "peso", "Cuidado", "Peso elevado para a idade", "z > +2"),
+  classificacao("EstaturaMuitoBaixa", "estatura", "Cuidado", "Muito baixa estatura para a idade", "z < −3"),
+  classificacao("EstaturaBaixa", "estatura", "Cuidado", "Baixa estatura para a idade", "−3 ≤ z < −2"),
+  classificacao("EstaturaAdequada", "estatura", "Otimo", "Estatura adequada para a idade", "z ≥ −2"),
+  classificacao("PerimetroCefalicoAbaixo", "perimetro", "Cuidado", "Perímetro cefálico abaixo do esperado (microcefalia)", "z < −2"),
+  classificacao("PerimetroCefalicoAdequado", "perimetro", "Otimo", "Perímetro cefálico adequado para a idade", "−2 ≤ z ≤ +2"),
+  classificacao("PerimetroCefalicoAcima", "perimetro", "Cuidado", "Perímetro cefálico acima do esperado (macrocefalia)", "z > +2"),
+];
+
+const classificacoesPorCodigo = new Map(CLASSIFICACOES_Z.map((c) => [c.codigo, c]));
+
+export function classificacaoPorCodigo(codigo: string | null | undefined): ClassificacaoZ | null {
+  return (codigo && classificacoesPorCodigo.get(codigo)) || null;
+}
+
+export function classificarZ(indicador: IndicadorZ, z: number | null | undefined): ClassificacaoZ | null {
   if (z == null || !Number.isFinite(z)) return null;
-  if (z < -3) return { rotulo: "Muito baixo", cor: "text-red-700" };
-  if (z < -2) return { rotulo: "Baixo", cor: "text-red-600" };
-  if (z < -1) return { rotulo: "Adequado — vigilância (baixo)", cor: "text-amber-600" };
-  if (z <= 1) return { rotulo: "Adequado", cor: "text-green-700" };
-  if (z <= 2) return { rotulo: "Adequado — vigilância (elevado)", cor: "text-amber-600" };
-  if (z <= 3) return { rotulo: "Elevado", cor: "text-red-600" };
-  return { rotulo: "Muito elevado", cor: "text-red-700" };
+  let codigo: string;
+  if (indicador === "peso") {
+    codigo =
+      z < -3 ? "PesoMuitoBaixo"
+      : z < -2 ? "PesoBaixo"
+      : z < -1 ? "PesoVigilanciaBaixo"
+      : z <= 1 ? "PesoAdequado"
+      : z <= 2 ? "PesoVigilanciaElevado"
+      : "PesoElevado";
+  } else if (indicador === "estatura") {
+    codigo = z < -3 ? "EstaturaMuitoBaixa" : z < -2 ? "EstaturaBaixa" : "EstaturaAdequada";
+  } else {
+    codigo = z < -2 ? "PerimetroCefalicoAbaixo" : z <= 2 ? "PerimetroCefalicoAdequado" : "PerimetroCefalicoAcima";
+  }
+  return classificacaoPorCodigo(codigo);
+}
+
+export function formatarZ(z: number | null | undefined): string {
+  return z == null || !Number.isFinite(z) ? "—" : z.toFixed(2).replace(".", ",");
 }

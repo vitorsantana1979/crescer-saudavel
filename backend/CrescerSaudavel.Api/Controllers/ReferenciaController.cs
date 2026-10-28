@@ -1,3 +1,4 @@
+using CrescerSaudavel.Api.Services.Crescimento;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using CrescerSaudavel.Api.Services;
@@ -83,6 +84,18 @@ public class ReferenciaController : ControllerBase
 
         return Ok(curvas);
     }
+
+    /// <summary>Tabela de interpretação dos z-scores por indicador (códigos gravados em Consulta.Classificacao*).</summary>
+    [HttpGet("classificacoes")]
+    public IActionResult GetClassificacoes() =>
+        Ok(ClassificacaoCrescimento.Tabela.Select(c => new
+        {
+            c.Codigo,
+            Indicador = c.Indicador.ToString(),
+            Nivel = c.Nivel.ToString(),
+            c.Rotulo,
+            c.Faixa
+        }));
 
     private static char SexoChar(string sexo) => string.IsNullOrEmpty(sexo) ? 'f' : char.ToLowerInvariant(sexo[0]);
 }

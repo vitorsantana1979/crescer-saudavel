@@ -117,7 +117,8 @@ public class DevSeedController : ControllerBase
             _context.RecemNascidos.Add(crianca);
             await _context.SaveChangesAsync();
 
-            foreach (var medida in criancaSeed.Medidas)
+            Consulta? anterior = null;
+            foreach (var medida in criancaSeed.Medidas.OrderBy(m => m.Semanas))
             {
                 var consulta = new Consulta
                 {
@@ -128,7 +129,8 @@ public class DevSeedController : ControllerBase
                     PerimetroCefalicoCm = medida.PerimetroCefalicoCm
                 };
 
-                _avaliacao.AplicarZScores(consulta, crianca);
+                _avaliacao.Avaliar(consulta, crianca, anterior);
+                anterior = consulta;
 
                 _context.Consultas.Add(consulta);
             }

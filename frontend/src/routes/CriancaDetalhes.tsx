@@ -5,6 +5,14 @@ import api from "@/lib/api";
 import PageHeader from "@/components/PageHeader";
 import GraficosZScore from "@/components/GraficosZScore";
 import {
+  COR_BADGE_NIVEL,
+  classificacaoPorCodigo,
+  classificarZ,
+  formatarTipoIdade,
+  formatarZ,
+  type TipoIdade,
+} from "@/lib/crescimento";
+import {
   Baby,
   Edit,
   Activity,
@@ -13,7 +21,6 @@ import {
   TrendingUp,
   Weight,
   Ruler,
-  Circle,
   Trash2,
   Search,
   AlertCircle,
@@ -59,6 +66,44 @@ interface Consulta {
   referenciaCurva?: string | null;
   idadeCalculoDias?: number | null;
   tipoIdadeCalculo?: string | null;
+  classificacaoPeso?: string | null;
+  classificacaoEstatura?: string | null;
+  classificacaoPerimetro?: string | null;
+  alertaRCEU?: boolean;
+  alertaQuedaPonderal?: boolean;
+}
+
+// Classificação gravada pelo backend; para consultas ainda não reprocessadas, deriva do z no cliente.
+function indicadoresZ(consulta: Consulta) {
+  return [
+    {
+      sigla: "Peso",
+      titulo: "Z-score peso/idade",
+      z: consulta.zScorePeso,
+      classificacao: classificacaoPorCodigo(consulta.classificacaoPeso) ?? classificarZ("peso", consulta.zScorePeso),
+    },
+    {
+      sigla: "Est.",
+      titulo: "Z-score comprimento (estatura)/idade",
+      z: consulta.zScoreAltura,
+      classificacao: classificacaoPorCodigo(consulta.classificacaoEstatura) ?? classificarZ("estatura", consulta.zScoreAltura),
+    },
+    {
+      sigla: "PC",
+      titulo: "Z-score perímetro cefálico/idade",
+      z: consulta.zScorePerimetro,
+      classificacao:
+        classificacaoPorCodigo(consulta.classificacaoPerimetro) ?? classificarZ("perimetro", consulta.zScorePerimetro),
+    },
+  ];
+}
+
+function descricaoReferencia(consulta: Consulta): string | null {
+  if (!consulta.referenciaCurva) return null;
+  const nome = consulta.referenciaCurva === "INTERGROWTH" ? "INTERGROWTH-21st" : "OMS";
+  return consulta.tipoIdadeCalculo === "Cronologica" || !consulta.tipoIdadeCalculo
+    ? nome
+    : `${nome} · ${formatarTipoIdade(consulta.tipoIdadeCalculo as TipoIdade).toLowerCase()}`;
 }
 
 interface DietaItem {
@@ -332,23 +377,6 @@ export default function CriancaDetalhes() {
     } catch (error) {
       toast.error("Erro ao excluir dieta");
     }
-  };
-
-  const getZScoreColor = (zScore?: number) => {
-    if (!zScore) return "text-gray-500";
-    if (zScore < -2) return "text-red-600";
-    if (zScore < -1) return "text-orange-600";
-    if (zScore > 2) return "text-red-600";
-    if (zScore > 1) return "text-orange-600";
-    return "text-primary";
-  };
-
-  const getZScoreIcon = (zScore?: number) => {
-    if (!zScore) return <Circle className="w-3 h-3" />;
-    if (Math.abs(zScore) < 1)
-      return <Circle className="w-3 h-3 fill-current" />;
-    if (Math.abs(zScore) < 2) return <Circle className="w-3 h-3" />;
-    return <Circle className="w-3 h-3 fill-current" />;
   };
 
   const calcularIdade = (dataNascimento: string) => {
@@ -797,8 +825,8 @@ export default function CriancaDetalhes() {
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                             PC (cm)
                           </th>
-                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-                            Z-Scores
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Z-scores e classificação
                           </th>
                           <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                             Ações
@@ -829,6 +857,11 @@ export default function CriancaDetalhes() {
                                     crianca.dataNascimento
                                   )}
                                 </span>
+                                {descricaoReferencia(consulta) && (
+                                  <span className="text-xs text-gray-400" title="Curva de referência usada no cálculo dos z-scores">
+                                    {descricaoReferencia(consulta)}
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="px-4 py-3 text-sm">
@@ -857,47 +890,50 @@ export default function CriancaDetalhes() {
                               {consulta.perimetroCefalicoCm.toFixed(1)}
                             </td>
                             <td className="px-4 py-3">
-                              <div className="flex items-center justify-center gap-3">
-                                <div
-                                  className="flex items-center gap-1"
-                                  title="Z-Score Peso"
-                                >
-                                  {getZScoreIcon(consulta.zScorePeso)}
-                                  <span
-                                    className={`text-xs font-semibold ${getZScoreColor(
-                                      consulta.zScorePeso
-                                    )}`}
+                              <div className="flex flex-col gap-1 min-w-[260px]">
+                                {indicadoresZ(consulta).map((item) => (
+                                  <div
+                                    key={item.sigla}
+                                    className="flex items-center gap-2 text-xs"
+                                    title={`${item.titulo}${item.classificacao ? ` · ${item.classificacao.faixa}` : ""}`}
                                   >
-                                    {consulta.zScorePeso?.toFixed(1) || "-"}
-                                  </span>
-                                </div>
-                                <div
-                                  className="flex items-center gap-1"
-                                  title="Z-Score Altura"
-                                >
-                                  {getZScoreIcon(consulta.zScoreAltura)}
-                                  <span
-                                    className={`text-xs font-semibold ${getZScoreColor(
-                                      consulta.zScoreAltura
-                                    )}`}
-                                  >
-                                    {consulta.zScoreAltura?.toFixed(1) || "-"}
-                                  </span>
-                                </div>
-                                <div
-                                  className="flex items-center gap-1"
-                                  title="Z-Score PC"
-                                >
-                                  {getZScoreIcon(consulta.zScorePerimetro)}
-                                  <span
-                                    className={`text-xs font-semibold ${getZScoreColor(
-                                      consulta.zScorePerimetro
-                                    )}`}
-                                  >
-                                    {consulta.zScorePerimetro?.toFixed(1) ||
-                                      "-"}
-                                  </span>
-                                </div>
+                                    <span className="w-8 text-gray-500">{item.sigla}</span>
+                                    <span
+                                      className={`w-10 font-semibold tabular-nums ${
+                                        item.classificacao ? item.classificacao.cor : "text-gray-400"
+                                      }`}
+                                    >
+                                      {formatarZ(item.z)}
+                                    </span>
+                                    {item.classificacao && (
+                                      <span
+                                        className={`px-1.5 py-0.5 rounded border ${COR_BADGE_NIVEL[item.classificacao.nivel]}`}
+                                      >
+                                        {item.classificacao.rotulo}
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                                {(consulta.alertaRCEU || consulta.alertaQuedaPonderal) && (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {consulta.alertaRCEU && (
+                                      <span
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border bg-red-100 text-red-800 border-red-300 text-xs font-semibold"
+                                        title="Restrição de crescimento extrauterino: peso ≤ percentil 10 (z ≤ −1,28) na curva INTERGROWTH-21st"
+                                      >
+                                        <AlertCircle className="w-3 h-3" /> RCEU
+                                      </span>
+                                    )}
+                                    {consulta.alertaQuedaPonderal && (
+                                      <span
+                                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border bg-orange-100 text-orange-800 border-orange-300 text-xs font-semibold"
+                                        title="Queda de pelo menos 0,5 DP no z-score de peso em relação à consulta anterior"
+                                      >
+                                        <AlertCircle className="w-3 h-3" /> Queda ponderal
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </td>
                             <td className="px-4 py-3 text-right">

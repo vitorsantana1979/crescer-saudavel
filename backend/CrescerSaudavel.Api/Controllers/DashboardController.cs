@@ -1,3 +1,5 @@
+using CrescerSaudavel.Api.Models;
+using CrescerSaudavel.Api.Services.Crescimento;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -65,7 +67,7 @@ public class DashboardController : ControllerBase
             .Where(x => x.Consulta.DataHora >= inicioHoje && x.Consulta.DataHora < fimHoje)
             .CountAsync();
 
-        // Alertas: crianças com Z-Score crítico (abaixo de -2 ou acima de +2)
+        // Alertas: consultas recentes com classificação de nível "cuidado" ou alerta de RCEU/queda ponderal
         var consultasRecentes = await _context.Consultas
             .Join(_context.RecemNascidos,
                 c => c.RecemNascidoId,
@@ -77,12 +79,7 @@ public class DashboardController : ControllerBase
             .Take(100)
             .ToListAsync();
 
-        var alertas = consultasRecentes
-            .Count(c => (c.ZScorePeso.HasValue && (c.ZScorePeso < -2 || c.ZScorePeso > 2)) ||
-                       (c.ZScoreAltura.HasValue && (c.ZScoreAltura < -2 || c.ZScoreAltura > 2)) ||
-                       (c.ZScorePerimetro.HasValue && (c.ZScorePerimetro < -2 || c.ZScorePerimetro > 2)) ||
-                       c.AlertaQuedaPonderal ||
-                       c.AlertaRCEU);
+        var alertas = consultasRecentes.Count(PossuiAlerta);
 
         // Total de alimentos
         var totalAlimentos = await _context.Alimentos
@@ -152,78 +149,85 @@ public class DashboardController : ControllerBase
             return Ok(Array.Empty<object>());
         }
 
+        var codigosCuidado = ClassificacaoCrescimento.CodigosCuidado;
         var consultasComAlerta = await _context.Consultas
             .Join(_context.RecemNascidos,
                 c => c.RecemNascidoId,
                 r => r.Id,
                 (c, r) => new { Consulta = c, RecemNascido = r })
             .Where(x => tenantIds.Contains(x.RecemNascido.TenantId))
-            .Where(x => (x.Consulta.ZScorePeso.HasValue && (x.Consulta.ZScorePeso < -2 || x.Consulta.ZScorePeso > 2)) ||
-                       (x.Consulta.ZScoreAltura.HasValue && (x.Consulta.ZScoreAltura < -2 || x.Consulta.ZScoreAltura > 2)) ||
-                       (x.Consulta.ZScorePerimetro.HasValue && (x.Consulta.ZScorePerimetro < -2 || x.Consulta.ZScorePerimetro > 2)) ||
-                       x.Consulta.AlertaQuedaPonderal ||
-                       x.Consulta.AlertaRCEU)
+            .Where(x => codigosCuidado.Contains(x.Consulta.ClassificacaoPeso!) ||
+                        codigosCuidado.Contains(x.Consulta.ClassificacaoEstatura!) ||
+                        codigosCuidado.Contains(x.Consulta.ClassificacaoPerimetro!) ||
+                        x.Consulta.AlertaQuedaPonderal ||
+                        x.Consulta.AlertaRCEU)
             .OrderByDescending(x => x.Consulta.DataHora)
             .Take(limit)
-            .Select(x => new
-            {
-                x.Consulta.Id,
-                x.Consulta.DataHora,
-                x.Consulta.ZScorePeso,
-                x.Consulta.ZScoreAltura,
-                x.Consulta.ZScorePerimetro,
-                crianca = new
-                {
-                    id = x.RecemNascido.Id,
-                    nome = x.RecemNascido.Nome
-                },
-                tipoAlerta = GetTipoAlerta(x.Consulta.ZScorePeso, x.Consulta.ZScoreAltura, x.Consulta.ZScorePerimetro, x.Consulta.AlertaQuedaPonderal, x.Consulta.AlertaRCEU),
-                severidade = GetSeveridade(x.Consulta.ZScorePeso, x.Consulta.ZScoreAltura, x.Consulta.ZScorePerimetro, x.Consulta.AlertaQuedaPonderal, x.Consulta.AlertaRCEU)
-            })
+            .Select(x => new { x.Consulta, crianca = new { id = x.RecemNascido.Id, nome = x.RecemNascido.Nome } })
             .ToListAsync();
 
-        return Ok(consultasComAlerta);
+        return Ok(consultasComAlerta.Select(x => new
+        {
+            x.Consulta.Id,
+            x.Consulta.DataHora,
+            x.Consulta.ZScorePeso,
+            x.Consulta.ZScoreAltura,
+            x.Consulta.ZScorePerimetro,
+            x.Consulta.ClassificacaoPeso,
+            x.Consulta.ClassificacaoEstatura,
+            x.Consulta.ClassificacaoPerimetro,
+            x.Consulta.AlertaRCEU,
+            x.Consulta.AlertaQuedaPonderal,
+            x.crianca,
+            tipoAlerta = GetTipoAlerta(x.Consulta),
+            severidade = GetSeveridade(x.Consulta)
+        }));
     }
 
-    private static string GetTipoAlerta(decimal? zPeso, decimal? zAltura, decimal? zPerimetro, bool alertaQuedaPonderal, bool alertaRceu)
+    private static bool PossuiAlerta(Consulta c) =>
+        ClassificacaoCrescimento.EhCuidado(c.ClassificacaoPeso)
+        || ClassificacaoCrescimento.EhCuidado(c.ClassificacaoEstatura)
+        || ClassificacaoCrescimento.EhCuidado(c.ClassificacaoPerimetro)
+        || c.AlertaQuedaPonderal
+        || c.AlertaRCEU;
+
+    private static string GetTipoAlerta(Consulta c)
     {
         var alertas = new List<string>();
-        
-        if (alertaRceu)
-            alertas.Add("RCEU (Restrição de Crescimento Extrauterino)");
-        else if (zPeso.HasValue && zPeso < -2)
-            alertas.Add("Peso abaixo do esperado");
-        else if (zPeso.HasValue && zPeso > 2)
-            alertas.Add("Peso acima do esperado");
 
-        if (alertaQuedaPonderal)
-            alertas.Add("Queda Ponderal Detectada (> 0,5 DP)");
-        
-        if (zAltura.HasValue && (zAltura < -2 || zAltura > 2))
-            alertas.Add(zAltura < -2 ? "Altura abaixo do esperado" : "Altura acima do esperado");
-        
-        if (zPerimetro.HasValue && (zPerimetro < -2 || zPerimetro > 2))
-            alertas.Add(zPerimetro < -2 ? "Perímetro cefálico abaixo do esperado" : "Perímetro cefálico acima do esperado");
+        if (c.AlertaRCEU)
+            alertas.Add("RCEU (Restrição de Crescimento Extrauterino)");
+        else if (ClassificacaoCrescimento.PorCodigo(c.ClassificacaoPeso) is { EhCuidado: true } peso)
+            alertas.Add(peso.Rotulo);
+
+        if (c.AlertaQuedaPonderal)
+            alertas.Add("Queda ponderal (≥ 0,5 DP desde a consulta anterior)");
+
+        if (ClassificacaoCrescimento.PorCodigo(c.ClassificacaoEstatura) is { EhCuidado: true } estatura)
+            alertas.Add(estatura.Rotulo);
+
+        if (ClassificacaoCrescimento.PorCodigo(c.ClassificacaoPerimetro) is { EhCuidado: true } perimetro)
+            alertas.Add(perimetro.Rotulo);
 
         return string.Join(", ", alertas);
     }
 
-    private static string GetSeveridade(decimal? zPeso, decimal? zAltura, decimal? zPerimetro, bool alertaQuedaPonderal, bool alertaRceu)
+    private static string GetSeveridade(Consulta c)
     {
-        if (alertaRceu || alertaQuedaPonderal)
+        if (c.AlertaRCEU || c.AlertaQuedaPonderal)
             return "critico";
 
-        var scores = new[] { zPeso, zAltura, zPerimetro }
+        var scores = new[] { c.ZScorePeso, c.ZScoreAltura, c.ZScorePerimetro }
             .Where(z => z.HasValue)
             .Select(z => Math.Abs(z!.Value))
             .ToList();
 
         if (scores.Any(s => s >= 3))
             return "critico";
-        
-        if (scores.Any(s => s >= 2))
+
+        if (PossuiAlerta(c))
             return "alerta";
-        
+
         return "atencao";
     }
 }

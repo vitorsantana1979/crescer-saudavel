@@ -42,7 +42,7 @@ public class ExportController : ControllerBase
 
         var builder = new StringBuilder();
         // Cabeçalho
-        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,Sexo,IdadeGestacionalSemanas,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
+        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,Sexo,IdadeGestacionalSemanas,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ReferenciaCurva,TipoIdadeCalculo,IdadeCalculoDias,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,ClassificacaoPeso,ClassificacaoEstatura,ClassificacaoPerimetro,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
 
         foreach (var c in consultas)
         {
@@ -63,9 +63,15 @@ public class ExportController : ControllerBase
                                $"{c.PesoKg.ToString(CultureInfo.InvariantCulture)}," +
                                $"{c.EstaturaCm.ToString(CultureInfo.InvariantCulture)}," +
                                $"{c.PerimetroCefalicoCm.ToString(CultureInfo.InvariantCulture)}," +
+                               $"{c.ReferenciaCurva ?? ""}," +
+                               $"{c.TipoIdadeCalculo ?? ""}," +
+                               $"{c.IdadeCalculoDias?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"{c.ZScorePeso?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"{c.ZScoreAltura?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"{c.ZScorePerimetro?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
+                               $"{c.ClassificacaoPeso ?? ""}," +
+                               $"{c.ClassificacaoEstatura ?? ""}," +
+                               $"{c.ClassificacaoPerimetro ?? ""}," +
                                $"{c.VelocidadeGanhoPonderal?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"{c.ZScoreManualEquipe?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"\"{c.ClassificacaoManualEquipe ?? ""}\"," +

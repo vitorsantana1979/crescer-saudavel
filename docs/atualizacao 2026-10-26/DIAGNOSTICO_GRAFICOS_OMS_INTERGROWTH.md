@@ -144,6 +144,9 @@ Muda classificação (ex.: "muito baixo peso" vira "baixo peso").
   Achados A, B, C, D, E, I, J e L resolvidos no backend.
 - **Fase 2 implementada em 2026-10-28** — achados F, G e H resolvidos (`GraficoOms` com os 5
   recortes); K (classificação no backend) fica para a Fase 3.
+- **Fase 3 implementada em 2026-10-28** — achado K resolvido: classificação por indicador
+  persistida na consulta (`ClassificacaoCrescimento`), alertas RCEU/queda no serviço de avaliação,
+  dashboard e exportação pela classificação, detalhe da criança com badges. Ver ADR-001, itens 12–15.
 
 ## 6. Decisões que dependem da equipe clínica
 - Até quando usar idade corrigida na OMS após 64 s (sugestão: 24 meses de idade corrigida).

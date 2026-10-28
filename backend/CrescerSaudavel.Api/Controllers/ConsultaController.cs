@@ -14,9 +14,6 @@ namespace CrescerSaudavel.Api.Controllers;
 [Authorize]
 public class ConsultaController : ControllerBase
 {
-    private const decimal LimiarAlertaRceu = -1.28m; // z do percentil 10
-    private const decimal LimiarQuedaPonderal = -0.5m; // queda de 0,5 DP em relação à consulta anterior
-
     private readonly CrescerSaudavelDbContext _context;
     private readonly IAvaliacaoCrescimentoService _avaliacao;
     private readonly ICurrentUserService _currentUserService;
@@ -107,10 +104,8 @@ public class ConsultaController : ControllerBase
             ZScoreManualEquipe = request.ZScoreManualEquipe
         };
 
-        _avaliacao.AplicarZScores(consulta, crianca);
-
         var consultaAnterior = await ConsultaAnteriorAsync(consulta);
-        AplicarAlertasEVelocidade(consulta, consultaAnterior);
+        _avaliacao.Avaliar(consulta, crianca, consultaAnterior);
 
         _context.Consultas.Add(consulta);
         await _context.SaveChangesAsync();
@@ -146,18 +141,16 @@ public class ConsultaController : ControllerBase
         consulta.ClassificacaoManualEquipe = request.ClassificacaoManualEquipe;
         consulta.ZScoreManualEquipe = request.ZScoreManualEquipe;
 
-        _avaliacao.AplicarZScores(consulta, crianca);
-
         var consultaAnterior = await ConsultaAnteriorAsync(consulta);
-        AplicarAlertasEVelocidade(consulta, consultaAnterior);
+        _avaliacao.Avaliar(consulta, crianca, consultaAnterior);
 
         await _context.SaveChangesAsync();
         return NoContent();
     }
 
     /// <summary>
-    /// Recalcula z-scores, alertas e velocidade de ganho ponderal de todas as consultas com as
-    /// referências atuais. Usar após atualizar as tabelas de referência ou a regra de seleção.
+    /// Recalcula z-scores, classificações, alertas e velocidade de ganho ponderal de todas as consultas
+    /// com as referências atuais. Usar após atualizar as tabelas de referência ou a regra de seleção.
     /// </summary>
     [HttpPost("recalcular-zscores")]
     [Authorize(Roles = SystemRoles.SuperAdmin)]
@@ -177,7 +170,7 @@ public class ConsultaController : ControllerBase
             foreach (var consulta in crianca.Consultas.OrderBy(c => c.DataHora))
             {
                 total++;
-                var selecao = _avaliacao.AplicarZScores(consulta, crianca);
+                var selecao = _avaliacao.Avaliar(consulta, crianca, anterior);
                 if (selecao.PossuiReferencia)
                 {
                     comReferencia++;
@@ -188,7 +181,6 @@ public class ConsultaController : ControllerBase
                     semReferencia[motivo] = semReferencia.GetValueOrDefault(motivo) + 1;
                 }
 
-                AplicarAlertasEVelocidade(consulta, anterior);
                 anterior = consulta;
             }
         }
@@ -227,30 +219,6 @@ public class ConsultaController : ControllerBase
             .Where(c => c.RecemNascidoId == consulta.RecemNascidoId && c.DataHora < consulta.DataHora && c.Id != consulta.Id)
             .OrderByDescending(c => c.DataHora)
             .FirstOrDefaultAsync();
-
-    private static void AplicarAlertasEVelocidade(Consulta consulta, Consulta? anterior)
-    {
-        consulta.AlertaRCEU = consulta.ZScorePeso.HasValue && consulta.ZScorePeso.Value <= LimiarAlertaRceu;
-
-        consulta.AlertaQuedaPonderal =
-            anterior?.ZScorePeso != null
-            && consulta.ZScorePeso.HasValue
-            && consulta.ZScorePeso.Value - anterior.ZScorePeso.Value <= LimiarQuedaPonderal;
-
-        // Velocidade de Ganho Ponderal (VGP) - Método Exponencial de Patel et al. (2005)
-        // VGP = 1000 × ln(P2/P1) / (D2 - D1)
-        consulta.VelocidadeGanhoPonderal = null;
-        if (anterior != null && anterior.PesoKg > 0 && consulta.PesoKg > 0)
-        {
-            var intervaloDias = (consulta.DataHora.Date - anterior.DataHora.Date).Days;
-            if (intervaloDias > 0)
-            {
-                var p1 = (double)anterior.PesoKg;
-                var p2 = (double)consulta.PesoKg;
-                consulta.VelocidadeGanhoPonderal = (decimal)(1000.0 * Math.Log(p2 / p1) / intervaloDias);
-            }
-        }
-    }
 }
 
 public record CreateConsultaRequest(

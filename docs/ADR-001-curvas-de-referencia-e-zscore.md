@@ -1,6 +1,6 @@
 # ADR-001 — Curvas de referência e cálculo de z-score
 
-Data: 2026-10-28 · Status: aceito (Fase 1 implementada)
+Data: 2026-10-28 · Status: aceito (Fases 1, 2 e 3 implementadas)
 Contexto completo: `docs/atualizacao 2026-10-26/DIAGNOSTICO_GRAFICOS_OMS_INTERGROWTH.md`
 
 ## Contexto
@@ -55,10 +55,43 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
     (peso 0,3–35 kg, comprimento 20–130 cm, PC 15–60 cm).
 11. `/dev/grafico-oms` (só em `vite dev`) exercita o componente com pontos fictícios.
 
+## Fase 3 — classificação e alertas (2026-10-28)
+
+12. **Classificação por indicador** (`ClassificacaoCrescimento`), pela tabela "Como interpretar os
+    gráficos para crianças menores de 5 anos" (Brasil 2008 / curso OMS 2006):
+    - peso/idade: muito baixo (z < −3), baixo (−3 ≤ z < −2), adequado com vigilância para baixo
+      peso (−2 ≤ z < −1), adequado (−1 ≤ z ≤ +1), adequado com vigilância para peso elevado
+      (+1 < z ≤ +2), elevado (z > +2 — a tabela não separa z > +3 para peso);
+    - estatura/idade: muito baixa (z < −3), baixa (−3 ≤ z < −2), adequada (z ≥ −2; sem corte
+      superior);
+    - perímetro cefálico/idade não consta da tabela: corte de ±2 DP da OMS/SBP (abaixo de −2,
+      microcefalia; acima de +2, macrocefalia; entre, adequado).
+    Os mesmos cortes de z valem para a curva INTERGROWTH-21st. Nível ótimo/atenção/cuidado segue
+    a coluna "o que significa". Os códigos ficam em `Consulta.ClassificacaoPeso/Estatura/Perimetro`
+    (migration `AddClassificacaoZConsulta`); a tabela é exposta em `GET /api/referencias/classificacoes`
+    e espelhada em `frontend/src/lib/crescimento.ts`.
+13. **Alertas** passam para `AvaliacaoCrescimentoService.Avaliar` (z-scores, classificação, alertas e
+    VGP numa única chamada, usada por consulta, reprocessamento e seed):
+    - RCEU apenas para pré-termo na curva INTERGROWTH (peso ≤ p10, z ≤ −1,28). Antes disparava
+      para qualquer criança com z ≤ −1,28, inclusive a termo, onde o conceito não se aplica;
+      depois de 64 semanas a leitura é a classificação OMS;
+    - queda ponderal (≥ 0,5 DP) só compara z-scores calculados na mesma referência — a troca
+      INTERGROWTH → OMS muda a escala.
+14. **Dashboard** conta/lista alertas por classificação de nível "cuidado" em qualquer indicador ou
+    RCEU/queda (antes: |z| > 2 em qualquer indicador, o que incluía estatura elevada, que a tabela
+    não classifica). A **exportação CSV** ganha referência, tipo de idade, idade de cálculo e as
+    três classificações.
+15. **Detalhe da criança** mostra, por consulta, z-score, classificação (badge por nível) e os
+    alertas RCEU/queda, além da referência usada. Consultas ainda não reprocessadas têm a
+    classificação derivada do z no cliente (mesma tabela).
+
 ## Consequências
 
-- Consultas antigas têm z nulo até rodar o reprocessamento.
+- Consultas antigas têm z, classificação e alertas desatualizados até rodar o reprocessamento
+  (`POST /api/consultas/recalcular-zscores`).
 - O limite de 24 meses de idade corrigida é uma decisão de produto (a literatura converge em
   ~2 anos; não há regra oficial explícita do MS/SBP) e fica configurável.
+- Os cortes de perímetro cefálico (±2 DP) e a restrição do RCEU ao período INTERGROWTH são
+  decisões desta ADR, a validar com a equipe clínica.
 - Pendentes: tabelas INTERGROWTH de comprimento e PC (pré-termo ≤ 64 s fica sem z nessas
-  medidas); gráficos com os 5 recortes OMS (Fase 2); classificação por z no backend (Fase 3).
+  medidas).

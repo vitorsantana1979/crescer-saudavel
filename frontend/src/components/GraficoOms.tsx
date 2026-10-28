@@ -475,7 +475,7 @@ export default function GraficoOms({
                       | PontoCurva
                       | undefined;
                     if (!ponto && !ref) return null;
-                    const classificacao = ponto ? classificarZ(ponto.z) : null;
+                    const classificacao = ponto ? classificarZ(medida, ponto.z) : null;
                     return (
                       <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-md text-xs">
                         {ponto ? (

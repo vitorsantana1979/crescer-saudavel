@@ -157,8 +157,20 @@ namespace CrescerSaudavel.Api.Migrations
                     b.Property<Guid?>("AtualizadoPorUserId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("ClassificacaoEstatura")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
                     b.Property<string>("ClassificacaoManualEquipe")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClassificacaoPerimetro")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("ClassificacaoPeso")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<DateTimeOffset>("CriadoEm")
                         .HasColumnType("datetimeoffset");

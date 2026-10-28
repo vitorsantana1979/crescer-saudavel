@@ -155,6 +155,11 @@ public class Consulta : EntidadeAuditavel
     public string? ReferenciaCurva { get; set; } // "OMS" | "INTERGROWTH"; null quando sem referência aplicável
     public int? IdadeCalculoDias { get; set; } // idade usada no cálculo, em dias
     public string? TipoIdadeCalculo { get; set; } // "Cronologica" | "PosMenstrual" | "Corrigida"
+
+    // Classificação por z-score de cada indicador (códigos de ClassificacaoCrescimento.Tabela)
+    public string? ClassificacaoPeso { get; set; }
+    public string? ClassificacaoEstatura { get; set; }
+    public string? ClassificacaoPerimetro { get; set; }
 }
 
 public class Alimento : EntidadeAuditavel
