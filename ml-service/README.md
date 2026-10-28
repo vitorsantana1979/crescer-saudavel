@@ -89,7 +89,9 @@ OPENAI_API_KEY=sk-your-key-here
 
 #### Backend C#
 
-Atualizar `/backend/CrescerSaudavel.Api/appsettings.json`:
+Não coloque a chave no `appsettings.json` (ele é versionado e fica vazio). Defina a variável de
+ambiente `OpenAI__ApiKey` — ou `OPENAI_API_KEY` no `.env` da raiz, que os compose files e o
+`scripts/run-api.sh` traduzem. `MLService:BaseUrl` continua no `appsettings.json`:
 
 ```json
 {
@@ -98,7 +100,7 @@ Atualizar `/backend/CrescerSaudavel.Api/appsettings.json`:
     "Timeout": 60
   },
   "OpenAI": {
-    "ApiKey": "sk-your-key-here",
+    "ApiKey": "",
     "Model": "gpt-4",
     "MaxTokens": 1500
   }

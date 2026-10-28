@@ -59,50 +59,44 @@ docker-compose logs -f frontend
 
 ## ⚙️ Configurações Necessárias (Primeira Vez)
 
-### 1. **OpenAI API Key**
+### 1. **Variáveis de ambiente (`.env`)**
 
-Crie/edite o arquivo `.env` no servidor:
+Nenhum segredo fica em arquivo versionado: senha do banco, chave JWT e chave OpenAI
+vêm do `.env` na raiz do projeto, lido pelo `docker compose`.
 
 ```bash
 # No servidor
 cd /caminho/do/projeto/crescer-saudavel
+cp .env.example .env
+chmod 600 .env
 nano .env
 ```
 
-Adicione:
-```env
-OpenAI__ApiKey=sua-chave-openai-aqui
-OPENAI_API_KEY=sua-chave-openai-aqui
-```
+Preencha as variáveis listadas em `.env.example`:
 
-### 2. **Verificar docker-compose.yml**
+| Variável | Obrigatória | Uso |
+|----------|-------------|-----|
+| `DATABASE_SERVER` | sim | `host,porta` do SQL Server |
+| `DATABASE_NAME` | não (padrão `crescer`) | nome do banco |
+| `DATABASE_USER` / `DATABASE_PASSWORD` | sim | credenciais do SQL Server (backend, ml-service e scripts) |
+| `JWT_KEY` | sim | chave HS256 dos tokens, mínimo 32 bytes (`openssl rand -base64 48`) |
+| `SEED_SUPERADMIN_PASSWORD` | recomendada | senha do SuperAdmin criado no primeiro start |
+| `OPENAI_API_KEY` | não | Chat IA (backend e ml-service) |
+| `VITE_API_URL` | produção | URL pública da API usada no build do frontend |
+| `CORS_ORIGINS` | produção | origens permitidas no ml-service (lista JSON) |
 
-O arquivo `docker-compose.yml` deve conter os 3 serviços:
+Sem as variáveis obrigatórias o `docker compose` falha antes de subir (`${VAR:?...}`)
+e o backend aborta a inicialização com mensagem clara. Credenciais que já foram
+expostas precisam ser trocadas: veja `docs/SEGREDOS_ROTACAO.md`.
 
-```yaml
-version: '3.8'
+### 2. **Verificar os compose files**
 
-services:
-  backend:
-    build: ./backend
-    environment:
-      - OpenAI__ApiKey=${OpenAI__ApiKey}
-    ports:
-      - "5280:5280"
-    depends_on:
-      - ml-service
+`docker-compose.yml`, `docker-compose.production.yml` e `docker-compose.prod.yml` já
+mapeiam o `.env` para as variáveis que cada serviço lê (`ConnectionStrings__DefaultConnection`,
+`Jwt__Key`, `OpenAI__ApiKey`, `DATABASE_*`). Confira o resultado sem subir nada:
 
-  ml-service:
-    build: ./ml-service
-    ports:
-      - "8000:8000"
-    environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "5193:80"
+```bash
+docker compose -f docker-compose.production.yml config
 ```
 
 ---
@@ -237,12 +231,13 @@ docker system prune -a
 - ❌ Não commitar `.env`
 - ❌ Não commitar `appsettings.Development.json`
 - ❌ Não commitar API Keys no código
+- ❌ Não colocar valores em `appsettings*.json` nem em `docker-compose*.yml` — eles ficam vazios e leem do `.env`
 
 ### ✅ Sempre usar variáveis de ambiente
 
 ```bash
 # No servidor, criar .env
-echo "OpenAI__ApiKey=sk-..." > .env
+cp .env.example .env && nano .env
 chmod 600 .env  # Permissões restritas
 ```
 
@@ -253,7 +248,7 @@ chmod 600 .env  # Permissões restritas
 - [ ] Código commitado e pushed para `main`
 - [ ] Conectado ao servidor via SSH
 - [ ] `git pull origin main` executado
-- [ ] `.env` configurado com API keys
+- [ ] `.env` preenchido com todas as variáveis de `.env.example`
 - [ ] `docker-compose down` executado
 - [ ] `docker-compose build --no-cache` executado
 - [ ] `docker-compose up -d` executado

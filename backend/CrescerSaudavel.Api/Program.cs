@@ -20,8 +20,33 @@ builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Logging.SetMinimumLevel(LogLevel.Information);
 
+// Segredos nunca ficam nos appsettings versionados: vêm de variáveis de ambiente
+// (ConnectionStrings__DefaultConnection, Jwt__Key, OpenAI__ApiKey), de um .env não
+// versionado ou de user-secrets. Falha cedo, com mensagem clara, se faltarem.
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "ConnectionStrings:DefaultConnection não configurada. " +
+        "Defina a variável de ambiente ConnectionStrings__DefaultConnection " +
+        "(veja .env.example na raiz do repositório e docs/SEGREDOS_ROTACAO.md).");
+}
+
+var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException(
+        "Jwt:Key não configurada. Defina a variável de ambiente Jwt__Key com uma chave aleatória " +
+        "de pelo menos 32 bytes (veja .env.example na raiz do repositório e docs/SEGREDOS_ROTACAO.md).");
+}
+if (Encoding.UTF8.GetByteCount(jwtKey) < 32)
+{
+    throw new InvalidOperationException(
+        "Jwt:Key muito curta: a assinatura HS256 exige pelo menos 32 bytes (256 bits). Gere uma nova chave.");
+}
+
 builder.Services.AddDbContext<CrescerSaudavelDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -88,7 +113,7 @@ builder.Services.AddAuthentication(options =>
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                Encoding.UTF8.GetBytes(jwtKey))
         };
 
         // Não falhar quando não há token - permite endpoints anônimos

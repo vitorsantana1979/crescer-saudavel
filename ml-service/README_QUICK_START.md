@@ -11,14 +11,15 @@ pip3 install -r requirements.txt
 
 ### 2. Configurar Banco de Dados
 
-Editar `app/config.py`:
+Não edite `app/config.py` (ele não contém credenciais). Crie `ml-service/.env` — ou use
+o `.env` da raiz do repositório (`cp .env.example .env`) — com:
 
-```python
-DATABASE_SERVER = "sql.vsantana.com.br"
-DATABASE_PORT = 1279
-DATABASE_NAME = "crescer"
-DATABASE_USER = "crescer"
-DATABASE_PASSWORD = "QSSmFTgRS7B3rsdl"
+```env
+DATABASE_SERVER=seu-servidor
+DATABASE_PORT=1433
+DATABASE_NAME=crescer
+DATABASE_USER=usuario
+DATABASE_PASSWORD=<senha-do-banco>
 ```
 
 ### 3. Iniciar Servidor
@@ -208,7 +209,7 @@ DATABASE_SERVER=sql.vsantana.com.br
 DATABASE_PORT=1279
 DATABASE_NAME=crescer
 DATABASE_USER=crescer
-DATABASE_PASSWORD=QSSmFTgRS7B3rsdl
+DATABASE_PASSWORD=<senha-do-banco>
 
 # ML Models
 MODEL_PATH=./models

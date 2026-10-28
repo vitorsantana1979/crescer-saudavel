@@ -220,11 +220,11 @@ curl http://localhost:5280/api/health
 
 ### Erro: API Key inválida
 **Causa**: OpenAI API Key expirada ou incorreta  
-**Solução**: Atualizar em `appsettings.json`:
+**Solução**: Atualizar a variável de ambiente `OpenAI__ApiKey` (ou `OPENAI_API_KEY` no `.env`) e reiniciar o backend. O `appsettings.json` versionado fica vazio:
 ```json
 {
   "OpenAI": {
-    "ApiKey": "sk-proj-...",
+    "ApiKey": "",
     "Model": "gpt-4",
     "MaxTokens": 1500
   }

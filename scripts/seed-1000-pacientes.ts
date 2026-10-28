@@ -10,18 +10,7 @@
  */
 
 import sql from "mssql";
-
-const config: sql.config = {
-  server: "sql.vsantana.com.br",
-  port: 1279,
-  database: "crescer",
-  user: "crescer",
-  password: "QSSmFTgRS7B3rsdl",
-  options: {
-    encrypt: true,
-    trustServerCertificate: true,
-  },
-};
+import { dbConfig as config } from "./db-config";
 
 const TENANT_ID = "512E3551-C8CC-4EC9-A70A-48A4959288C4";
 

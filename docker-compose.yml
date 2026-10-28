@@ -1,3 +1,6 @@
+# Credenciais e endereços vêm do arquivo .env (não versionado) na raiz do repositório.
+# Copie .env.example para .env e preencha antes de rodar `docker compose up`.
+# Variáveis marcadas com :? são obrigatórias e o compose falha cedo se faltarem.
 services:
   ml-service:
     build:
@@ -6,14 +9,15 @@ services:
       - ./ml-service/app:/app/app
       - ml-models:/models
     environment:
-      - DATABASE_SERVER=sql.vsantana.com.br,1279
-      - DATABASE_NAME=crescer
-      - DATABASE_USER=crescer
-      - DATABASE_PASSWORD=QSSmFTgRS7B3rsdl
+      - DATABASE_SERVER=${DATABASE_SERVER:?Defina DATABASE_SERVER no .env (veja .env.example)}
+      - DATABASE_NAME=${DATABASE_NAME:-crescer}
+      - DATABASE_USER=${DATABASE_USER:?Defina DATABASE_USER no .env (veja .env.example)}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:?Defina DATABASE_PASSWORD no .env (veja .env.example)}
       - DATABASE_DRIVER=ODBC Driver 18 for SQL Server
       - DATABASE_TRUST_CERTIFICATE=True
       - MODEL_PATH=/models
-      - CORS_ORIGINS=["http://localhost:5173","http://localhost:5174","http://localhost:5280"]
+      - CORS_ORIGINS=${CORS_ORIGINS:-["http://localhost:5173","http://localhost:5174","http://localhost:5280"]}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     ports:
       - "8000:8000"
     networks:
@@ -32,6 +36,10 @@ services:
       - ASPNETCORE_URLS=http://0.0.0.0:5280
       - URLS=http://0.0.0.0:5280
       - MLService__BaseUrl=http://ml-service:8000
+      - ConnectionStrings__DefaultConnection=Server=${DATABASE_SERVER:?Defina DATABASE_SERVER no .env (veja .env.example)};Database=${DATABASE_NAME:-crescer};User Id=${DATABASE_USER:?Defina DATABASE_USER no .env (veja .env.example)};Password=${DATABASE_PASSWORD:?Defina DATABASE_PASSWORD no .env (veja .env.example)};TrustServerCertificate=True;
+      - Jwt__Key=${JWT_KEY:?Defina JWT_KEY no .env (veja .env.example)}
+      - OpenAI__ApiKey=${OPENAI_API_KEY:-}
+      - Seed__SuperAdminPassword=${SEED_SUPERADMIN_PASSWORD:-}
     ports:
       - "5280:5280"
     networks:

@@ -19,18 +19,26 @@ public class DatabaseSeeder : IDatabaseSeeder
     private readonly RoleManager<IdentityRole<Guid>> _roleManager;
     private readonly UserManager<ProfissionalSaude> _userManager;
     private readonly CrescerSaudavelDbContext _context;
+    private readonly IConfiguration _configuration;
+    private readonly ILogger<DatabaseSeeder> _logger;
 
     private const string DefaultSuperAdminEmail = "superadmin@crescersaudavel.com";
+    // Senha de desenvolvimento, pública no repositório. Em qualquer ambiente real defina
+    // Seed:SuperAdminPassword (variável Seed__SuperAdminPassword) antes do primeiro start.
     private const string DefaultSuperAdminPassword = "Super@123";
 
     public DatabaseSeeder(
         RoleManager<IdentityRole<Guid>> roleManager,
         UserManager<ProfissionalSaude> userManager,
-        CrescerSaudavelDbContext context)
+        CrescerSaudavelDbContext context,
+        IConfiguration configuration,
+        ILogger<DatabaseSeeder> logger)
     {
         _roleManager = roleManager;
         _userManager = userManager;
         _context = context;
+        _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task SeedAsync()
@@ -76,7 +84,15 @@ public class DatabaseSeeder : IDatabaseSeeder
             CriadoEm = DateTimeOffset.UtcNow
         };
 
-        var createResult = await _userManager.CreateAsync(superAdmin, DefaultSuperAdminPassword);
+        var senhaInicial = _configuration["Seed:SuperAdminPassword"];
+        if (string.IsNullOrWhiteSpace(senhaInicial))
+        {
+            senhaInicial = DefaultSuperAdminPassword;
+            _logger.LogWarning(
+                "Seed:SuperAdminPassword não configurada; o SuperAdmin inicial será criado com a senha padrão de desenvolvimento. Troque-a no primeiro acesso.");
+        }
+
+        var createResult = await _userManager.CreateAsync(superAdmin, senhaInicial);
         if (!createResult.Succeeded)
         {
             throw new InvalidOperationException($"Falha ao criar SuperAdmin: {string.Join(",", createResult.Errors.Select(e => e.Description))}");

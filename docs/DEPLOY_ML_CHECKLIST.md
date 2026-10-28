@@ -159,28 +159,18 @@ sudo netstat -tulpn | grep -E "8000|5280|5174"
 
 #### 3. Variáveis de Ambiente
 
-O arquivo `docker-compose.yml` já tem as variáveis hardcoded, mas para produção, recomenda-se usar `.env`:
+O `docker-compose.yml` não tem credenciais: todas vêm do `.env` na raiz do projeto
+(obrigatório — sem ele o compose falha antes de subir).
 
 ```bash
-# Criar arquivo .env na raiz do projeto
-cat > .env << 'EOF'
-# Database
-DATABASE_SERVER=sql.vsantana.com.br,1279
-DATABASE_NAME=crescer
-DATABASE_USER=crescer
-DATABASE_PASSWORD=QSSmFTgRS7B3rsdl
-
-# ML Service
-MODEL_PATH=/models
-CORS_ORIGINS=["http://localhost:5173","http://localhost:5280"]
-
-# Backend
-ASPNETCORE_ENVIRONMENT=Production
-MLService__BaseUrl=http://ml-service:8000
-EOF
+# Na raiz do projeto
+cp .env.example .env
+chmod 600 .env
+nano .env   # preencher DATABASE_SERVER, DATABASE_USER, DATABASE_PASSWORD, JWT_KEY, ...
 ```
 
-⚠️ **ATENÇÃO**: Mude senhas e URLs para produção!
+A lista completa de variáveis, com descrição, está em `.env.example`. Nunca commite o
+`.env`. Credenciais já expostas precisam ser trocadas: `docs/SEGREDOS_ROTACAO.md`.
 
 #### 4. Firewall
 
@@ -353,7 +343,7 @@ docker-compose logs ml-service
    - Solução: Verificar Dockerfile tem instalação do ODBC Driver 18
    
 3. **Erro de conexão com banco**
-   - Solução: Verificar variáveis DATABASE_* no docker-compose.yml
+   - Solução: Verificar variáveis DATABASE_* no `.env`
 
 ### Problema 2: Modelos não encontrados
 
@@ -439,10 +429,9 @@ Access to XMLHttpRequest blocked by CORS policy
 ```
 
 **Solução**:
-Verificar CORS_ORIGINS no docker-compose.yml inclui o domínio correto:
-```yaml
-environment:
-  - CORS_ORIGINS=["http://seu-dominio.com","https://seu-dominio.com"]
+Verificar CORS_ORIGINS no `.env` inclui o domínio correto:
+```env
+CORS_ORIGINS=["http://seu-dominio.com","https://seu-dominio.com"]
 ```
 
 ---
@@ -602,7 +591,7 @@ docker-compose restart ml-service
 - [ ] `requirements.txt` está atualizado
 - [ ] Variáveis de ambiente configuradas
 - [ ] Credenciais de produção (não usar dev)
-- [ ] `.env` criado (opcional, mas recomendado)
+- [ ] `.env` criado a partir de `.env.example` (obrigatório)
 - [ ] Firewall configurado
 - [ ] Backup do banco de dados
 - [ ] Notificar equipe sobre manutenção

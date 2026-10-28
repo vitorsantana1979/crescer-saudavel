@@ -6,6 +6,32 @@
 
 ---
 
+## 🔑 Quais segredos existem e onde ficam
+
+| Segredo | Chave de configuração (.NET) | Variável de ambiente | No `.env` da raiz |
+|---------|------------------------------|----------------------|-------------------|
+| Connection string do SQL Server | `ConnectionStrings:DefaultConnection` | `ConnectionStrings__DefaultConnection` | montada a partir de `DATABASE_SERVER`, `DATABASE_NAME`, `DATABASE_USER`, `DATABASE_PASSWORD` |
+| Chave de assinatura JWT | `Jwt:Key` | `Jwt__Key` | `JWT_KEY` |
+| Chave OpenAI | `OpenAI:ApiKey` | `OpenAI__ApiKey` | `OPENAI_API_KEY` |
+| Senha inicial do SuperAdmin | `Seed:SuperAdminPassword` | `Seed__SuperAdminPassword` | `SEED_SUPERADMIN_PASSWORD` |
+
+`appsettings.json` e `appsettings.Production.json` são versionados e ficam com esses valores
+vazios. O `Program.cs` aborta a inicialização se a connection string ou a `Jwt:Key` estiverem
+vazias (ou se a chave tiver menos de 32 bytes). Os `docker-compose*.yml` e o `scripts/run-api.sh`
+traduzem o `.env` (modelo em `.env.example`) para essas variáveis. Credenciais que já foram
+commitadas: `docs/SEGREDOS_ROTACAO.md`.
+
+### Desenvolvimento local com user-secrets
+
+```bash
+cd backend/CrescerSaudavel.Api
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=host,porta;Database=crescer;User Id=usuario;Password=senha;TrustServerCertificate=True;"
+dotnet user-secrets set "Jwt:Key" "$(openssl rand -base64 48)"
+dotnet user-secrets set "OpenAI:ApiKey" "sua-chave-aqui"
+```
+
+---
+
 ## 📝 Configuração Local (Desenvolvimento)
 
 ### 1. OpenAI API Key
@@ -115,8 +141,13 @@ env:
 
 | Arquivo | Versionado | Contém Secrets |
 |---------|------------|----------------|
-| `appsettings.json` | ✅ Sim | ❌ Não (vazio) |
+| `appsettings.json` | ✅ Sim | ❌ Não (connection string, `Jwt:Key` e `OpenAI:ApiKey` vazios) |
+| `appsettings.Production.json` | ✅ Sim | ❌ Não (vazio) |
+| `docker-compose*.yml` | ✅ Sim | ❌ Não (só `${VARIAVEL}`) |
+| `.env.example` | ✅ Sim | ❌ Não (nomes das variáveis, sem valores) |
+| `.env` | ❌ Não (.gitignore) | ✅ Sim (servidor / máquina local) |
 | `appsettings.Development.json` | ❌ Não (.gitignore) | ✅ Sim (local) |
+| `dotnet user-secrets` | ❌ Não | ✅ Sim (local) |
 | Variáveis de ambiente | ❌ Não | ✅ Sim (runtime) |
 
 ---

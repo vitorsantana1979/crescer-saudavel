@@ -1,0 +1,9 @@
+bin
+obj
+.git
+.gitignore
+.vscode
+*.log
+.env
+# Configuração local com segredos: nunca entra na imagem
+**/appsettings.Development.json

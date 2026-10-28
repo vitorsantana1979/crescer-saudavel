@@ -255,14 +255,14 @@ ml-service:
 
 ### 1. Configurar Variáveis
 
-**Backend** (`appsettings.json`):
+**Backend** (`appsettings.json` fica sem segredos; a chave vai em `OpenAI__ApiKey` / `OPENAI_API_KEY` no `.env`):
 ```json
 {
   "MLService": {
     "BaseUrl": "http://ml-service:8000"
   },
   "OpenAI": {
-    "ApiKey": "sk-your-openai-key"
+    "ApiKey": ""
   }
 }
 ```

@@ -1,4 +1,5 @@
-version: '3.8'
+# Produção. Credenciais vêm do arquivo .env (não versionado) ao lado deste compose.
+# Copie .env.example para .env no servidor e preencha; veja docs/SEGREDOS_ROTACAO.md.
 
 services:
   ml-service:
@@ -8,15 +9,15 @@ services:
     volumes:
       - ml-models:/models
     environment:
-      - DATABASE_SERVER=${DATABASE_SERVER}
-      - DATABASE_NAME=${DATABASE_NAME}
-      - DATABASE_USER=${DATABASE_USER}
-      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - DATABASE_SERVER=${DATABASE_SERVER:?Defina DATABASE_SERVER no .env (veja .env.example)}
+      - DATABASE_NAME=${DATABASE_NAME:-crescer}
+      - DATABASE_USER=${DATABASE_USER:?Defina DATABASE_USER no .env (veja .env.example)}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:?Defina DATABASE_PASSWORD no .env (veja .env.example)}
       - DATABASE_DRIVER=ODBC Driver 18 for SQL Server
       - DATABASE_TRUST_CERTIFICATE=True
       - MODEL_PATH=${MODEL_PATH:-/models}
       - CORS_ORIGINS=${CORS_ORIGINS}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     ports:
       - "8000:8000"
     networks:
@@ -30,11 +31,13 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Production}
       - ASPNETCORE_URLS=${ASPNETCORE_URLS:-http://0.0.0.0:5280}
-      - ConnectionStrings__DefaultConnection=Server=${DATABASE_SERVER};Database=${DATABASE_NAME};User Id=${DATABASE_USER};Password=${DATABASE_PASSWORD};TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=${DATABASE_SERVER:?Defina DATABASE_SERVER no .env (veja .env.example)};Database=${DATABASE_NAME:-crescer};User Id=${DATABASE_USER:?Defina DATABASE_USER no .env (veja .env.example)};Password=${DATABASE_PASSWORD:?Defina DATABASE_PASSWORD no .env (veja .env.example)};TrustServerCertificate=True;
+      - Jwt__Key=${JWT_KEY:?Defina JWT_KEY no .env (veja .env.example)}
       - MLService__BaseUrl=http://ml-service:8000
-      - OpenAI__ApiKey=${OpenAI__ApiKey}
+      - OpenAI__ApiKey=${OPENAI_API_KEY:-}
       - OpenAI__Model=gpt-4
       - OpenAI__MaxTokens=1500
+      - Seed__SuperAdminPassword=${SEED_SUPERADMIN_PASSWORD:-}
     ports:
       - "5280:5280"
     networks:
@@ -69,4 +72,3 @@ volumes:
 networks:
   app-network:
     driver: bridge
-

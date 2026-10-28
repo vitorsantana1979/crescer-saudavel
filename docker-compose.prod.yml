@@ -1,3 +1,5 @@
+# Credenciais vêm do arquivo .env (não versionado) na raiz do repositório.
+# Copie .env.example para .env e preencha; veja docs/SEGREDOS_ROTACAO.md.
 services:
   api:
     build:
@@ -5,6 +7,10 @@ services:
       target: prod
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Server=${DATABASE_SERVER:?Defina DATABASE_SERVER no .env (veja .env.example)};Database=${DATABASE_NAME:-crescer};User Id=${DATABASE_USER:?Defina DATABASE_USER no .env (veja .env.example)};Password=${DATABASE_PASSWORD:?Defina DATABASE_PASSWORD no .env (veja .env.example)};TrustServerCertificate=True;
+      - Jwt__Key=${JWT_KEY:?Defina JWT_KEY no .env (veja .env.example)}
+      - OpenAI__ApiKey=${OPENAI_API_KEY:-}
+      - Seed__SuperAdminPassword=${SEED_SUPERADMIN_PASSWORD:-}
     networks: [webnet]
     expose:           # expõe só na rede docker
       - "5280"

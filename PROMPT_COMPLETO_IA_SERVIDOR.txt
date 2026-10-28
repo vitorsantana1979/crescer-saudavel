@@ -229,7 +229,7 @@ docker-compose -f docker-compose.production.yml exec backend env | grep -E "MLSe
 
 # Deve mostrar:
 # MLService__BaseUrl=http://ml-service:8000
-# OpenAI__ApiKey=sk-proj-...
+# OpenAI__ApiKey=<chave-openai>
 
 # Rebuild forçado completo
 docker-compose -f docker-compose.production.yml down -v
@@ -301,9 +301,9 @@ cat .env
 DATABASE_SERVER=sql.vsantana.com.br:1279
 DATABASE_NAME=crescer
 DATABASE_USER=crescer
-DATABASE_PASSWORD=Cr35c3r@2024
-OPENAI_API_KEY=sk-proj-z7BCuAqti...
-OpenAI__ApiKey=sk-proj-z7BCuAqti...
+DATABASE_PASSWORD=<senha-do-banco>
+OPENAI_API_KEY=<chave-openai>
+OpenAI__ApiKey=<chave-openai>
 ASPNETCORE_ENVIRONMENT=Production
 VITE_API_URL=https://cs.quasarai.co/api
 

@@ -52,9 +52,9 @@ ARQUIVO .env DEVE CONTER:
 DATABASE_SERVER=sql.vsantana.com.br:1279
 DATABASE_NAME=crescer
 DATABASE_USER=crescer
-DATABASE_PASSWORD=Cr35c3r@2024
-OPENAI_API_KEY=sk-proj-z7BCuAqti...
-OpenAI__ApiKey=sk-proj-z7BCuAqti...
+DATABASE_PASSWORD=<senha-do-banco>
+OPENAI_API_KEY=<chave-openai>
+OpenAI__ApiKey=<chave-openai>
 
 Execute e me informe se há erros nos logs:
 docker-compose -f docker-compose.production.yml logs --tail=100

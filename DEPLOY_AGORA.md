@@ -32,8 +32,8 @@ cat .env | grep OpenAI
 
 **Deve mostrar**:
 ```
-OPENAI_API_KEY=sk-proj-z7BCuAqti...
-OpenAI__ApiKey=sk-proj-z7BCuAqti...
+OPENAI_API_KEY=<chave-openai>
+OpenAI__ApiKey=<chave-openai>
 ```
 
 ### 4. Atualizar Código do GitHub
@@ -143,7 +143,7 @@ docker-compose -f docker-compose.production.yml exec ml-service bash
 docker-compose -f docker-compose.production.yml exec backend env | grep OpenAI
 
 # Deve mostrar:
-# OpenAI__ApiKey=sk-proj-z7BCuAqti...
+# OpenAI__ApiKey=<chave-openai>
 ```
 
 ### Rebuild completo (última opção)

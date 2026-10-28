@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     DATABASE_PORT: int = 1279
     DATABASE_NAME: str = "crescer"
     DATABASE_USER: str = "crescer"
-    DATABASE_PASSWORD: str = "QSSmFTgRS7B3rsdl"
+    DATABASE_PASSWORD: str = ""
     DATABASE_DRIVER: str = "pymssql"
     DATABASE_TRUST_CERTIFICATE: bool = True
     
@@ -34,12 +34,19 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:3000"]
     
     class Config:
-        env_file = ".env"
+        # Segredos vêm do ambiente ou de um .env não versionado: ml-service/.env ou o
+        # .env da raiz do repositório (veja .env.example). O último arquivo tem prioridade.
+        env_file = ("../.env", ".env")
         case_sensitive = True
     
     @property
     def database_url(self) -> str:
         """Constrói URL de conexão com SQL Server"""
+        if not self.DATABASE_PASSWORD:
+            raise RuntimeError(
+                "DATABASE_PASSWORD não configurada. Defina a variável de ambiente "
+                "(ou ml-service/.env) — veja .env.example na raiz do repositório."
+            )
         return (
             f"mssql+pymssql://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}"
             f"@{self.DATABASE_SERVER}:{self.DATABASE_PORT}/{self.DATABASE_NAME}"

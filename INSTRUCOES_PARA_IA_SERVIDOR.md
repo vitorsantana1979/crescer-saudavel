@@ -80,9 +80,9 @@ cat .env | grep -E "OpenAI|DATABASE"
 DATABASE_SERVER=sql.vsantana.com.br:1279
 DATABASE_NAME=crescer
 DATABASE_USER=crescer
-DATABASE_PASSWORD=Cr35c3r@2024
-OPENAI_API_KEY=sk-proj-z7BCuAqti...
-OpenAI__ApiKey=sk-proj-z7BCuAqti...
+DATABASE_PASSWORD=<senha-do-banco>
+OPENAI_API_KEY=<chave-openai>
+OpenAI__ApiKey=<chave-openai>
 ```
 
 ### Passo 5: Rebuild COMPLETO dos Containers
