@@ -56,6 +56,9 @@ interface Consulta {
   zScoreAltura?: number;
   zScorePerimetro?: number;
   velocidadeGanhoPonderal?: number;
+  referenciaCurva?: string | null;
+  idadeCalculoDias?: number | null;
+  tipoIdadeCalculo?: string | null;
 }
 
 interface DietaItem {

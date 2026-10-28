@@ -12,6 +12,8 @@ import {
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
+import GraficoOms, { type PontoPacienteOms } from "@/components/GraficoOms";
+import { resolverIdadeConsulta } from "@/lib/crescimento";
 
 interface CurvaReferencia {
   semanas: number;
@@ -33,6 +35,10 @@ interface ConsultaItem {
   zScorePeso?: number;
   zScoreAltura?: number;
   zScorePerimetro?: number;
+  // Rastreabilidade do cálculo gravada pelo backend (ausente em consultas antigas)
+  referenciaCurva?: string | null;
+  idadeCalculoDias?: number | null;
+  tipoIdadeCalculo?: string | null;
 }
 
 interface DietaItem {
@@ -448,13 +454,8 @@ export default function GraficosZScore({
     let houveConversao = false;
     const pontos = consultasOrdenadas
       .map((consulta) => {
-        let peso = consulta.pesoKg;
+        const peso = consulta.pesoKg;
         if (peso == null || Number.isNaN(peso)) return null;
-
-        if (peso > 15) {
-          peso = Number((peso / 1000).toFixed(3));
-          houveConversao = true;
-        }
 
         const dataConsulta = new Date(consulta.dataHora);
         let semanasTotais: number | null = null;
@@ -532,6 +533,31 @@ export default function GraficosZScore({
   }, [consultasSelecionadas, dataNascimento, ehPretermo, idadeGestacionalSemanas, idadeGestacionalDias]);
 
   const pontosPaciente = pontosPacienteMemo.pontos;
+
+  // Pontos avaliados na OMS: a termo (idade cronológica) e pré-termo após 64 semanas (idade corrigida)
+  const pontosOms = useMemo<PontoPacienteOms[]>(() => {
+    if (!dataNascimento) return [];
+    const crianca = { dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias };
+    return consultasSelecionadas
+      .map((consulta): PontoPacienteOms | null => {
+        const idade = resolverIdadeConsulta(consulta, crianca);
+        if (idade.referencia !== "OMS") return null;
+        return {
+          id: consulta.id,
+          data: consulta.dataHora,
+          dia: idade.idadeDias,
+          tipoIdade: idade.tipoIdade,
+          pesoKg: consulta.pesoKg,
+          estaturaCm: consulta.estaturaCm,
+          perimetroCefalicoCm: consulta.perimetroCefalicoCm,
+          zScorePeso: consulta.zScorePeso,
+          zScoreAltura: consulta.zScoreAltura,
+          zScorePerimetro: consulta.zScorePerimetro,
+        };
+      })
+      .filter((p): p is PontoPacienteOms => p !== null);
+  }, [consultasSelecionadas, dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias]);
+  const mostrarGraficoOms = !ehPretermo || pontosOms.length > 0;
 
   useEffect(() => {
     if (pontosPacienteMemo.houveConversao) {
@@ -1288,8 +1314,9 @@ export default function GraficosZScore({
             CURVAS DE CRESCIMENTO
           </h3>
           <p className="text-xs text-gray-600 italic">
-            {ehPretermo ? "INTERGROWTH-21st" : "WHO Child Growth Standards"}
-            {ehPretermo && <span className="ml-2 text-orange-600">(Pré-termo - Idade corrigida)</span>}
+            {ehPretermo
+              ? "INTERGROWTH-21st (idade pós-menstrual) até 64 semanas; depois OMS com idade corrigida"
+              : "WHO Child Growth Standards"}
           </p>
             </div>
         
@@ -1321,7 +1348,10 @@ export default function GraficosZScore({
               </div>
             )}
         </div>
-        <div className="flex flex-col lg:flex-row gap-6" ref={areaGraficoRef}>
+        <div ref={areaGraficoRef}>
+        {ehPretermo && (
+        <>
+        <div className="flex flex-col lg:flex-row gap-6">
           <div className="flex-1">
             <div
               className="mx-auto rounded-lg overflow-hidden relative"
@@ -1945,6 +1975,20 @@ export default function GraficosZScore({
               Ver tudo
             </button>
           </div>
+        </div>
+        </>
+        )}
+        {mostrarGraficoOms && (
+          <div className={ehPretermo ? "mt-6 pt-6 border-t border-gray-200" : ""}>
+            {ehPretermo && (
+              <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
+                Após 64 semanas pós-menstruais — OMS (idade corrigida até {" "}
+                24 meses, depois cronológica)
+              </h4>
+            )}
+            <GraficoOms sexo={sexo === "F" ? "F" : "M"} pontos={pontosOms} />
+          </div>
+        )}
         </div>
         
         {/* Tabela de Histórico de Peso */}

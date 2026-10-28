@@ -141,7 +141,9 @@ Muda classificação (ex.: "muito baixo peso" vira "baixo peso").
 
 ### Status
 - **Fase 1 implementada em 2026-10-28** — ver `docs/ADR-001-curvas-de-referencia-e-zscore.md`.
-  Achados A, B, C, D, E, I, J e L resolvidos no backend; F, G, H e K ficam para as Fases 2 e 3.
+  Achados A, B, C, D, E, I, J e L resolvidos no backend.
+- **Fase 2 implementada em 2026-10-28** — achados F, G e H resolvidos (`GraficoOms` com os 5
+  recortes); K (classificação no backend) fica para a Fase 3.
 
 ## 6. Decisões que dependem da equipe clínica
 - Até quando usar idade corrigida na OMS após 64 s (sugestão: 24 meses de idade corrigida).

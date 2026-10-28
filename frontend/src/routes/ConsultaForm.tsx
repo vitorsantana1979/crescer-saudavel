@@ -195,7 +195,8 @@ export default function ConsultaForm() {
                 step="0.001"
                 {...register("pesoKg", {
                   required: "Peso é obrigatório",
-                  min: { value: 0.1, message: "Peso deve ser maior que 0" },
+                  min: { value: 0.3, message: "Peso mínimo 0,300 kg — informe em quilogramas" },
+                  max: { value: 35, message: "Peso máximo 35 kg — informe em quilogramas, não em gramas" },
                   valueAsNumber: true,
                 })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -247,10 +248,8 @@ export default function ConsultaForm() {
                 step="0.1"
                 {...register("estaturaCm", {
                   required: "Comprimento é obrigatório",
-                  min: {
-                    value: 1,
-                    message: "Comprimento deve ser maior que 0",
-                  },
+                  min: { value: 20, message: "Comprimento mínimo 20 cm" },
+                  max: { value: 130, message: "Comprimento máximo 130 cm — informe em centímetros" },
                   valueAsNumber: true,
                 })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -286,7 +285,8 @@ export default function ConsultaForm() {
                 step="0.1"
                 {...register("perimetroCefalicoCm", {
                   required: "Perímetro cefálico é obrigatório",
-                  min: { value: 1, message: "Perímetro deve ser maior que 0" },
+                  min: { value: 15, message: "Perímetro cefálico mínimo 15 cm" },
+                  max: { value: 60, message: "Perímetro cefálico máximo 60 cm — informe em centímetros" },
                   valueAsNumber: true,
                 })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"

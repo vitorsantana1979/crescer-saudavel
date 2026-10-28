@@ -38,6 +38,23 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
 7. A "consulta anterior" para alertas e VGP é a última com data **anterior** à consulta avaliada
    (antes, na criação, era a última cadastrada, independentemente da data).
 
+## Fase 2 — gráficos (2026-10-28)
+
+8. **`GraficoOms`** (`frontend/src/components/GraficoOms.tsx`): os cinco recortes oficiais da
+   OMS (nascimento–6 m, nascimento–2 a, 6 m–2 a, 2–5 a, nascimento–5 a) como filtro; eixo X em
+   dias rotulado em semanas (0–13), meses e anos completos (1 mês = 30,4375 dias); domínios de
+   peso iguais aos dos PDFs oficiais por sexo e recorte; linhas −3/−2/0/+2/+3 nas cores da OMS,
+   ±1 opcional (tracejada âmbar); moldura rosa/azul; medidas peso, comprimento/estatura e
+   perímetro cefálico (curva diária de `/api/referencias/oms/{medida}/{sexo}/curva-diaria`).
+9. **Regra no cliente** (`frontend/src/lib/crescimento.ts`) espelha o backend e usa a
+   rastreabilidade gravada na consulta (`referenciaCurva`, `idadeCalculoDias`,
+   `tipoIdadeCalculo`) quando existe. A termo → só `GraficoOms`; pré-termo → INTERGROWTH até
+   64 semanas e, havendo consultas posteriores, `GraficoOms` em idade corrigida (pontos vazados)
+   com a marca "fim INTERGROWTH".
+10. Removido o `peso > 15 → /1000` do gráfico; o formulário de consulta valida faixas
+    (peso 0,3–35 kg, comprimento 20–130 cm, PC 15–60 cm).
+11. `/dev/grafico-oms` (só em `vite dev`) exercita o componente com pontos fictícios.
+
 ## Consequências
 
 - Consultas antigas têm z nulo até rodar o reprocessamento.

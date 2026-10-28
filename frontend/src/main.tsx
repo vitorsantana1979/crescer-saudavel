@@ -21,6 +21,8 @@ import GruposSaude from "./routes/GruposSaude";
 import UnidadesSaude from "./routes/UnidadesSaude";
 import IAInsights from "./routes/IAInsights";
 import ChatIA from "./routes/ChatIA";
+// Página de desenvolvimento do gráfico OMS; fora do bundle de produção
+const DevGraficoOms = import.meta.env.DEV ? React.lazy(() => import("./routes/DevGraficoOms")) : null;
 import { AuthProvider } from "./contexts/AuthContext";
 import RequireAuth from "./components/RequireAuth";
 import "./styles/globals.css";
@@ -35,6 +37,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     >
       <Routes>
         <Route path="/" element={<Login />} />
+        {DevGraficoOms && (
+          <Route
+            path="/dev/grafico-oms"
+            element={
+              <React.Suspense fallback={null}>
+                <DevGraficoOms />
+              </React.Suspense>
+            }
+          />
+        )}
         <Route
           path="/dashboard"
           element={
