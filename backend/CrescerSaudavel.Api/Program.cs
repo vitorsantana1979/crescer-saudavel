@@ -6,6 +6,7 @@ using System.Text;
 using CrescerSaudavel.Api.Data;
 using CrescerSaudavel.Api.Models;
 using CrescerSaudavel.Api.Services;
+using CrescerSaudavel.Api.Services.Crescimento;
 using CrescerSaudavel.Api.Services.Seed;
 using CrescerSaudavel.Api.Services.Time;
 using CrescerSaudavel.Api.Services.Location;
@@ -145,7 +146,10 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton<ZScoreService>();
+builder.Services.Configure<CrescimentoOptions>(builder.Configuration.GetSection(CrescimentoOptions.Secao));
+builder.Services.AddSingleton(_ => new ZScoreService(Path.Combine(builder.Environment.ContentRootPath, "Data", "Referencias")));
+builder.Services.AddSingleton<IReferenciaCrescimentoService, ReferenciaCrescimentoService>();
+builder.Services.AddSingleton<IAvaliacaoCrescimentoService, AvaliacaoCrescimentoService>();
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
 
 // Registrar HttpClient para MLService

@@ -3,60 +3,52 @@ using System.Text.Json.Serialization;
 
 namespace CrescerSaudavel.Api.Services;
 
+public enum TipoReferencia
+{
+    OMS,
+    INTERGROWTH
+}
+
+public enum Medida
+{
+    Peso,
+    Estatura,
+    PerimetroCefalico
+}
+
+/// <summary>
+/// Cálculo de z-scores e curvas de referência.
+/// OMS: tabelas expandidas diárias (0-1856 dias) com parâmetros LMS, z pelo método LMS com o ajuste
+/// da OMS além de ±3 para o peso. INTERGROWTH-21st: tabela semanal (27-64 semanas pós-menstruais)
+/// de valores por z, com interpolação linear entre semanas e entre linhas de z.
+/// </summary>
 public class ZScoreService
 {
-    private readonly IWebHostEnvironment _env;
-    private readonly Dictionary<string, List<RefPoint>> _cache = new();
-    private readonly Dictionary<string, List<RefPointJson>> _cacheJson = new();
-    private readonly Dictionary<string, List<WeightDataPoint>> _cacheWeightData = new();
+    public const int OmsDiaMaximo = 1856;
+    public const int IntergrowthSemanaMinima = 27;
+    public const int IntergrowthSemanaMaxima = 64;
+    private static readonly int[] ZsCurva = { -3, -2, -1, 0, 1, 2, 3 };
 
-    public record RefPoint(double IdadeSemanas, double Z, double Valor);
-    
-    // Estrutura para deserializar JSONs que podem ter idadeDias também
-    private class RefPointJson
+    private sealed class PontoLms
     {
-        [JsonPropertyName("idadeSemanas")]
-        public int IdadeSemanas { get; set; }
-        
-        [JsonPropertyName("idadeDias")]
-        public int IdadeDias { get; set; }
-        
-        [JsonPropertyName("z")]
-        public int Z { get; set; }
-        
-        [JsonPropertyName("valor")]
-        public double Valor { get; set; }
+        [JsonPropertyName("dia")] public int Dia { get; set; }
+        [JsonPropertyName("l")] public double L { get; set; }
+        [JsonPropertyName("m")] public double M { get; set; }
+        [JsonPropertyName("s")] public double S { get; set; }
     }
 
-    // Estrutura para deserializar JSONs com formato weeks/days/z_-3, z_-2, etc
-    private class WeightDataPoint
+    private sealed class PontoSemanal
     {
-        [JsonPropertyName("weeks")]
-        public int Weeks { get; set; }
-        
-        [JsonPropertyName("days")]
-        public int Days { get; set; }
-        
-        [JsonPropertyName("z_-3")]
-        public double ZN3 { get; set; }
-        
-        [JsonPropertyName("z_-2")]
-        public double ZN2 { get; set; }
-        
-        [JsonPropertyName("z_-1")]
-        public double ZN1 { get; set; }
-        
-        [JsonPropertyName("z_0")]
-        public double Z0 { get; set; }
-        
-        [JsonPropertyName("z_1")]
-        public double ZP1 { get; set; }
-        
-        [JsonPropertyName("z_2")]
-        public double ZP2 { get; set; }
-        
-        [JsonPropertyName("z_3")]
-        public double ZP3 { get; set; }
+        [JsonPropertyName("semana")] public int Semana { get; set; }
+        [JsonPropertyName("zN3")] public double ZN3 { get; set; }
+        [JsonPropertyName("zN2")] public double ZN2 { get; set; }
+        [JsonPropertyName("zN1")] public double ZN1 { get; set; }
+        [JsonPropertyName("z0")] public double Z0 { get; set; }
+        [JsonPropertyName("zP1")] public double ZP1 { get; set; }
+        [JsonPropertyName("zP2")] public double ZP2 { get; set; }
+        [JsonPropertyName("zP3")] public double ZP3 { get; set; }
+
+        public double[] Valores => new[] { ZN3, ZN2, ZN1, Z0, ZP1, ZP2, ZP3 };
     }
 
     public record CurvaReferencia(
@@ -70,394 +62,251 @@ public class ZScoreService
         double ZP3
     );
 
-    public ZScoreService(IWebHostEnvironment env)
+    public record PontoCurvaDiaria(
+        int Dia,
+        double ZN3,
+        double ZN2,
+        double ZN1,
+        double Z0,
+        double ZP1,
+        double ZP2,
+        double ZP3
+    );
+
+    private readonly Dictionary<string, PontoLms[]> _oms = new();
+    private readonly Dictionary<string, PontoSemanal[]> _intergrowth = new();
+
+    public ZScoreService(string basePath)
     {
-        _env = env;
-        LoadAll();
+        Carregar(basePath);
     }
 
-    private void LoadAll()
+    public static string NomeArquivo(Medida medida) => medida switch
     {
-        string basePath = Path.Combine(_env.ContentRootPath, "Data", "Referencias");
-        if (!Directory.Exists(basePath)) return;
-        foreach (var dir in Directory.GetDirectories(basePath))
+        Medida.Peso => "peso",
+        Medida.Estatura => "estatura",
+        Medida.PerimetroCefalico => "perimetro",
+        _ => throw new ArgumentOutOfRangeException(nameof(medida))
+    };
+
+    public static bool TryParseMedida(string? texto, out Medida medida)
+    {
+        switch (texto?.Trim().ToLowerInvariant())
         {
-            var tipo = Path.GetFileName(dir);
-            foreach (var file in Directory.GetFiles(dir, "*.json"))
+            case "peso": medida = Medida.Peso; return true;
+            case "estatura":
+            case "comprimento":
+            case "altura": medida = Medida.Estatura; return true;
+            case "perimetro":
+            case "pc":
+            case "perimetrocefalico": medida = Medida.PerimetroCefalico; return true;
+            default: medida = default; return false;
+        }
+    }
+
+    private static string Chave(Medida medida, char sexo) => $"{NomeArquivo(medida)}_{char.ToLowerInvariant(sexo)}";
+
+    private void Carregar(string basePath)
+    {
+        var opcoes = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+        foreach (var medida in Enum.GetValues<Medida>())
+        {
+            foreach (var sexo in new[] { 'f', 'm' })
             {
-                var key = $"{tipo}/{Path.GetFileNameWithoutExtension(file)}".ToLower();
-                var json = File.ReadAllText(file);
-                
-                // Debug: log das chaves sendo carregadas
-                if (file.Contains("peso_pretermo") || file.Contains("peso_padrao"))
+                var arquivoOms = Path.Combine(basePath, "OMS", $"{Chave(medida, sexo)}.json");
+                if (File.Exists(arquivoOms))
                 {
-                    Console.WriteLine($"📦 Carregando arquivo: {file} -> chave: {key}");
-                }
-                
-                // Verificar se o JSON contém o formato weeks/days/z_-3
-                if (json.Contains("\"weeks\"") && json.Contains("\"z_-3\""))
-                {
-                    // Tentar deserializar com formato WeightDataPoint
-                    try
+                    var pontos = JsonSerializer.Deserialize<List<PontoLms>>(File.ReadAllText(arquivoOms), opcoes);
+                    if (pontos is { Count: > 0 })
                     {
-                        var dataWeight = JsonSerializer.Deserialize<List<WeightDataPoint>>(json);
-                        if (dataWeight != null && dataWeight.Count > 0)
-                        {
-                            _cacheWeightData[key] = dataWeight;
-                            if (file.Contains("peso_pretermo") || file.Contains("peso_padrao"))
-                            {
-                                Console.WriteLine($"✅ Cache atualizado: {key} = {dataWeight.Count} pontos");
-                            }
-                            continue;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Erro ao carregar arquivo WeightDataPoint {file}: {ex.Message}");
+                        var porDia = new PontoLms[OmsDiaMaximo + 1];
+                        foreach (var p in pontos.Where(p => p.Dia >= 0 && p.Dia <= OmsDiaMaximo))
+                            porDia[p.Dia] = p;
+                        if (porDia.All(p => p != null))
+                            _oms[Chave(medida, sexo)] = porDia;
+                        else
+                            Console.WriteLine($"Referência OMS incompleta ignorada: {arquivoOms}");
                     }
                 }
-                
-                // Verificar se o JSON contém idadeDias
-                if (json.Contains("\"idadeDias\""))
+
+                var arquivoIg = Path.Combine(basePath, "INTERGROWTH", $"{Chave(medida, sexo)}.json");
+                if (File.Exists(arquivoIg))
                 {
-                    // Tentar deserializar com idadeDias
-                    try
-                    {
-                        var dataJson = JsonSerializer.Deserialize<List<RefPointJson>>(json);
-                        if (dataJson != null && dataJson.Count > 0)
-                        {
-                            // Arquivo com idadeDias - guardar ambos
-                            _cacheJson[key] = dataJson;
-                            // Também manter compatibilidade com formato antigo
-                            var data = dataJson.Select(p => new RefPoint(p.IdadeSemanas, p.Z, p.Valor)).ToList();
-                            _cache[key] = data;
-                            continue;
-                        }
-                    }
-                    catch
-                    {
-                        // Se falhar, tenta formato antigo
-                    }
-                }
-                
-                // Fallback para formato antigo (sem idadeDias)
-                try
-                {
-                    var data = JsonSerializer.Deserialize<List<RefPoint>>(json) ?? new();
-                    _cache[key] = data;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Erro ao carregar arquivo {file}: {ex.Message}");
+                    var pontos = JsonSerializer.Deserialize<List<PontoSemanal>>(File.ReadAllText(arquivoIg), opcoes);
+                    if (pontos is { Count: > 0 })
+                        _intergrowth[Chave(medida, sexo)] = pontos.OrderBy(p => p.Semana).ToArray();
                 }
             }
         }
     }
 
-    public double? CalcularZ(double idadeSemanas, double valor, string sexo, string tipo, string medida)
+    public bool PossuiReferencia(TipoReferencia tipo, Medida medida, char sexo) => tipo switch
     {
-        // Validação: para Intergrowth, IGC não pode ultrapassar 64 semanas
-        if (tipo.Equals("INTERGROWTH", StringComparison.OrdinalIgnoreCase) && idadeSemanas > 64)
+        TipoReferencia.OMS => _oms.ContainsKey(Chave(medida, sexo)),
+        TipoReferencia.INTERGROWTH => _intergrowth.ContainsKey(Chave(medida, sexo)),
+        _ => false
+    };
+
+    /// <summary>
+    /// Z-score de uma medida. Para OMS, <paramref name="idadeDias"/> é a idade (cronológica ou corrigida)
+    /// em dias; para INTERGROWTH, é a idade pós-menstrual em dias. Retorna null fora da faixa da referência.
+    /// </summary>
+    public double? CalcularZ(TipoReferencia tipo, Medida medida, char sexo, double idadeDias, double valor)
+    {
+        if (valor <= 0 || double.IsNaN(idadeDias) || double.IsInfinity(idadeDias)) return null;
+
+        var z = tipo switch
         {
-            return null; // Retorna null se ultrapassar limite de 64 semanas de IGC
-        }
+            TipoReferencia.OMS => CalcularZOms(medida, sexo, idadeDias, valor),
+            TipoReferencia.INTERGROWTH => CalcularZIntergrowth(medida, sexo, idadeDias, valor),
+            _ => null
+        };
 
-        var key = $"{tipo}/{medida}_{sexo}".ToLower();
-        if (!_cache.ContainsKey(key)) return null;
-
-        var tabela = _cache[key];
-        var pontos = tabela.Where(p => Math.Abs(p.IdadeSemanas - idadeSemanas) < 1).ToList();
-        if (!pontos.Any()) return null;
-
-        var refZero = pontos.FirstOrDefault(p => p.Z == 0);
-        var refPlus1 = pontos.FirstOrDefault(p => p.Z == 1);
-        var refMinus1 = pontos.FirstOrDefault(p => p.Z == -1);
-        if (refZero == null || refPlus1 == null || refMinus1 == null) return null;
-
-        var sd = (refPlus1.Valor - refMinus1.Valor) / 2;
-        return Math.Round((valor - refZero.Valor) / sd, 2);
+        return z.HasValue ? Math.Round(z.Value, 2) : null;
     }
 
-    // Método para combinar arquivos de peso prematuro e padrão (masculino ou feminino)
-    public List<CurvaReferencia>? ObterCurvasPesoCombinado(string sexo)
+    private double? CalcularZOms(Medida medida, char sexo, double idadeDias, double valor)
     {
-        var keyPretermo = $"intergrowth/peso_pretermo_{sexo}".ToLower();
-        var keyPadrao = $"intergrowth/peso_padrao_{sexo}".ToLower();
+        if (!_oms.TryGetValue(Chave(medida, sexo), out var tabela)) return null;
+        if (idadeDias < 0 || idadeDias > OmsDiaMaximo) return null;
 
-        List<WeightDataPoint>? dadosPretermo = null;
-        List<WeightDataPoint>? dadosPadrao = null;
-
-        if (_cacheWeightData.ContainsKey(keyPretermo))
-        {
-            dadosPretermo = _cacheWeightData[keyPretermo];
-        }
-
-        if (_cacheWeightData.ContainsKey(keyPadrao))
-        {
-            dadosPadrao = _cacheWeightData[keyPadrao];
-        }
-
-        if (dadosPretermo == null && dadosPadrao == null)
-        {
-            return null;
-        }
-
-        var todosDados = new List<WeightDataPoint>();
-        
-        // Dados de prematuros apenas para semanas < 37 (pré-termo)
-        // Mas como temos dados padrão completos (0-64 semanas), vamos usar apenas dados padrão
-        // para evitar conflitos e garantir continuidade
-        if (dadosPadrao != null && dadosPadrao.Count > 0)
-        {
-            // Usar apenas dados padrão que têm dados completos até 64 semanas
-            todosDados.AddRange(dadosPadrao);
-        }
-        else if (dadosPretermo != null)
-        {
-            // Fallback: usar dados pré-termo se não houver dados padrão
-            var pretermoFiltrado = dadosPretermo.Where(p => p.Weeks < 37).ToList();
-            todosDados.AddRange(pretermoFiltrado);
-        }
-
-        // Filtrar apenas pontos com days = 0 (início da semana) e agrupar por semana
-        // Remover duplicatas mantendo apenas um ponto por semana (ordenado)
-        var porSemana = todosDados
-            .Where(p => p.Days == 0)
-            .GroupBy(p => p.Weeks)
-            .OrderBy(g => g.Key)
-            .Select(g => g.First())  // Primeiro ponto de cada semana (garantir ordem consistente)
-            .ToList();
-
-        var curvas = new List<CurvaReferencia>();
-
-        foreach (var ponto in porSemana)
-        {
-            curvas.Add(new CurvaReferencia(
-                ponto.Weeks,
-                ponto.ZN3,
-                ponto.ZN2,
-                ponto.ZN1,
-                ponto.Z0,
-                ponto.ZP1,
-                ponto.ZP2,
-                ponto.ZP3
-            ));
-        }
-
-        return curvas;
+        var (l, m, s) = ParametrosLms(tabela, idadeDias);
+        // A OMS restringe as caudas além de ±3 apenas nos indicadores baseados em peso.
+        return ZLms(valor, l, m, s, ajustarCaudas: medida == Medida.Peso);
     }
 
-    public List<CurvaReferencia>? ObterCurvasPesoPretermo(string sexo)
+    private static (double L, double M, double S) ParametrosLms(PontoLms[] tabela, double idadeDias)
     {
-        // Para pré-termo INTERGROWTH: usar dados oficiais disponíveis em arquivo.
-        // Permitimos retornar apenas a faixa 27-64 semanas quando o arquivo 27plus estiver presente.
-        var keyPretermoFaixaCompleta = $"intergrowth/peso_pretermo_{sexo}".ToLower();
-        var keyPretermo27Plus = $"intergrowth/peso_pretermo_{sexo}_27plus".ToLower();
-        
-        List<WeightDataPoint>? dadosPretermo = null;
-        if (_cacheWeightData.ContainsKey(keyPretermo27Plus))
-        {
-            dadosPretermo = _cacheWeightData[keyPretermo27Plus];
-        }
-        else if (_cacheWeightData.ContainsKey(keyPretermoFaixaCompleta))
-        {
-            dadosPretermo = _cacheWeightData[keyPretermoFaixaCompleta];
-        }
-        
-        if (dadosPretermo == null)
-        {
-            return null;
-        }
-
-        // Usar apenas pontos com days = 0 (início da semana) para manter um ponto por semana
-        var dadosFiltrados = dadosPretermo
-            .Where(p => p.Days == 0)
-            .GroupBy(p => p.Weeks)
-            .OrderBy(g => g.Key)
-            .Select(g => g.First())
-            .ToList();
-
-        var curvas = new List<CurvaReferencia>();
-
-        foreach (var ponto in dadosFiltrados)
-        {
-            curvas.Add(new CurvaReferencia(
-                ponto.Weeks,
-                ponto.ZN3,
-                ponto.ZN2,
-                ponto.ZN1,
-                ponto.Z0,
-                ponto.ZP1,
-                ponto.ZP2,
-                ponto.ZP3
-            ));
-        }
-
-        return curvas;
+        var inferior = (int)Math.Floor(idadeDias);
+        var superior = Math.Min(inferior + 1, OmsDiaMaximo);
+        var fracao = idadeDias - inferior;
+        var a = tabela[inferior];
+        var b = tabela[superior];
+        return (
+            a.L + (b.L - a.L) * fracao,
+            a.M + (b.M - a.M) * fracao,
+            a.S + (b.S - a.S) * fracao
+        );
     }
 
-    public List<CurvaReferencia>? ObterCurvasPesoPadrao(string sexo)
+    public static double ValorLms(double l, double m, double s, double z) =>
+        Math.Abs(l) < 1e-9 ? m * Math.Exp(s * z) : m * Math.Pow(1 + l * s * z, 1 / l);
+
+    public static double ZLms(double valor, double l, double m, double s, bool ajustarCaudas)
     {
-        // Usar dados OMS (padrão)
-        var keyOms = $"oms/peso_{sexo}".ToLower();
-        
-        if (_cacheWeightData.ContainsKey(keyOms))
+        var z = Math.Abs(l) < 1e-9
+            ? Math.Log(valor / m) / s
+            : (Math.Pow(valor / m, l) - 1) / (l * s);
+
+        if (!ajustarCaudas) return z;
+
+        if (z > 3)
         {
-            var dadosOms = _cacheWeightData[keyOms];
-            
-            var porSemana = dadosOms
-                .Where(p => p.Days == 0)
-                .GroupBy(p => p.Weeks)
-                .OrderBy(g => g.Key)
-                .Select(g => g.First())
+            var sd3 = ValorLms(l, m, s, 3);
+            var sd2 = ValorLms(l, m, s, 2);
+            return 3 + (valor - sd3) / (sd3 - sd2);
+        }
+
+        if (z < -3)
+        {
+            var sd3n = ValorLms(l, m, s, -3);
+            var sd2n = ValorLms(l, m, s, -2);
+            return -3 + (valor - sd3n) / (sd2n - sd3n);
+        }
+
+        return z;
+    }
+
+    private double? CalcularZIntergrowth(Medida medida, char sexo, double idadePosMenstrualDias, double valor)
+    {
+        if (!_intergrowth.TryGetValue(Chave(medida, sexo), out var tabela)) return null;
+
+        var semanas = idadePosMenstrualDias / 7.0;
+        if (semanas < IntergrowthSemanaMinima || semanas > IntergrowthSemanaMaxima) return null;
+
+        var valores = ValoresIntergrowth(tabela, semanas);
+        if (valores == null) return null;
+
+        return ZPorInterpolacao(valor, valores);
+    }
+
+    private static double[]? ValoresIntergrowth(PontoSemanal[] tabela, double semanas)
+    {
+        var semanaInferior = (int)Math.Floor(semanas);
+        var a = tabela.FirstOrDefault(p => p.Semana == semanaInferior);
+        if (a == null) return null;
+        var b = tabela.FirstOrDefault(p => p.Semana == semanaInferior + 1) ?? a;
+        var fracao = semanas - semanaInferior;
+        var va = a.Valores;
+        var vb = b.Valores;
+        return va.Select((v, i) => v + (vb[i] - v) * fracao).ToArray();
+    }
+
+    // Interpolação linear entre as linhas de z (-3..+3); além das extremas, extrapola com a largura da
+    // banda vizinha, no mesmo espírito do ajuste de caudas da OMS.
+    private static double ZPorInterpolacao(double valor, double[] valoresPorZ)
+    {
+        var n = ZsCurva.Length;
+        if (valor <= valoresPorZ[0])
+            return ZsCurva[0] + (valor - valoresPorZ[0]) / (valoresPorZ[1] - valoresPorZ[0]);
+        if (valor >= valoresPorZ[n - 1])
+            return ZsCurva[n - 1] + (valor - valoresPorZ[n - 1]) / (valoresPorZ[n - 1] - valoresPorZ[n - 2]);
+
+        for (var i = 0; i < n - 1; i++)
+        {
+            if (valor <= valoresPorZ[i + 1])
+                return ZsCurva[i] + (valor - valoresPorZ[i]) / (valoresPorZ[i + 1] - valoresPorZ[i]);
+        }
+
+        return ZsCurva[n - 1];
+    }
+
+    // ---------- Curvas para os gráficos ----------
+
+    public List<CurvaReferencia>? ObterCurvasPesoPretermo(string sexo) =>
+        ObterCurvasReferencia(TipoReferencia.INTERGROWTH, Medida.Peso, SexoChar(sexo));
+
+    public List<CurvaReferencia>? ObterCurvasPesoPadrao(string sexo) =>
+        ObterCurvasReferencia(TipoReferencia.OMS, Medida.Peso, SexoChar(sexo));
+
+    /// <summary>Um ponto por semana (OMS: semanas 0-265; INTERGROWTH: 27-64).</summary>
+    public List<CurvaReferencia>? ObterCurvasReferencia(TipoReferencia tipo, Medida medida, char sexo)
+    {
+        if (tipo == TipoReferencia.INTERGROWTH)
+        {
+            if (!_intergrowth.TryGetValue(Chave(medida, sexo), out var tabela)) return null;
+            return tabela
+                .Select(p => new CurvaReferencia(p.Semana, p.ZN3, p.ZN2, p.ZN1, p.Z0, p.ZP1, p.ZP2, p.ZP3))
                 .ToList();
-
-            var curvas = new List<CurvaReferencia>();
-
-            foreach (var ponto in porSemana)
-            {
-                curvas.Add(new CurvaReferencia(
-                    ponto.Weeks,
-                    ponto.ZN3,
-                    ponto.ZN2,
-                    ponto.ZN1,
-                    ponto.Z0,
-                    ponto.ZP1,
-                    ponto.ZP2,
-                    ponto.ZP3
-                ));
-            }
-
-            return curvas;
         }
-        
-        // Fallback: tentar formato antigo
-        return ObterCurvasReferencia("OMS", "peso", sexo);
-    }
 
-    public List<CurvaReferencia>? ObterCurvasReferencia(string tipo, string medida, string sexo)
-    {
-        var key = $"{tipo}/{medida}_{sexo}".ToLower();
-        
-        // Tentar usar dados com formato WeightDataPoint (weeks/days/z_-3)
-        if (_cacheWeightData.ContainsKey(key))
-        {
-            var tabela = _cacheWeightData[key];
-            
-            // Filtrar apenas pontos com days = 0 (início da semana) e agrupar por semana
-            var porSemana = tabela
-                .Where(p => p.Days == 0)
-                .GroupBy(p => p.Weeks)
-                .OrderBy(g => g.Key)
-                .Select(g => g.First())
-                .ToList();
-
-            var curvas = new List<CurvaReferencia>();
-            
-            foreach (var ponto in porSemana)
-            {
-                curvas.Add(new CurvaReferencia(
-                    ponto.Weeks,
-                    ponto.ZN3,
-                    ponto.ZN2,
-                    ponto.ZN1,
-                    ponto.Z0,
-                    ponto.ZP1,
-                    ponto.ZP2,
-                    ponto.ZP3
-                ));
-            }
-
-            return curvas;
-        }
-        
-        // Tentar usar dados com idadeDias primeiro (arquivos de prematuros)
-        if (_cacheJson.ContainsKey(key))
-        {
-            var tabela = _cacheJson[key];
-            
-            // Filtrar apenas pontos com idadeDias = 0 (início da semana) e agrupar por semana
-            var porSemana = tabela
-                .Where(p => p.IdadeDias == 0)
-                .GroupBy(p => p.IdadeSemanas)
-                .OrderBy(g => g.Key)
-                .Select(g => new
-                {
-                    Semanas = g.Key,
-                    Pontos = g.ToList()
-                })
-                .ToList();
-
-            var curvas = new List<CurvaReferencia>();
-            
-            foreach (var grupo in porSemana)
-            {
-                var pontos = grupo.Pontos;
-                var zN3 = pontos.FirstOrDefault(p => p.Z == -3)?.Valor ?? 0;
-                var zN2 = pontos.FirstOrDefault(p => p.Z == -2)?.Valor ?? 0;
-                var zN1 = pontos.FirstOrDefault(p => p.Z == -1)?.Valor ?? 0;
-                var z0 = pontos.FirstOrDefault(p => p.Z == 0)?.Valor ?? 0;
-                var zP1 = pontos.FirstOrDefault(p => p.Z == 1)?.Valor ?? 0;
-                var zP2 = pontos.FirstOrDefault(p => p.Z == 2)?.Valor ?? 0;
-                var zP3 = pontos.FirstOrDefault(p => p.Z == 3)?.Valor ?? 0;
-
-                curvas.Add(new CurvaReferencia(
-                    grupo.Semanas,
-                    zN3,
-                    zN2,
-                    zN1,
-                    z0,
-                    zP1,
-                    zP2,
-                    zP3
-                ));
-            }
-
-            return curvas;
-        }
-        
-        // Fallback para formato antigo (sem idadeDias)
-        if (!_cache.ContainsKey(key)) return null;
-
-        var tabelaOld = _cache[key];
-        
-        // Agrupar por semana
-        var porSemanaOld = tabelaOld
-            .Where(p => Math.Abs(p.IdadeSemanas - Math.Floor(p.IdadeSemanas)) < 0.001)
-            .GroupBy(p => (int)Math.Round(p.IdadeSemanas))
-            .OrderBy(g => g.Key)
-            .Select(g => new
-            {
-                Semanas = g.Key,
-                Pontos = g.ToList()
-            })
+        var diaria = ObterCurvaDiaria(medida, sexo);
+        if (diaria == null) return null;
+        return diaria
+            .Where(p => p.Dia % 7 == 0)
+            .Select(p => new CurvaReferencia(p.Dia / 7, p.ZN3, p.ZN2, p.ZN1, p.Z0, p.ZP1, p.ZP2, p.ZP3))
             .ToList();
-
-        var curvasOld = new List<CurvaReferencia>();
-        
-        foreach (var grupo in porSemanaOld)
-        {
-            var pontos = grupo.Pontos;
-            var zN3 = pontos.FirstOrDefault(p => Math.Abs(p.Z - (-3)) < 0.001)?.Valor ?? 0;
-            var zN2 = pontos.FirstOrDefault(p => Math.Abs(p.Z - (-2)) < 0.001)?.Valor ?? 0;
-            var zN1 = pontos.FirstOrDefault(p => Math.Abs(p.Z - (-1)) < 0.001)?.Valor ?? 0;
-            var z0 = pontos.FirstOrDefault(p => Math.Abs(p.Z - 0) < 0.001)?.Valor ?? 0;
-            var zP1 = pontos.FirstOrDefault(p => Math.Abs(p.Z - 1) < 0.001)?.Valor ?? 0;
-            var zP2 = pontos.FirstOrDefault(p => Math.Abs(p.Z - 2) < 0.001)?.Valor ?? 0;
-            var zP3 = pontos.FirstOrDefault(p => Math.Abs(p.Z - 3) < 0.001)?.Valor ?? 0;
-
-            curvasOld.Add(new CurvaReferencia(
-                grupo.Semanas,
-                zN3,
-                zN2,
-                zN1,
-                z0,
-                zP1,
-                zP2,
-                zP3
-            ));
-        }
-
-        return curvasOld;
     }
+
+    /// <summary>Curva OMS dia a dia (0-1856), valores nas linhas z = -3..+3.</summary>
+    public List<PontoCurvaDiaria>? ObterCurvaDiaria(Medida medida, char sexo)
+    {
+        if (!_oms.TryGetValue(Chave(medida, sexo), out var tabela)) return null;
+        return tabela
+            .Select(p => new PontoCurvaDiaria(
+                p.Dia,
+                Arredondar(ValorLms(p.L, p.M, p.S, -3)),
+                Arredondar(ValorLms(p.L, p.M, p.S, -2)),
+                Arredondar(ValorLms(p.L, p.M, p.S, -1)),
+                Arredondar(ValorLms(p.L, p.M, p.S, 0)),
+                Arredondar(ValorLms(p.L, p.M, p.S, 1)),
+                Arredondar(ValorLms(p.L, p.M, p.S, 2)),
+                Arredondar(ValorLms(p.L, p.M, p.S, 3))))
+            .ToList();
+    }
+
+    private static double Arredondar(double valor) => Math.Round(valor, 3);
+
+    private static char SexoChar(string sexo) => string.IsNullOrEmpty(sexo) ? 'f' : char.ToLowerInvariant(sexo[0]);
 }

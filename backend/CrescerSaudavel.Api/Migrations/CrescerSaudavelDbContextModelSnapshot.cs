@@ -173,6 +173,9 @@ namespace CrescerSaudavel.Api.Migrations
                         .HasPrecision(6, 2)
                         .HasColumnType("decimal(6,2)");
 
+                    b.Property<int?>("IdadeCalculoDias")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("PerimetroCefalicoCm")
                         .HasPrecision(6, 2)
                         .HasColumnType("decimal(6,2)");
@@ -183,6 +186,12 @@ namespace CrescerSaudavel.Api.Migrations
 
                     b.Property<Guid>("RecemNascidoId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ReferenciaCurva")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TipoIdadeCalculo")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("VelocidadeGanhoPonderal")
                         .HasColumnType("decimal(18,2)");

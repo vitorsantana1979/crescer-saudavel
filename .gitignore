@@ -69,3 +69,8 @@ dist-ssr/
 # Generated files
 frontend/src/generated/
 
+
+# Saídas de build .NET
+backend/**/bin/
+backend/**/obj/
+backend/**/TestResults/

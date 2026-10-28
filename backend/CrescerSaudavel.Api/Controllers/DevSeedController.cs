@@ -1,6 +1,6 @@
 using CrescerSaudavel.Api.Data;
 using CrescerSaudavel.Api.Models;
-using CrescerSaudavel.Api.Services;
+using CrescerSaudavel.Api.Services.Crescimento;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,16 +13,16 @@ namespace CrescerSaudavel.Api.Controllers;
 public class DevSeedController : ControllerBase
 {
     private readonly CrescerSaudavelDbContext _context;
-    private readonly ZScoreService _zScoreService;
+    private readonly IAvaliacaoCrescimentoService _avaliacao;
     private readonly IWebHostEnvironment _environment;
 
     public DevSeedController(
         CrescerSaudavelDbContext context,
-        ZScoreService zScoreService,
+        IAvaliacaoCrescimentoService avaliacao,
         IWebHostEnvironment environment)
     {
         _context = context;
-        _zScoreService = zScoreService;
+        _avaliacao = avaliacao;
         _environment = environment;
     }
 
@@ -117,45 +117,18 @@ public class DevSeedController : ControllerBase
             _context.RecemNascidos.Add(crianca);
             await _context.SaveChangesAsync();
 
-            var sexo = crianca.Sexo == 'M' ? "m" : "f";
-            var curva = crianca.IdadeGestacionalSemanas < 37 ? "INTERGROWTH" : "OMS";
-
             foreach (var medida in criancaSeed.Medidas)
             {
-                var dataConsulta = crianca.DataNascimento.AddDays(medida.Semanas * 7);
-                var idadeSemanas = (dataConsulta.Date - crianca.DataNascimento.Date).TotalDays / 7.0;
-
-                decimal? zPeso = null;
-                decimal? zAltura = null;
-                decimal? zPerimetro = null;
-
-                try
-                {
-                    var zPesoCalc = _zScoreService.CalcularZ(idadeSemanas, (double)medida.PesoKg, sexo, curva, "peso");
-                    if (zPesoCalc.HasValue) zPeso = (decimal)zPesoCalc.Value;
-
-                    var zAlturaCalc = _zScoreService.CalcularZ(idadeSemanas, (double)medida.EstaturaCm, sexo, curva, "comprimento");
-                    if (zAlturaCalc.HasValue) zAltura = (decimal)zAlturaCalc.Value;
-
-                    var zPerimetroCalc = _zScoreService.CalcularZ(idadeSemanas, (double)medida.PerimetroCefalicoCm, sexo, curva, "pc");
-                    if (zPerimetroCalc.HasValue) zPerimetro = (decimal)zPerimetroCalc.Value;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Erro ao calcular Z-Score na seed: {ex.Message}");
-                }
-
                 var consulta = new Consulta
                 {
                     RecemNascidoId = crianca.Id,
-                    DataHora = dataConsulta,
+                    DataHora = crianca.DataNascimento.AddDays(medida.Semanas * 7),
                     PesoKg = medida.PesoKg,
                     EstaturaCm = medida.EstaturaCm,
-                    PerimetroCefalicoCm = medida.PerimetroCefalicoCm,
-                    ZScorePeso = zPeso,
-                    ZScoreAltura = zAltura,
-                    ZScorePerimetro = zPerimetro
+                    PerimetroCefalicoCm = medida.PerimetroCefalicoCm
                 };
+
+                _avaliacao.AplicarZScores(consulta, crianca);
 
                 _context.Consultas.Add(consulta);
             }

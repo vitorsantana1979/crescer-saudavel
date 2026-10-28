@@ -150,6 +150,11 @@ public class Consulta : EntidadeAuditavel
     // Velocidade de Ganho Ponderal (g/kg/dia) - Método Exponencial de Patel et al. (2005)
     // VGP = 1000 × ln(P2/P1) / (D2 - D1)
     public decimal? VelocidadeGanhoPonderal { get; set; }
+
+    // Rastreabilidade do cálculo dos z-scores
+    public string? ReferenciaCurva { get; set; } // "OMS" | "INTERGROWTH"; null quando sem referência aplicável
+    public int? IdadeCalculoDias { get; set; } // idade usada no cálculo, em dias
+    public string? TipoIdadeCalculo { get; set; } // "Cronologica" | "PosMenstrual" | "Corrigida"
 }
 
 public class Alimento : EntidadeAuditavel
