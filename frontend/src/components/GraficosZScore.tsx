@@ -3,7 +3,14 @@ import toast from "react-hot-toast";
 import GraficoOms, { type PontoPacienteOms } from "@/components/GraficoOms";
 import GraficoIntergrowth, { type PontoPacienteIntergrowth } from "@/components/GraficoIntergrowth";
 import GraficoPesoEstatura, { type PontoPesoEstatura } from "@/components/GraficoPesoEstatura";
-import { ajustarEstaturaPelaPosicao, formatarZ, resolverIdadeConsulta } from "@/lib/crescimento";
+import {
+  ajustarEstaturaPelaPosicao,
+  diasEntre,
+  formatarZ,
+  idadeGestacionalEmDias,
+  idadesNaData,
+  resolverIdadeConsulta,
+} from "@/lib/crescimento";
 
 interface ConsultaItem {
     id: string;
@@ -111,33 +118,16 @@ export default function GraficosZScore({
   const ehPretermo = idadeGestacionalSemanas < 37;
 
   // Cálculos para exibição de dados do RN
-  const calcularIdadeCronologica = useMemo(() => {
-    if (!dataNascimento) return null;
-    const hoje = new Date();
-    const nascimento = new Date(dataNascimento);
-    const diffMs = hoje.getTime() - nascimento.getTime();
-    return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  }, [dataNascimento]);
+  const calcularIdadeCronologica = useMemo(
+    () => (dataNascimento ? diasEntre(dataNascimento, new Date()) : null),
+    [dataNascimento]
+  );
 
+  // Idade pós-menstrual hoje (IGC), pelo helper único de idades
   const calcularIGCAtual = useMemo(() => {
     if (!dataNascimento || !idadeGestacionalSemanas) return null;
-    const hoje = new Date();
-    const nascimento = new Date(dataNascimento);
-    const diffMs = hoje.getTime() - nascimento.getTime();
-    const diasVida = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    const semanasVida = Math.floor(diasVida / 7);
-    const diasRestantes = diasVida % 7;
-    
-    let semanasTotais = idadeGestacionalSemanas + semanasVida;
-    let diasTotais = (idadeGestacionalDias || 0) + diasRestantes;
-    
-    if (diasTotais >= 7) {
-      semanasTotais += Math.floor(diasTotais / 7);
-      diasTotais = diasTotais % 7;
-    }
-    
-    return { semanas: semanasTotais, dias: diasTotais };
+    const pm = idadesNaData({ dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias }).posMenstrualDias;
+    return pm == null ? null : { semanas: Math.floor(pm / 7), dias: pm % 7 };
   }, [dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias]);
 
   // Obter peso atual e calcular diferença
@@ -253,21 +243,11 @@ export default function GraficosZScore({
     return consultasSelecionadas
       .map((consulta) => {
         const dataConsulta = new Date(consulta.dataHora);
-        const nascimento = new Date(dataNascimento);
-        const diasVida = Math.floor((dataConsulta.getTime() - nascimento.getTime()) / (1000 * 60 * 60 * 24));
-        
-        // Calcular IGC para cada consulta
-        const semanasVida = Math.floor(diasVida / 7);
-        const diasRestantes = diasVida % 7;
-        
-        let igcSemanas = idadeGestacionalSemanas + semanasVida;
-        let igcDias = (idadeGestacionalDias || 0) + diasRestantes;
-        
-        if (igcDias >= 7) {
-          igcSemanas += Math.floor(igcDias / 7);
-          igcDias = igcDias % 7;
-        }
-        
+        // IG ao nascer + idade cronológica (idade pós-menstrual) na data da consulta
+        const igc = idadeGestacionalEmDias(idadeGestacionalSemanas, idadeGestacionalDias) + diasEntre(dataNascimento, consulta.dataHora);
+        const igcSemanas = Math.floor(igc / 7);
+        const igcDias = igc % 7;
+
         return {
           id: consulta.id,
           data: dataConsulta,

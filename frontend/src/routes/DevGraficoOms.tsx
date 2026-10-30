@@ -4,6 +4,7 @@ import GraficoIntergrowth, { type PontoPacienteIntergrowth } from "@/components/
 import CardTamanhoNascimento from "@/components/CardTamanhoNascimento";
 import CardGanhoEsperado from "@/components/CardGanhoEsperado";
 import GraficoPesoEstatura, { type PontoPesoEstatura } from "@/components/GraficoPesoEstatura";
+import CriancaForm from "@/routes/CriancaForm";
 
 // Página de desenvolvimento (só em `vite dev`): exercita GraficoOms e GraficoIntergrowth com pontos fictícios.
 // Rota: /dev/grafico-oms
@@ -94,6 +95,11 @@ export default function DevGraficoOms() {
           Sexo: {sexo}
         </button>
       </div>
+
+      <section id="cadastro">
+        <h2 className="font-semibold mb-2">Formulário de cadastro (componente real, sem salvar)</h2>
+        <CriancaForm />
+      </section>
 
       <section>
         <h2 className="font-semibold mb-2">Ganho esperado para manter o canal (exemplo do mock)</h2>

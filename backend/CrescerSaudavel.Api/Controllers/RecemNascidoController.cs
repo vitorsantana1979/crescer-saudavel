@@ -79,6 +79,9 @@ public class RecemNascidoController : ControllerBase
         if (!tenantIds.Contains(recemNascido.TenantId))
             return Forbid();
 
+        if (DatasGestacao.Validar(recemNascido) is { } erroDatas)
+            return BadRequest(new { message = erroDatas });
+
         // Calcular classificações automaticamente
         recemNascido.ClassificacaoIG = RecemNascidoClassificacaoService.ClassificarIdadeGestacional(recemNascido.IdadeGestacionalSemanas);
         
@@ -106,6 +109,9 @@ public class RecemNascidoController : ControllerBase
 
         if (!tenantIds.Contains(recemNascido.TenantId))
             return Forbid();
+
+        if (DatasGestacao.Validar(recemNascido) is { } erroDatas)
+            return BadRequest(new { message = erroDatas });
 
         // Recalcular classificações automaticamente
         recemNascido.ClassificacaoIG = RecemNascidoClassificacaoService.ClassificarIdadeGestacional(recemNascido.IdadeGestacionalSemanas);

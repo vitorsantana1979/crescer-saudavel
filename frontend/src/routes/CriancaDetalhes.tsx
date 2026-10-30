@@ -10,8 +10,13 @@ import {
   COR_BADGE_NIVEL,
   classificacaoPorCodigo,
   classificarZ,
+  formatarIdadeDias,
   formatarPercentil,
+  formatarSemanasDias,
   formatarTipoIdade,
+  idadesNaData,
+  METODOS_IG,
+  LIMITE_IDADE_CORRIGIDA_MESES,
   formatarZ,
   percentilDeZ,
   type TipoIdade,
@@ -55,6 +60,10 @@ interface Crianca {
   classificacaoPN?: string;
   comprimentoCm?: number;
   perimetroCefalicoCm?: number;
+  horaNascimento?: string | null;
+  metodoIG?: string | null;
+  dataUltimaMenstruacao?: string | null;
+  dataProvavelParto?: string | null;
 }
 
 interface Consulta {
@@ -435,41 +444,6 @@ export default function CriancaDetalhes() {
     }
   };
 
-  const calcularIdadeCronologica = (dataNascimento: string) => {
-    const hoje = new Date();
-    const nascimento = new Date(dataNascimento);
-    const diffMs = hoje.getTime() - nascimento.getTime();
-    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    return diffDias;
-  };
-
-  const calcularIGC = (
-    dataNascimento: string,
-    idadeGestacionalSemanas: number,
-    idadeGestacionalDias: number = 0,
-    dataAtual: Date = new Date()
-  ): { semanas: number; dias: number } => {
-    const nascimento = new Date(dataNascimento);
-    const diffMs = dataAtual.getTime() - nascimento.getTime();
-    const diasVida = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    // Converter idade cronológica para semanas e dias
-    const semanasVida = Math.floor(diasVida / 7);
-    const diasRestantes = diasVida % 7;
-
-    // Somar IG ao nascimento + idade cronológica
-    let semanasTotais = idadeGestacionalSemanas + semanasVida;
-    let diasTotais = idadeGestacionalDias + diasRestantes;
-
-    // Ajustar se dias >= 7
-    if (diasTotais >= 7) {
-      semanasTotais += Math.floor(diasTotais / 7);
-      diasTotais = diasTotais % 7;
-    }
-
-    return { semanas: semanasTotais, dias: diasTotais };
-  };
-
   const formatarIdadeGestacional = (semanas: number, dias?: number): string => {
     if (dias !== undefined && dias !== null && dias > 0) {
       return `${semanas} semanas e ${dias} dia${dias > 1 ? "s" : ""}`;
@@ -583,31 +557,20 @@ export default function CriancaDetalhes() {
                   crianca.idadeGestacionalDias
                 )}
               </p>
+              {crianca.metodoIG && (
+                <p className="text-xs text-gray-500">por {METODOS_IG[crianca.metodoIG] ?? crianca.metodoIG}</p>
+              )}
+              {(crianca.dataUltimaMenstruacao || crianca.dataProvavelParto) && (
+                <p className="text-xs text-gray-500">
+                  {crianca.dataUltimaMenstruacao &&
+                    `DUM ${new Date(crianca.dataUltimaMenstruacao).toLocaleDateString("pt-BR")}`}
+                  {crianca.dataUltimaMenstruacao && crianca.dataProvavelParto && " · "}
+                  {crianca.dataProvavelParto && `DPP ${new Date(crianca.dataProvavelParto).toLocaleDateString("pt-BR")}`}
+                </p>
+              )}
             </div>
           </div>
         </div>
-
-        {isPreTermo &&
-          (() => {
-            const igc = calcularIGC(
-              crianca.dataNascimento,
-              crianca.idadeGestacionalSemanas,
-              crianca.idadeGestacionalDias || 0
-            );
-            return (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="w-8 h-8 text-indigo-600" />
-                  <div>
-                    <p className="text-xs text-gray-500">IGC (calculada)</p>
-                    <p className="text-sm font-semibold">
-                      {formatarIdadeGestacional(igc.semanas, igc.dias)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
 
         {/* Classificação por IG */}
         {crianca.idadeGestacionalSemanas &&
@@ -646,20 +609,46 @@ export default function CriancaDetalhes() {
             );
           })()}
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex items-center gap-3">
-            <Calendar className="w-8 h-8 text-green-600" />
-            <div>
-              <p className="text-xs text-gray-500">Idade Cronológica</p>
-              <p className="text-sm font-semibold">
-                {calcularIdadeCronologica(crianca.dataNascimento)} dia
-                {calcularIdadeCronologica(crianca.dataNascimento) !== 1
-                  ? "s"
-                  : ""}
-              </p>
+        {(() => {
+          const idades = idadesNaData(crianca);
+          return (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:col-span-2">
+              <div className="flex items-start gap-3">
+                <Calendar className="w-8 h-8 text-green-600 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500">Idades hoje</p>
+                  <dl className="mt-1 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                    <dt className="text-gray-500">Cronológica</dt>
+                    <dd className="font-semibold">
+                      {formatarIdadeDias(idades.cronologicaDias)}{" "}
+                      <span className="font-normal text-gray-500">({idades.diaDeVida}º dia de vida)</span>
+                    </dd>
+                    {idades.pretermo && (
+                      <>
+                        <dt className="text-gray-500">Pós-menstrual</dt>
+                        <dd className="font-semibold text-indigo-700">{formatarSemanasDias(idades.posMenstrualDias)}</dd>
+                        <dt className="text-gray-500">Corrigida</dt>
+                        <dd className="font-semibold text-indigo-700">
+                          {idades.corrigidaDias != null
+                            ? formatarIdadeDias(idades.corrigidaDias)
+                            : idades.correcaoEncerrada
+                            ? `encerrada aos ${LIMITE_IDADE_CORRIGIDA_MESES} meses`
+                            : "antes do termo (40 sem)"}
+                        </dd>
+                      </>
+                    )}
+                    {crianca.horaNascimento && (
+                      <>
+                        <dt className="text-gray-500">Nasceu às</dt>
+                        <dd className="font-semibold">{String(crianca.horaNascimento).slice(0, 5)}</dd>
+                      </>
+                    )}
+                  </dl>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })()}
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">

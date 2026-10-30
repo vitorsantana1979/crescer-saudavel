@@ -123,6 +123,16 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
     Pré-termo no período INTERGROWTH não tem z de IMC nem de P/E (sem tabela pública). O IMC entra nos
     alertas do painel; P/E não, para não duplicar o mesmo achado. Migration `AddEstadoNutricionalConsulta`.
 
+20. **Datas e idades**: o RN grava hora do nascimento, método de datação da IG (DUM, USG ou exame do
+    RN, Caderneta p. 69), DUM e DPP (migration `AddDatasGestacaoRecemNascido`). O cadastro calcula a IG
+    pela DUM e pela DPP (Naegele: DPP = DUM + 280 dias), oferece usá-las e avisa quando a IG informada
+    difere 7 dias ou mais; a IG gravada continua sendo a informada. O backend recusa método desconhecido
+    e DUM/DPP que impliquem IG fora de 20–45 semanas. Convenção de **dia de vida**: o dia do nascimento
+    é o 1º dia de vida (uso brasileiro); idades seguem contando por data de calendário, sem a hora.
+    O detalhe mostra "Idades hoje" (cronológica, dia de vida, pós-menstrual e corrigida) a partir de um
+    helper único no cliente (`idadesNaData`), que substitui três cálculos de IGC duplicados. Os campos
+    `IdadeGestacionalCorrigida*` do RN ficam como legado: saem do formulário e não são usados.
+
 ## Consequências
 
 - Consultas antigas têm z, classificação e alertas desatualizados até rodar o reprocessamento

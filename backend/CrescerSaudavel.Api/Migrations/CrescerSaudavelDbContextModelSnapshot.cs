@@ -637,6 +637,12 @@ namespace CrescerSaudavel.Api.Migrations
                     b.Property<DateTime>("DataNascimento")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DataProvavelParto")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("DataUltimaMenstruacao")
+                        .HasColumnType("date");
+
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
@@ -661,6 +667,9 @@ namespace CrescerSaudavel.Api.Migrations
                     b.Property<string>("EnderecoUf")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<TimeSpan?>("HoraNascimento")
+                        .HasColumnType("time");
+
                     b.Property<int?>("IdadeGestacionalCorrigidaDias")
                         .HasColumnType("int");
 
@@ -674,6 +683,10 @@ namespace CrescerSaudavel.Api.Migrations
                     b.Property<decimal>("IdadeGestacionalSemanas")
                         .HasPrecision(5, 2)
                         .HasColumnType("decimal(5,2)");
+
+                    b.Property<string>("MetodoIG")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("Nome")
                         .IsRequired()

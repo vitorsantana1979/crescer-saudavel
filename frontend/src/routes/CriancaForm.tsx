@@ -7,6 +7,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getErrorMessage } from "@/lib/errorHandler";
 import PageHeader from "@/components/PageHeader";
 import CardTamanhoNascimento from "@/components/CardTamanhoNascimento";
+import {
+  METODOS_IG,
+  dppPelaDum,
+  formatarSemanasDias,
+  idadeGestacionalEmDias,
+  igPelaDpp,
+  igPelaDum,
+} from "@/lib/crescimento";
 import { Baby, Save, X, AlertCircle } from "lucide-react";
 import {
   classificarIdadeGestacional,
@@ -23,6 +31,7 @@ export default function CriancaForm() {
     register,
     handleSubmit,
     reset,
+    setValue,
     control,
     formState: { errors },
   } = useForm();
@@ -34,6 +43,47 @@ export default function CriancaForm() {
   const sexo = useWatch({ control, name: "sexo" });
   const comprimentoCm = useWatch({ control, name: "comprimentoCm" });
   const perimetroCefalicoCm = useWatch({ control, name: "perimetroCefalicoCm" });
+  const dataNascimento = useWatch({ control, name: "dataNascimento" });
+  const dum = useWatch({ control, name: "dataUltimaMenstruacao" });
+  const dpp = useWatch({ control, name: "dataProvavelParto" });
+
+  // Cálculo cruzado DUM ↔ DPP ↔ IG (regra de Naegele); a IG gravada continua sendo a informada
+  const datacao = (() => {
+    if (!dataNascimento || (!dum && !dpp)) return null;
+    const usarIg = (dias: number) => () => {
+      setValue("idadeGestacionalSemanas", String(Math.floor(dias / 7)));
+      setValue("idadeGestacionalDias", String(dias % 7));
+    };
+    const itens: { rotulo: string; valor: string; acao?: { rotulo: string; executar: () => void } }[] = [];
+    const calculadas: { origem: string; dias: number }[] = [];
+    if (dum) {
+      const ig = igPelaDum(dum, dataNascimento);
+      calculadas.push({ origem: "DUM", dias: ig });
+      itens.push({ rotulo: "IG pela DUM", valor: formatarSemanasDias(ig), acao: { rotulo: "Usar esta IG", executar: usarIg(ig) } });
+      const dppCalculada = dppPelaDum(dum);
+      if (dppCalculada !== dpp) {
+        itens.push({
+          rotulo: "DPP pela DUM (Naegele)",
+          valor: dppCalculada.split("-").reverse().join("/"),
+          acao: { rotulo: "Preencher DPP", executar: () => setValue("dataProvavelParto", dppCalculada) },
+        });
+      }
+    }
+    if (dpp) {
+      const ig = igPelaDpp(dpp, dataNascimento);
+      calculadas.push({ origem: "DPP", dias: ig });
+      itens.push({ rotulo: "IG pela DPP", valor: formatarSemanasDias(ig), acao: { rotulo: "Usar esta IG", executar: usarIg(ig) } });
+    }
+    const informada =
+      Number(idadeGestacionalSemanas) > 0
+        ? idadeGestacionalEmDias(Number(idadeGestacionalSemanas), idadeGestacionalDias === "" ? null : Number(idadeGestacionalDias))
+        : null;
+    const diferencas = informada == null ? [] : calculadas.filter((c) => Math.abs(c.dias - informada) >= 7);
+    const divergente = diferencas.length
+      ? `A IG informada difere ${diferencas.map((d) => `${Math.abs(d.dias - informada!)} dias da calculada pela ${d.origem}`).join(" e ")}. Confira o método de datação.`
+      : null;
+    return { itens, divergente };
+  })();
 
   // Calcular classificações
   const classificacaoIG =
@@ -63,6 +113,10 @@ export default function CriancaForm() {
       reset({
         ...dados,
         dataNascimento: dataNascimentoIso,
+        horaNascimento: dados.horaNascimento ? String(dados.horaNascimento).slice(0, 5) : "",
+        metodoIG: dados.metodoIG || "",
+        dataUltimaMenstruacao: dados.dataUltimaMenstruacao ? String(dados.dataUltimaMenstruacao).slice(0, 10) : "",
+        dataProvavelParto: dados.dataProvavelParto ? String(dados.dataProvavelParto).slice(0, 10) : "",
         idadeGestacionalSemanas:
           dados.idadeGestacionalSemanas !== undefined &&
           dados.idadeGestacionalSemanas !== null
@@ -72,16 +126,6 @@ export default function CriancaForm() {
           dados.idadeGestacionalDias !== undefined &&
           dados.idadeGestacionalDias !== null
             ? Number(dados.idadeGestacionalDias).toString()
-            : "",
-        idadeGestacionalCorrigidaSemanas:
-          dados.idadeGestacionalCorrigidaSemanas !== undefined &&
-          dados.idadeGestacionalCorrigidaSemanas !== null
-            ? Number(dados.idadeGestacionalCorrigidaSemanas).toString()
-            : "",
-        idadeGestacionalCorrigidaDias:
-          dados.idadeGestacionalCorrigidaDias !== undefined &&
-          dados.idadeGestacionalCorrigidaDias !== null
-            ? Number(dados.idadeGestacionalCorrigidaDias).toString()
             : "",
         tipoParto: dados.tipoParto || "",
         apgar1Minuto:
@@ -132,16 +176,14 @@ export default function CriancaForm() {
         nome: data.nome,
         sexo: data.sexo,
         dataNascimento: data.dataNascimento,
+        horaNascimento: data.horaNascimento ? `${data.horaNascimento}:00` : null,
+        metodoIG: data.metodoIG || null,
+        dataUltimaMenstruacao: data.dataUltimaMenstruacao || null,
+        dataProvavelParto: data.dataProvavelParto || null,
         idadeGestacionalSemanas: toNullableNumber(
           data.idadeGestacionalSemanas
         ),
         idadeGestacionalDias: toNullableNumber(data.idadeGestacionalDias),
-        idadeGestacionalCorrigidaSemanas: toNullableNumber(
-          data.idadeGestacionalCorrigidaSemanas
-        ),
-        idadeGestacionalCorrigidaDias: toNullableNumber(
-          data.idadeGestacionalCorrigidaDias
-        ),
         tipoParto: data.tipoParto || null,
         apgar1Minuto: toNullableNumber(data.apgar1Minuto),
         apgar5Minuto: toNullableNumber(data.apgar5Minuto),
@@ -207,13 +249,21 @@ export default function CriancaForm() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Data de Nascimento *
+                Data e hora do nascimento *
               </label>
-              <input
-                {...register("dataNascimento", { required: true })}
-                type="date"
-                className="w-full border border-gray-400 rounded-lg px-4 py-2 bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
-              />
+              <div className="flex gap-2">
+                <input
+                  {...register("dataNascimento", { required: true })}
+                  type="date"
+                  className="flex-1 border border-gray-400 rounded-lg px-4 py-2 bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
+                />
+                <input
+                  {...register("horaNascimento")}
+                  type="time"
+                  title="Hora do nascimento"
+                  className="w-32 border border-gray-400 rounded-lg px-3 py-2 bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
+                />
+              </div>
             </div>
 
             <div>
@@ -254,39 +304,68 @@ export default function CriancaForm() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                IGC - Semanas
+                Método de datação da IG
               </label>
-              <input
-                {...register("idadeGestacionalCorrigidaSemanas")}
-                type="number"
-                step="0.1"
-                min="0"
+              <select
+                {...register("metodoIG")}
                 className="w-full border border-gray-400 rounded-lg px-4 py-2 bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
-                placeholder="Ex: 34"
-              />
+              >
+                <option value="">Não informado</option>
+                {Object.entries(METODOS_IG).map(([valor, rotulo]) => (
+                  <option key={valor} value={valor}>
+                    {rotulo}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                IGC - Dias
-              </label>
-              <input
-                {...register("idadeGestacionalCorrigidaDias", {
-                  min: 0,
-                  max: 6,
-                })}
-                type="number"
-                min="0"
-                max="6"
-                className="w-full border border-gray-400 rounded-lg px-4 py-2 bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
-                placeholder="0-6"
-              />
-              {errors.idadeGestacionalCorrigidaDias && (
-                <span className="text-red-500 text-sm">
-                  Deve ser entre 0 e 6 dias
-                </span>
-              )}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">DUM</label>
+                <input
+                  {...register("dataUltimaMenstruacao")}
+                  type="date"
+                  className="w-full border border-gray-400 rounded-lg px-3 py-2 bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">DPP</label>
+                <input
+                  {...register("dataProvavelParto")}
+                  type="date"
+                  className="w-full border border-gray-400 rounded-lg px-3 py-2 bg-white text-gray-900 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none"
+                />
+              </div>
             </div>
+
+            {datacao && (
+              <div className="md:col-span-2">
+                <div className={`rounded-lg border p-3 text-sm ${datacao.divergente ? "border-amber-300 bg-amber-50" : "border-gray-200 bg-gray-50"}`}>
+                  <p className="font-semibold text-gray-800 mb-1">Datação da gestação</p>
+                  <ul className="space-y-1 text-gray-700">
+                    {datacao.itens.map((item) => (
+                      <li key={item.rotulo} className="flex flex-wrap items-center gap-2">
+                        <span>
+                          {item.rotulo}: <strong>{item.valor}</strong>
+                        </span>
+                        {item.acao && (
+                          <button
+                            type="button"
+                            onClick={item.acao.executar}
+                            className="text-xs px-2 py-0.5 rounded border border-primary text-primary hover:bg-primary/10"
+                          >
+                            {item.acao.rotulo}
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  {datacao.divergente && (
+                    <p className="mt-2 text-amber-800 text-xs font-medium">{datacao.divergente}</p>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Classificação por Idade Gestacional */}
             {classificacaoIG && (

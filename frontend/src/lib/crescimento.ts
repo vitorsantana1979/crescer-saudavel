@@ -34,6 +34,12 @@ export interface SelecaoReferencia {
 const MS_POR_DIA = 86_400_000;
 
 function diaUtc(data: string | Date): number {
+  // "aaaa-mm-dd" (campo de data) é data de calendário; new Date() a leria como UTC e, no Brasil,
+  // cairia no dia anterior
+  if (typeof data === "string") {
+    const so = /^(\d{4})-(\d{2})-(\d{2})$/.exec(data);
+    if (so) return Date.UTC(Number(so[1]), Number(so[2]) - 1, Number(so[3]));
+  }
   const d = new Date(data);
   return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
 }
@@ -376,4 +382,67 @@ export function ajustarEstaturaPelaPosicao(cm: number, idadeDias: number, posica
   if (posicao === "EmPe" && deitadoParaIdade) return cm + 0.7;
   if (posicao === "Deitado" && !deitadoParaIdade) return cm - 0.7;
   return cm;
+}
+
+// --- Idades e datação da gestação ----------------------------------------------------------------
+
+export interface IdadesNaData {
+  cronologicaDias: number;
+  /** Convenção brasileira: o dia do nascimento é o 1º dia de vida. */
+  diaDeVida: number;
+  pretermo: boolean;
+  /** IG ao nascer + idade cronológica (só pré-termo). */
+  posMenstrualDias: number | null;
+  /** Pós-menstrual − 40 semanas, do termo até o limite de correção (só pré-termo). */
+  corrigidaDias: number | null;
+  /** Pré-termo que já passou do limite de idade corrigida (passa a usar a cronológica). */
+  correcaoEncerrada: boolean;
+}
+
+/** Fonte única das idades exibidas (espelha ReferenciaCrescimentoService no backend). */
+export function idadesNaData(crianca: DadosNascimento, data: string | Date = new Date()): IdadesNaData {
+  const cronologicaDias = diasEntre(crianca.dataNascimento, data);
+  const pretermo = crianca.idadeGestacionalSemanas < SEMANAS_TERMO;
+  const posMenstrualDias = pretermo
+    ? idadeGestacionalEmDias(crianca.idadeGestacionalSemanas, crianca.idadeGestacionalDias) + cronologicaDias
+    : null;
+  const corrigida = posMenstrualDias != null ? posMenstrualDias - DIAS_GESTACAO_TERMO : null;
+  const limite = Math.ceil(LIMITE_IDADE_CORRIGIDA_MESES * DIAS_POR_MES);
+  return {
+    cronologicaDias,
+    diaDeVida: cronologicaDias + 1,
+    pretermo,
+    posMenstrualDias,
+    corrigidaDias: corrigida != null && corrigida >= 0 && corrigida <= limite ? corrigida : null,
+    correcaoEncerrada: corrigida != null && corrigida > limite,
+  };
+}
+
+/** "34 sem 2 d" (idade gestacional / pós-menstrual em semanas e dias). */
+export function formatarSemanasDias(dias: number | null | undefined): string {
+  if (dias == null || !Number.isFinite(dias)) return "—";
+  const semanas = Math.floor(dias / 7);
+  const resto = dias - semanas * 7;
+  return resto ? `${semanas} sem ${resto} d` : `${semanas} sem`;
+}
+
+export const METODOS_IG: Record<string, string> = {
+  DUM: "DUM",
+  USG: "Ultrassom",
+  ExameRN: "Exame do recém-nascido",
+};
+
+/** DPP pela regra de Naegele: DUM + 280 dias (data ISO yyyy-mm-dd). */
+export function dppPelaDum(dum: string): string {
+  const [a, m, d] = dum.split("-").map(Number);
+  const data = new Date(Date.UTC(a, m - 1, d + DIAS_GESTACAO_TERMO));
+  return data.toISOString().slice(0, 10);
+}
+
+export function igPelaDum(dum: string, nascimento: string): number {
+  return diasEntre(dum, nascimento);
+}
+
+export function igPelaDpp(dpp: string, nascimento: string): number {
+  return DIAS_GESTACAO_TERMO - diasEntre(nascimento, dpp);
 }

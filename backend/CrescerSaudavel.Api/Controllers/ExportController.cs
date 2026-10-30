@@ -42,7 +42,7 @@ public class ExportController : ControllerBase
 
         var builder = new StringBuilder();
         // Cabeçalho
-        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,Sexo,IdadeGestacionalSemanas,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,AdequacaoPesoNascimento,ZNascimentoPeso,ZNascimentoComprimento,ZNascimentoPerimetro,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ReferenciaCurva,TipoIdadeCalculo,IdadeCalculoDias,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,PercentilPeso,PercentilEstatura,PercentilPerimetro,ClassificacaoPeso,ClassificacaoEstatura,ClassificacaoPerimetro,PosicaoMedida,Imc,ZScoreImc,ZScorePesoEstatura,ClassificacaoImc,ClassificacaoPesoEstatura,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
+        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,HoraNascimento,Sexo,IdadeGestacionalSemanas,IdadeGestacionalDias,MetodoIG,DUM,DPP,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,AdequacaoPesoNascimento,ZNascimentoPeso,ZNascimentoComprimento,ZNascimentoPerimetro,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ReferenciaCurva,TipoIdadeCalculo,IdadeCalculoDias,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,PercentilPeso,PercentilEstatura,PercentilPerimetro,ClassificacaoPeso,ClassificacaoEstatura,ClassificacaoPerimetro,PosicaoMedida,Imc,ZScoreImc,ZScorePesoEstatura,ClassificacaoImc,ClassificacaoPesoEstatura,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
 
         foreach (var c in consultas)
         {
@@ -52,8 +52,13 @@ public class ExportController : ControllerBase
             builder.AppendLine($"{r.Id}," +
                                $"\"{r.Nome}\"," +
                                $"{r.DataNascimento:yyyy-MM-dd}," +
+                               $"{r.HoraNascimento?.ToString(@"hh\:mm") ?? ""}," +
                                $"{r.Sexo}," +
                                $"{r.IdadeGestacionalSemanas.ToString(CultureInfo.InvariantCulture)}," +
+                               $"{r.IdadeGestacionalDias?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
+                               $"{r.MetodoIG ?? ""}," +
+                               $"{r.DataUltimaMenstruacao:yyyy-MM-dd}," +
+                               $"{r.DataProvavelParto:yyyy-MM-dd}," +
                                $"\"{r.ClassificacaoIG}\"," +
                                $"{r.PesoNascimentoGr}," +
                                $"\"{r.ClassificacaoPN}\"," +

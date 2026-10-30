@@ -88,8 +88,13 @@ public class RecemNascido : EntidadeAuditavel
     public string Nome { get; set; } = string.Empty;
     public char Sexo { get; set; }
     public DateTime DataNascimento { get; set; }
+    public TimeSpan? HoraNascimento { get; set; }
     public decimal IdadeGestacionalSemanas { get; set; }
     public int? IdadeGestacionalDias { get; set; } // 0-6 dias
+    public string? MetodoIG { get; set; } // DUM, USG ou ExameRN (Caderneta p. 69)
+    public DateTime? DataUltimaMenstruacao { get; set; }
+    public DateTime? DataProvavelParto { get; set; }
+    // Legado: IGC digitada no cadastro; a idade corrigida é sempre calculada (ReferenciaCrescimentoService)
     public decimal? IdadeGestacionalCorrigidaSemanas { get; set; }
     public int? IdadeGestacionalCorrigidaDias { get; set; } // 0-6 dias
     
