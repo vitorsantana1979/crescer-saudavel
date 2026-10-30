@@ -72,7 +72,7 @@ public class AvaliacaoCrescimentoServiceTests
     }
 
     [Fact]
-    public void Pretermo_calcula_o_peso_no_intergrowth_e_deixa_as_outras_medidas_sem_z()
+    public void Pretermo_calcula_as_tres_medidas_no_intergrowth()
     {
         var consulta = new Consulta
         {
@@ -89,10 +89,25 @@ public class AvaliacaoCrescimentoServiceTests
         Assert.Equal(280, consulta.IdadeCalculoDias);
         Assert.Equal(0m, consulta.ZScorePeso!.Value, 1);
         Assert.Equal("PesoAdequado", consulta.ClassificacaoPeso);
-        Assert.Null(consulta.ZScoreAltura);
-        Assert.Null(consulta.ClassificacaoEstatura);
-        Assert.Null(consulta.ZScorePerimetro);
-        Assert.Null(consulta.ClassificacaoPerimetro);
+        // meninas, 40 semanas: comprimento mediana 49,3 / +1 51,2; PC mediana 34,2 / +1 35,2
+        Assert.InRange(consulta.ZScoreAltura!.Value, 0.3m, 0.45m);
+        Assert.Equal("EstaturaAdequada", consulta.ClassificacaoEstatura);
+        Assert.InRange(consulta.ZScorePerimetro!.Value, 0.75m, 0.85m);
+        Assert.Equal("PerimetroCefalicoAdequado", consulta.ClassificacaoPerimetro);
+        Assert.False(consulta.AlertaRCEU);
+    }
+
+    [Fact]
+    public void Pretermo_com_perimetro_abaixo_de_menos_2_e_classificado_mas_rceu_continua_so_pelo_peso()
+    {
+        var consulta = new Consulta { DataHora = Nascimento.AddDays(70), PesoKg = 3.13m, EstaturaCm = 49.3m, PerimetroCefalicoCm = 31.8m };
+
+        Servico().Avaliar(consulta, Crianca(30), null);
+
+        Assert.Equal("INTERGROWTH", consulta.ReferenciaCurva);
+        Assert.True(consulta.ZScorePerimetro < -2m);
+        Assert.Equal("PerimetroCefalicoAbaixo", consulta.ClassificacaoPerimetro);
+        Assert.Equal("EstaturaAdequada", consulta.ClassificacaoEstatura);
         Assert.False(consulta.AlertaRCEU);
     }
 

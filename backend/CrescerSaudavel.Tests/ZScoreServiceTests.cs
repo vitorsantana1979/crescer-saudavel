@@ -117,11 +117,30 @@ public class ZScoreServiceTests
         Assert.Null(_servico.CalcularZ(TipoReferencia.INTERGROWTH, Medida.Peso, 'f', idadePosMenstrualDias, 3.0));
     }
 
-    [Fact]
-    public void Intergrowth_nao_possui_estatura_nem_perimetro()
+    [Theory]
+    [InlineData(Medida.Estatura, 'm', 27 * 7, 26.6, -3.00)]
+    [InlineData(Medida.Estatura, 'm', 40 * 7, 50.9, 0.00)]
+    [InlineData(Medida.Estatura, 'f', 40 * 7, 45.8, -2.00)]
+    [InlineData(Medida.Estatura, 'f', 64 * 7, 71.8, 3.00)]
+    [InlineData(Medida.PerimetroCefalico, 'f', 27 * 7, 18.8, -3.00)]
+    [InlineData(Medida.PerimetroCefalico, 'f', 40 * 7, 34.2, 0.00)]
+    [InlineData(Medida.PerimetroCefalico, 'm', 40 * 7, 33.1, -2.00)]
+    [InlineData(Medida.PerimetroCefalico, 'm', 64 * 7, 46.6, 3.00)]
+    public void Intergrowth_comprimento_e_perimetro_reproduzem_a_tabela_oficial(
+        Medida medida, char sexo, int idadePosMenstrualDias, double valor, double zEsperado)
     {
-        Assert.False(_servico.PossuiReferencia(TipoReferencia.INTERGROWTH, Medida.Estatura, 'f'));
-        Assert.Null(_servico.CalcularZ(TipoReferencia.INTERGROWTH, Medida.Estatura, 'f', 280, 50));
+        var z = _servico.CalcularZ(TipoReferencia.INTERGROWTH, medida, sexo, idadePosMenstrualDias, valor);
+
+        Assert.NotNull(z);
+        Assert.Equal(zEsperado, z!.Value, 2);
+    }
+
+    [Fact]
+    public void Intergrowth_possui_as_tres_medidas_para_os_dois_sexos()
+    {
+        foreach (var medida in Enum.GetValues<Medida>())
+        foreach (var sexo in new[] { 'f', 'm' })
+            Assert.True(_servico.PossuiReferencia(TipoReferencia.INTERGROWTH, medida, sexo), $"{medida} {sexo}");
     }
 
     [Fact]

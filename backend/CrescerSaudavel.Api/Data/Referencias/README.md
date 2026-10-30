@@ -18,20 +18,24 @@ national health cards"), dia 0 a 1856, com os parâmetros LMS:
 - Geradas por `scripts/importar_referencias_oms.py` a partir das planilhas oficiais (`.xlsx`);
   o script confere cada linha contra a fórmula LMS. Fonte: https://www.who.int/tools/child-growth-standards/standards
 
-## INTERGROWTH-21st (`INTERGROWTH/peso_{f,m}.json`)
+## INTERGROWTH-21st (`INTERGROWTH/{peso,estatura,perimetro}_{f,m}.json`)
 
 Postnatal Growth Standards for Preterm Infants (Villar et al., Lancet Glob Health 2015;3:e681-91),
-peso por semana pós-menstrual exata, 27 a 64 semanas, valores nas linhas z = −3..+3:
+peso (kg), comprimento (cm) e perímetro cefálico (cm) por semana pós-menstrual exata, 27 a 64
+semanas, valores nas linhas z = −3..+3:
 
 ```json
 [{"semana":27,"zN3":0.33,"zN2":0.40,"zN1":0.50,"z0":0.61,"zP1":0.75,"zP2":0.93,"zP3":1.14}, ...]
 ```
 
-- Conferido contra a tabela oficial (`grow_preterm-zs-{girls,boys}_bw_table.pdf`, neste diretório).
-- O z é obtido por interpolação linear entre semanas e entre as linhas de z.
+- Fonte: tabelas oficiais `grow_preterm-zs-{girls,boys}_{bw,lt,hc}_table.pdf` (neste diretório),
+  baixadas de https://intergrowth21.com/sites/default/files/2023-02/. `scripts/importar_referencias_intergrowth.py`
+  gera `estatura`/`perimetro` a partir delas e confere o `peso` (`--verificar` confere as seis).
+- O z é obtido por interpolação linear entre semanas e entre as linhas de z; além de ±3, extrapola
+  com a largura da banda vizinha.
+- Uso livre para profissionais, © University of Oxford — manter o crédito na interface e nos relatórios.
 - Os demais PDFs são material de referência (tabelas de tamanho ao nascer, que **não** devem ser
   usadas para crescimento pós-natal, e gráficos).
-- Pendente: tabelas INTERGROWTH de comprimento e perímetro cefálico (27-64 semanas).
 
 ## Regra de seleção
 
