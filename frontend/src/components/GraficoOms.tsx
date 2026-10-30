@@ -418,17 +418,17 @@ export default function GraficoOms({
                   />
                 )}
 
-                <Line yAxisId="y" type="monotone" dataKey="zN3" stroke={CORES_LINHAS.zN3} strokeWidth={1.4} dot={false} isAnimationActive={false} name="-3" />
-                <Line yAxisId="y" type="monotone" dataKey="zN2" stroke={CORES_LINHAS.zN2} strokeWidth={1.4} dot={false} isAnimationActive={false} name="-2" />
+                <Line yAxisId="y" type="monotone" dataKey="zN3" stroke={CORES_LINHAS.zN3} strokeWidth={1.4} dot={false} activeDot={false} isAnimationActive={false} name="-3" />
+                <Line yAxisId="y" type="monotone" dataKey="zN2" stroke={CORES_LINHAS.zN2} strokeWidth={1.4} dot={false} activeDot={false} isAnimationActive={false} name="-2" />
                 {mostrarZ1 && (
-                  <Line yAxisId="y" type="monotone" dataKey="zN1" stroke={CORES_LINHAS.zN1} strokeWidth={1} strokeDasharray="5 3" dot={false} isAnimationActive={false} name="-1" />
+                  <Line yAxisId="y" type="monotone" dataKey="zN1" stroke={CORES_LINHAS.zN1} strokeWidth={1} strokeDasharray="5 3" dot={false} activeDot={false} isAnimationActive={false} name="-1" />
                 )}
-                <Line yAxisId="y" type="monotone" dataKey="z0" stroke={CORES_LINHAS.z0} strokeWidth={1.6} dot={false} isAnimationActive={false} name="0" />
+                <Line yAxisId="y" type="monotone" dataKey="z0" stroke={CORES_LINHAS.z0} strokeWidth={1.6} dot={false} activeDot={false} isAnimationActive={false} name="0" />
                 {mostrarZ1 && (
-                  <Line yAxisId="y" type="monotone" dataKey="zP1" stroke={CORES_LINHAS.zP1} strokeWidth={1} strokeDasharray="5 3" dot={false} isAnimationActive={false} name="+1" />
+                  <Line yAxisId="y" type="monotone" dataKey="zP1" stroke={CORES_LINHAS.zP1} strokeWidth={1} strokeDasharray="5 3" dot={false} activeDot={false} isAnimationActive={false} name="+1" />
                 )}
-                <Line yAxisId="y" type="monotone" dataKey="zP2" stroke={CORES_LINHAS.zP2} strokeWidth={1.4} dot={false} isAnimationActive={false} name="+2" />
-                <Line yAxisId="y" type="monotone" dataKey="zP3" stroke={CORES_LINHAS.zP3} strokeWidth={1.4} dot={false} isAnimationActive={false} name="+3" />
+                <Line yAxisId="y" type="monotone" dataKey="zP2" stroke={CORES_LINHAS.zP2} strokeWidth={1.4} dot={false} activeDot={false} isAnimationActive={false} name="+2" />
+                <Line yAxisId="y" type="monotone" dataKey="zP3" stroke={CORES_LINHAS.zP3} strokeWidth={1.4} dot={false} activeDot={false} isAnimationActive={false} name="+3" />
 
                 {pontosJanela.length > 1 && (
                   <Line

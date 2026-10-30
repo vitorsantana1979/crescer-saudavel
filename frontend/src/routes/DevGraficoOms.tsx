@@ -1,7 +1,8 @@
 import { useState } from "react";
 import GraficoOms, { type PontoPacienteOms } from "@/components/GraficoOms";
+import GraficoIntergrowth, { type PontoPacienteIntergrowth } from "@/components/GraficoIntergrowth";
 
-// Página de desenvolvimento (só em `vite dev`): exercita o GraficoOms com pontos fictícios.
+// Página de desenvolvimento (só em `vite dev`): exercita GraficoOms e GraficoIntergrowth com pontos fictícios.
 // Rota: /dev/grafico-oms
 
 const NASCIMENTO = new Date(2025, 0, 1);
@@ -47,17 +48,49 @@ const PRETERMO: PontoPacienteOms[] = [
   ponto(820, 12.4, 88.0, 48.5, "Cronologica"),
 ];
 
+// Menina nascida com 30 semanas, acompanhada até 64 semanas pós-menstruais (INTERGROWTH-21st).
+// Peso cai abaixo do P10 por volta de 36 semanas (RCEU) e recupera; PC abaixo de −2 em 34 semanas.
+function pontoIg(semanas: number, pesoKg: number, estaturaCm: number, perimetroCefalicoCm: number): PontoPacienteIntergrowth {
+  return {
+    id: `ig${semanas}`,
+    data: new Date(NASCIMENTO.getTime() + (semanas - 30) * 7 * 86_400_000).toISOString(),
+    semanas,
+    pesoKg,
+    estaturaCm,
+    perimetroCefalicoCm,
+  };
+}
+
+const INTERGROWTH: PontoPacienteIntergrowth[] = [
+  pontoIg(30, 1.25, 39.0, 27.5),
+  pontoIg(32, 1.45, 41.0, 28.3),
+  pontoIg(34, 1.7, 42.8, 27.9),
+  pontoIg(36, 1.95, 44.5, 30.6),
+  pontoIg(38 + 3 / 7, 2.55, 47.0, 32.4),
+  pontoIg(40, 2.95, 48.6, 33.6),
+  pontoIg(44, 4.0, 52.5, 36.0),
+  pontoIg(48, 5.0, 56.0, 38.0),
+  pontoIg(52, 5.8, 59.0, 39.4),
+  pontoIg(58, 6.8, 62.6, 41.0),
+  pontoIg(64, 7.5, 65.5, 42.2),
+];
+
 export default function DevGraficoOms() {
   const [sexo, setSexo] = useState<"M" | "F">("F");
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
       <div className="flex items-center gap-3">
-        <h1 className="text-xl font-bold">Dev — GraficoOms</h1>
+        <h1 className="text-xl font-bold">Dev — gráficos OMS e INTERGROWTH</h1>
         <button className="px-3 py-1 rounded border text-sm" onClick={() => setSexo(sexo === "F" ? "M" : "F")}>
           Sexo: {sexo}
         </button>
       </div>
+
+      <section>
+        <h2 className="font-semibold mb-2">Pré-termo, 27–64 semanas (INTERGROWTH-21st)</h2>
+        <GraficoIntergrowth sexo={sexo} pontos={INTERGROWTH} />
+      </section>
 
       <section>
         <h2 className="font-semibold mb-2">A termo, 0–5 anos</h2>

@@ -1,6 +1,6 @@
 # ADR-001 — Curvas de referência e cálculo de z-score
 
-Data: 2026-10-28 · Status: aceito (Fases 1, 2 e 3 implementadas)
+Data: 2026-10-28 · Status: aceito (Fases 1, 2 e 3 implementadas; INTERGROWTH com as três medidas em 2026-10-30)
 Contexto completo: `docs/atualizacao 2026-10-26/DIAGNOSTICO_GRAFICOS_OMS_INTERGROWTH.md`
 
 ## Contexto
@@ -15,9 +15,10 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
    peso/idade, estatura/idade e perímetro cefálico/idade, ambos os sexos. Formato
    `[{"dia","l","m","s"}]`, gerado por `scripts/importar_referencias_oms.py` a partir das
    planilhas oficiais (que o script confere contra a fórmula LMS).
-2. **Dados INTERGROWTH-21st**: Postnatal Growth Standards for Preterm Infants, peso, tabela
-   semanal 27–64 semanas pós-menstruais com os valores das linhas z = −3..+3 (conferida contra o
-   PDF oficial). Arquivos de tamanho ao nascer, backups e cópias "sintéticas" foram removidos
+2. **Dados INTERGROWTH-21st**: Postnatal Growth Standards for Preterm Infants, peso, comprimento e
+   perímetro cefálico, tabela semanal 27–64 semanas pós-menstruais com os valores das linhas
+   z = −3..+3, gerada dos PDFs oficiais por `scripts/importar_referencias_intergrowth.py` (que
+   também confere o peso). Arquivos de tamanho ao nascer, backups e cópias "sintéticas" foram removidos
    do diretório de referências.
 3. **Cálculo** (`ZScoreService`): idade em **dias**; OMS pelo método LMS com o ajuste da OMS
    além de ±3 **apenas para o peso** (estatura e PC não são restringidos, como no WHO Anthro);
@@ -85,6 +86,14 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
     alertas RCEU/queda, além da referência usada. Consultas ainda não reprocessadas têm a
     classificação derivada do z no cliente (mesma tabela).
 
+## Novidades do benchmark — Onda 1 (2026-10-30)
+
+16. **INTERGROWTH-21st com as três medidas**: comprimento e PC (27–64 s) passam a ter z e
+    classificação no período INTERGROWTH, com os mesmos cortes de z da tabela do MS (comprimento
+    < −2 baixo; PC fora de ±2). O **RCEU continua só pelo peso**; comprimento e PC abaixo de −2 entram
+    como classificação de nível "cuidado". `GraficoIntergrowth` substitui o gráfico legado de peso do
+    pré-termo, com seletor de medida e recortes 27–40 / 35–50 / 40–64 / 27–64 semanas.
+
 ## Consequências
 
 - Consultas antigas têm z, classificação e alertas desatualizados até rodar o reprocessamento
@@ -93,5 +102,5 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
   ~2 anos; não há regra oficial explícita do MS/SBP) e fica configurável.
 - Os cortes de perímetro cefálico (±2 DP) e a restrição do RCEU ao período INTERGROWTH são
   decisões desta ADR, a validar com a equipe clínica.
-- Pendentes: tabelas INTERGROWTH de comprimento e PC (pré-termo ≤ 64 s fica sem z nessas
-  medidas).
+- Consultas de pré-termo ≤ 64 s registradas antes de 2026-10-30 só ganham z de comprimento e PC
+  após o reprocessamento.
