@@ -143,6 +143,38 @@ public class ZScoreServiceTests
             Assert.True(_servico.PossuiReferencia(TipoReferencia.INTERGROWTH, medida, sexo), $"{medida} {sexo}");
     }
 
+    [Theory]
+    [InlineData(TipoReferencia.OMS, Medida.Peso, 'f', 0, 2.0, 4.230)]
+    [InlineData(TipoReferencia.OMS, Medida.Peso, 'f', 364, -2.0, 7.035)]
+    [InlineData(TipoReferencia.INTERGROWTH, Medida.Peso, 'f', 280, 0.0, 3.13)]
+    [InlineData(TipoReferencia.INTERGROWTH, Medida.Peso, 'f', 280, -2.0, 2.37)]
+    [InlineData(TipoReferencia.INTERGROWTH, Medida.PerimetroCefalico, 'm', 280, -2.0, 33.1)]
+    public void Valor_no_z_reproduz_as_tabelas(TipoReferencia tipo, Medida medida, char sexo, int idade, double z, double esperado)
+    {
+        Assert.Equal(esperado, _servico.ValorNoZ(tipo, medida, sexo, idade, z)!.Value, 3);
+    }
+
+    [Theory]
+    [InlineData(TipoReferencia.OMS, Medida.Peso, 'm', 100, -3.7)]
+    [InlineData(TipoReferencia.OMS, Medida.Peso, 'm', 100, 3.4)]
+    [InlineData(TipoReferencia.OMS, Medida.Estatura, 'f', 500, -1.23)]
+    [InlineData(TipoReferencia.INTERGROWTH, Medida.Estatura, 'f', 250, 0.57)]
+    [InlineData(TipoReferencia.INTERGROWTH, Medida.Peso, 'm', 300, -3.4)]
+    [InlineData(TipoReferencia.INTERGROWTH, Medida.Peso, 'm', 300, 3.2)]
+    public void Valor_no_z_e_o_inverso_do_calculo_de_z(TipoReferencia tipo, Medida medida, char sexo, double idade, double z)
+    {
+        var valor = _servico.ValorNoZ(tipo, medida, sexo, idade, z)!.Value;
+
+        Assert.Equal(z, _servico.CalcularZ(tipo, medida, sexo, idade, valor)!.Value, 2);
+    }
+
+    [Fact]
+    public void Valor_no_z_fora_da_faixa_retorna_null()
+    {
+        Assert.Null(_servico.ValorNoZ(TipoReferencia.OMS, Medida.Peso, 'f', 1857, 0));
+        Assert.Null(_servico.ValorNoZ(TipoReferencia.INTERGROWTH, Medida.Peso, 'f', 64 * 7 + 1, 0));
+    }
+
     [Fact]
     public void Curvas_semanais_oms_cobrem_0_a_265_semanas()
     {

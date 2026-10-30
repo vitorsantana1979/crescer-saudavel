@@ -15,8 +15,10 @@ import {
   INTERGROWTH_SEMANA_MAX,
   INTERGROWTH_SEMANA_MIN,
   classificarZ,
+  formatarPercentil,
   formatarZ,
   interpolarZ,
+  percentilDeZ,
 } from "@/lib/crescimento";
 
 // Gráfico INTERGROWTH-21st (Postnatal Growth Standards for Preterm Infants, Villar 2015):
@@ -395,6 +397,7 @@ export default function GraficoIntergrowth({ sexo, pontos, medidaInicial = "peso
                             {ponto.z != null && (
                               <p className="mt-1 text-gray-800">
                                 Z-score: <strong>{formatarZ(ponto.z)}</strong>
+                                <span className="text-gray-500"> · {formatarPercentil(percentilDeZ(ponto.z))}</span>
                                 {classificacao && <span className={`ml-2 font-semibold ${classificacao.cor}`}>{classificacao.rotulo}</span>}
                               </p>
                             )}

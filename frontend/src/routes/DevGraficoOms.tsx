@@ -2,6 +2,7 @@ import { useState } from "react";
 import GraficoOms, { type PontoPacienteOms } from "@/components/GraficoOms";
 import GraficoIntergrowth, { type PontoPacienteIntergrowth } from "@/components/GraficoIntergrowth";
 import CardTamanhoNascimento from "@/components/CardTamanhoNascimento";
+import CardGanhoEsperado from "@/components/CardGanhoEsperado";
 
 // Página de desenvolvimento (só em `vite dev`): exercita GraficoOms e GraficoIntergrowth com pontos fictícios.
 // Rota: /dev/grafico-oms
@@ -87,6 +88,11 @@ export default function DevGraficoOms() {
           Sexo: {sexo}
         </button>
       </div>
+
+      <section>
+        <h2 className="font-semibold mb-2">Ganho esperado para manter o canal (exemplo do mock)</h2>
+        <CardGanhoEsperado consultaId="dev" dataConsulta={new Date(2025, 1, 12).toISOString()} />
+      </section>
 
       <section className="space-y-3">
         <h2 className="font-semibold">Tamanho ao nascer (INTERGROWTH-21st)</h2>

@@ -16,8 +16,10 @@ import {
   OMS_DIA_MAXIMO,
   classificarZ,
   formatarIdadeDias,
+  formatarPercentil,
   formatarTipoIdade,
   interpolarZ,
+  percentilDeZ,
   type TipoIdade,
 } from "@/lib/crescimento";
 
@@ -490,6 +492,7 @@ export default function GraficoOms({
                             {ponto.z != null && (
                               <p className="mt-1 text-gray-800">
                                 Z-score: <strong>{ponto.z.toFixed(2).replace(".", ",")}</strong>
+                                <span className="text-gray-500"> · {formatarPercentil(percentilDeZ(ponto.z))}</span>
                                 {classificacao && <span className={`ml-2 font-semibold ${classificacao.cor}`}>{classificacao.rotulo}</span>}
                               </p>
                             )}

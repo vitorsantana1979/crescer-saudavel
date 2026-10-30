@@ -5,12 +5,15 @@ import api from "@/lib/api";
 import PageHeader from "@/components/PageHeader";
 import GraficosZScore from "@/components/GraficosZScore";
 import CardTamanhoNascimento from "@/components/CardTamanhoNascimento";
+import CardGanhoEsperado from "@/components/CardGanhoEsperado";
 import {
   COR_BADGE_NIVEL,
   classificacaoPorCodigo,
   classificarZ,
+  formatarPercentil,
   formatarTipoIdade,
   formatarZ,
+  percentilDeZ,
   type TipoIdade,
 } from "@/lib/crescimento";
 import {
@@ -316,6 +319,16 @@ export default function CriancaDetalhes() {
       setConsultasPlotadas(consultasOrdenadas);
     }
   }, [consultas]);
+
+  const ultimaConsulta = useMemo(
+    () =>
+      consultas.length === 0
+        ? null
+        : consultas.reduce((maisRecente, c) =>
+            new Date(c.dataHora).getTime() > new Date(maisRecente.dataHora).getTime() ? c : maisRecente
+          ),
+    [consultas]
+  );
 
   const zScoreChartData = useMemo(() => {
     const sortedConsultas = [...consultas].sort(
@@ -824,6 +837,9 @@ export default function CriancaDetalhes() {
                 </div>
               ) : (
                 <div>
+                  {ultimaConsulta && (
+                    <CardGanhoEsperado consultaId={ultimaConsulta.id} dataConsulta={ultimaConsulta.dataHora} />
+                  )}
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-gray-50 border-b border-gray-200">
@@ -919,6 +935,9 @@ export default function CriancaDetalhes() {
                                       }`}
                                     >
                                       {formatarZ(item.z)}
+                                    </span>
+                                    <span className="w-14 text-gray-500 tabular-nums">
+                                      {item.z != null ? formatarPercentil(percentilDeZ(item.z)) : ""}
                                     </span>
                                     {item.classificacao && (
                                       <span

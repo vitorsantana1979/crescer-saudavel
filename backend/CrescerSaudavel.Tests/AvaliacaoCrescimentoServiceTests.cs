@@ -1,4 +1,5 @@
 using CrescerSaudavel.Api.Models;
+using CrescerSaudavel.Api.Services;
 using CrescerSaudavel.Api.Services.Crescimento;
 using Microsoft.Extensions.Options;
 using Xunit;
@@ -191,6 +192,57 @@ public class AvaliacaoCrescimentoServiceTests
         Assert.Null(consulta.ZScorePeso);
         Assert.Null(consulta.ClassificacaoPeso);
         Assert.False(consulta.AlertaRCEU);
+    }
+
+    [Fact]
+    public void Ganho_esperado_no_termo_usa_30_dias_da_oms()
+    {
+        var consulta = ConsultaTermoNaMediana();
+
+        var ganhos = Servico().GanhoParaManterCanal(consulta, Crianca(39));
+
+        var peso = Assert.Single(ganhos, g => g.Medida == "peso");
+        Assert.Equal("OMS", peso.Referencia);
+        Assert.Equal(30, peso.HorizonteDias);
+        var esperado = Referencias.Servico.ValorNoZ(TipoReferencia.OMS, Medida.Peso, 'f', 30, (double)peso.Z)!.Value;
+        Assert.Equal(Math.Round((decimal)esperado, 3), peso.ValorEsperado);
+        Assert.Equal(peso.ValorEsperado - 3.232m, peso.Ganho);
+        Assert.Equal(3, ganhos.Count);
+    }
+
+    [Fact]
+    public void Ganho_esperado_no_pretermo_usa_7_dias_da_intergrowth()
+    {
+        var consulta = new Consulta { DataHora = Nascimento.AddDays(70), PesoKg = 3.13m, EstaturaCm = 49.3m, PerimetroCefalicoCm = 34.2m };
+
+        var ganhos = Servico().GanhoParaManterCanal(consulta, Crianca(30));
+
+        var peso = ganhos.Single(g => g.Medida == "peso");
+        Assert.Equal("INTERGROWTH", peso.Referencia);
+        Assert.Equal(7, peso.HorizonteDias);
+        Assert.Equal(3.35m, peso.ValorEsperado);   // mediana de meninas às 41 semanas
+        Assert.Equal(0.22m, peso.Ganho);
+        Assert.Equal(Math.Round((decimal)(1000 * Math.Log(3.35 / 3.13) / 7), 1), peso.VelocidadeGKgDia);
+        Assert.Null(ganhos.Single(g => g.Medida == "estatura").VelocidadeGKgDia);
+    }
+
+    [Fact]
+    public void Ganho_esperado_encurta_o_horizonte_no_fim_da_intergrowth()
+    {
+        // IG 30 s; 64 s pós-menstruais menos 3 dias
+        var consulta = new Consulta { DataHora = Nascimento.AddDays(34 * 7 - 3), PesoKg = 7.0m, EstaturaCm = 0m, PerimetroCefalicoCm = 0m };
+
+        var peso = Assert.Single(Servico().GanhoParaManterCanal(consulta, Crianca(30)));
+
+        Assert.Equal(3, peso.HorizonteDias);
+    }
+
+    [Fact]
+    public void Sem_referencia_nao_ha_ganho_esperado()
+    {
+        var consulta = new Consulta { DataHora = Nascimento.AddDays(7), PesoKg = 0.8m };
+
+        Assert.Empty(Servico().GanhoParaManterCanal(consulta, Crianca(25)));
     }
 
     [Fact]

@@ -262,6 +262,47 @@ public class ZScoreService
         return ZsCurva[n - 1];
     }
 
+    /// <summary>
+    /// Valor da medida no z dado (inverso de <see cref="CalcularZ"/>), com a mesma convenção de idade.
+    /// Retorna null fora da faixa da referência.
+    /// </summary>
+    public double? ValorNoZ(TipoReferencia tipo, Medida medida, char sexo, double idadeDias, double z)
+    {
+        if (double.IsNaN(z) || double.IsInfinity(z) || double.IsNaN(idadeDias)) return null;
+
+        if (tipo == TipoReferencia.OMS)
+        {
+            if (!_oms.TryGetValue(Chave(medida, sexo), out var tabela)) return null;
+            if (idadeDias < 0 || idadeDias > OmsDiaMaximo) return null;
+            var (l, m, s) = ParametrosLms(tabela, idadeDias);
+            if (medida == Medida.Peso && z > 3)
+            {
+                var sd3 = ValorLms(l, m, s, 3);
+                return sd3 + (z - 3) * (sd3 - ValorLms(l, m, s, 2));
+            }
+            if (medida == Medida.Peso && z < -3)
+            {
+                var sd3n = ValorLms(l, m, s, -3);
+                return sd3n + (z + 3) * (ValorLms(l, m, s, -2) - sd3n);
+            }
+            return ValorLms(l, m, s, z);
+        }
+
+        if (!_intergrowth.TryGetValue(Chave(medida, sexo), out var semanal)) return null;
+        var semanas = idadeDias / 7.0;
+        if (semanas < IntergrowthSemanaMinima || semanas > IntergrowthSemanaMaxima) return null;
+        var v = ValoresIntergrowth(semanal, semanas);
+        if (v == null) return null;
+        if (z <= -3) return v[0] + (z + 3) * (v[1] - v[0]);
+        if (z >= 3) return v[6] + (z - 3) * (v[6] - v[5]);
+        var i = Math.Min((int)Math.Floor(z + 3), 5);
+        return v[i] + (z + 3 - i) * (v[i + 1] - v[i]);
+    }
+
+    /// <summary>Última idade (em dias, na convenção da referência) coberta pela tabela.</summary>
+    public static int IdadeMaximaDias(TipoReferencia tipo) =>
+        tipo == TipoReferencia.OMS ? OmsDiaMaximo : IntergrowthSemanaMaxima * 7;
+
     // ---------- Curvas para os gráficos ----------
 
     public List<CurvaReferencia>? ObterCurvasPesoPretermo(string sexo) =>

@@ -10,7 +10,26 @@ public interface IAvaliacaoCrescimentoService
     /// velocidade de ganho ponderal em relação à consulta anterior, gravando tudo na consulta.
     /// </summary>
     SelecaoReferencia Avaliar(Consulta consulta, RecemNascido crianca, Consulta? consultaAnterior);
+
+    /// <summary>
+    /// Quanto cada medida precisa variar para manter o mesmo z no próximo período (7 dias na
+    /// INTERGROWTH-21st, 30 dias na OMS, encurtado no fim da referência). Referência de canal, não meta.
+    /// </summary>
+    IReadOnlyList<GanhoEsperado> GanhoParaManterCanal(Consulta consulta, RecemNascido crianca);
 }
+
+/// <param name="Medida">peso, estatura ou perimetro.</param>
+/// <param name="Ganho">Na unidade da medida (kg ou cm).</param>
+/// <param name="VelocidadeGKgDia">Só peso: 1000·ln(esperado/atual)/dias, comparável à VGP de Patel.</param>
+public sealed record GanhoEsperado(
+    string Medida,
+    string Referencia,
+    int HorizonteDias,
+    decimal Z,
+    decimal ValorAtual,
+    decimal ValorEsperado,
+    decimal Ganho,
+    decimal? VelocidadeGKgDia);
 
 public class AvaliacaoCrescimentoService : IAvaliacaoCrescimentoService
 {
@@ -36,6 +55,50 @@ public class AvaliacaoCrescimentoService : IAvaliacaoCrescimentoService
         AplicarAlertas(consulta, consultaAnterior);
         AplicarVelocidadeGanhoPonderal(consulta, consultaAnterior);
         return selecao;
+    }
+
+    public const int HorizonteIntergrowthDias = 7;
+    public const int HorizonteOmsDias = 30;
+
+    public IReadOnlyList<GanhoEsperado> GanhoParaManterCanal(Consulta consulta, RecemNascido crianca)
+    {
+        var selecao = _referenciaService.Selecionar(crianca, consulta.DataHora);
+        if (selecao.Referencia is not { } referencia) return Array.Empty<GanhoEsperado>();
+
+        var padrao = referencia == TipoReferencia.INTERGROWTH ? HorizonteIntergrowthDias : HorizonteOmsDias;
+        var horizonte = Math.Min(padrao, ZScoreService.IdadeMaximaDias(referencia) - selecao.IdadeDias);
+        if (horizonte <= 0) return Array.Empty<GanhoEsperado>();
+
+        var resultado = new List<GanhoEsperado>();
+        foreach (var (medida, nome, valor) in new[]
+                 {
+                     (Medida.Peso, "peso", consulta.PesoKg),
+                     (Medida.Estatura, "estatura", consulta.EstaturaCm),
+                     (Medida.PerimetroCefalico, "perimetro", consulta.PerimetroCefalicoCm)
+                 })
+        {
+            if (valor <= 0) continue;
+            var z = _zScoreService.CalcularZ(referencia, medida, crianca.Sexo, selecao.IdadeDias, (double)valor);
+            if (z is null) continue;
+            var esperado = _zScoreService.ValorNoZ(referencia, medida, crianca.Sexo, selecao.IdadeDias + horizonte, z.Value);
+            if (esperado is null or <= 0) continue;
+
+            var casas = medida == Medida.Peso ? 3 : 1;
+            decimal? velocidade = medida == Medida.Peso
+                ? Math.Round((decimal)(1000.0 * Math.Log(esperado.Value / (double)valor) / horizonte), 1)
+                : null;
+            resultado.Add(new GanhoEsperado(
+                nome,
+                referencia.ToString(),
+                horizonte,
+                (decimal)z.Value,
+                valor,
+                Math.Round((decimal)esperado.Value, casas),
+                Math.Round((decimal)esperado.Value - valor, casas),
+                velocidade));
+        }
+
+        return resultado;
     }
 
     private SelecaoReferencia AplicarZScores(Consulta consulta, RecemNascido crianca)

@@ -105,6 +105,14 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
     informação complementar. Gravado em `RecemNascido.ZNascimento*`/`AdequacaoPesoNascimento`
     (migration `AddTamanhoNascimentoRecemNascido`); não usar para crescimento pós-natal.
 
+18. **Percentil e ganho para manter o canal**: o percentil é Φ(z) da normal padrão (OMS e INTERGROWTH
+    publicam em z) e **não é gravado** — é calculado na tela, no CSV e no relatório a partir do z
+    gravado (extremos como "< P0,1" / "> P99,9"). O ganho esperado inverte a curva da mesma referência:
+    valor(z atual, idade + horizonte) − valor atual, com horizonte de 7 dias na INTERGROWTH-21st e 30
+    dias na OMS, encurtado no fim da referência; para o peso também em g/kg/dia (forma exponencial,
+    comparável à VGP de Patel). `GET /api/consultas/{id}/ganho-esperado`. É referência de canal, não
+    meta nutricional.
+
 ## Consequências
 
 - Consultas antigas têm z, classificação e alertas desatualizados até rodar o reprocessamento

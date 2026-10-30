@@ -42,7 +42,7 @@ public class ExportController : ControllerBase
 
         var builder = new StringBuilder();
         // Cabeçalho
-        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,Sexo,IdadeGestacionalSemanas,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,AdequacaoPesoNascimento,ZNascimentoPeso,ZNascimentoComprimento,ZNascimentoPerimetro,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ReferenciaCurva,TipoIdadeCalculo,IdadeCalculoDias,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,ClassificacaoPeso,ClassificacaoEstatura,ClassificacaoPerimetro,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
+        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,Sexo,IdadeGestacionalSemanas,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,AdequacaoPesoNascimento,ZNascimentoPeso,ZNascimentoComprimento,ZNascimentoPerimetro,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ReferenciaCurva,TipoIdadeCalculo,IdadeCalculoDias,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,PercentilPeso,PercentilEstatura,PercentilPerimetro,ClassificacaoPeso,ClassificacaoEstatura,ClassificacaoPerimetro,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
 
         foreach (var c in consultas)
         {
@@ -73,6 +73,9 @@ public class ExportController : ControllerBase
                                $"{c.ZScorePeso?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"{c.ZScoreAltura?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"{c.ZScorePerimetro?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
+                               $"{PercentilCsv(c.ZScorePeso)}," +
+                               $"{PercentilCsv(c.ZScoreAltura)}," +
+                               $"{PercentilCsv(c.ZScorePerimetro)}," +
                                $"{c.ClassificacaoPeso ?? ""}," +
                                $"{c.ClassificacaoEstatura ?? ""}," +
                                $"{c.ClassificacaoPerimetro ?? ""}," +
@@ -86,4 +89,9 @@ public class ExportController : ControllerBase
         var byteArray = Encoding.UTF8.GetBytes(builder.ToString());
         return File(byteArray, "text/csv", $"exportacao_pesquisa_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
     }
+
+    private static string PercentilCsv(decimal? z) =>
+        z.HasValue
+            ? Math.Round(Services.Crescimento.Percentil.DeZ((double)z.Value), 1).ToString(CultureInfo.InvariantCulture)
+            : "";
 }

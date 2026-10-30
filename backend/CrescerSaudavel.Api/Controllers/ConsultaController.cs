@@ -156,6 +156,25 @@ public class ConsultaController : ControllerBase
     /// Recalcula z-scores, classificações, alertas e velocidade de ganho ponderal de todas as consultas
     /// com as referências atuais. Usar após atualizar as tabelas de referência ou a regra de seleção.
     /// </summary>
+    /// <summary>Ganho de cada medida para manter o z atual no próximo período (7 d INTERGROWTH, 30 d OMS).</summary>
+    [HttpGet("{id}/ganho-esperado")]
+    public async Task<IActionResult> GetGanhoEsperado(Guid id)
+    {
+        var consulta = await _context.Consultas.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
+        if (consulta == null)
+            return NotFound();
+
+        var tenantIds = _currentUserService.TenantIds.ToHashSet();
+        var crianca = await _context.RecemNascidos
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == consulta.RecemNascidoId);
+
+        if (crianca == null || !tenantIds.Contains(crianca.TenantId))
+            return Forbid();
+
+        return Ok(_avaliacao.GanhoParaManterCanal(consulta, crianca));
+    }
+
     [HttpPost("recalcular-zscores")]
     [Authorize(Roles = SystemRoles.SuperAdmin)]
     public async Task<IActionResult> RecalcularZScores()
