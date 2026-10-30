@@ -5,3 +5,19 @@
 body {
   @apply bg-gray-50 text-gray-800;
 }
+
+/* Impressão (relatório de acompanhamento): A4 e cores preservadas */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html,
+  body {
+    background: #fff;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

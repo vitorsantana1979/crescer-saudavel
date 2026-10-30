@@ -6,6 +6,8 @@ import PageHeader from "@/components/PageHeader";
 import GraficosZScore from "@/components/GraficosZScore";
 import CardTamanhoNascimento from "@/components/CardTamanhoNascimento";
 import CardGanhoEsperado from "@/components/CardGanhoEsperado";
+import ImportarAtendimentos from "@/components/ImportarAtendimentos";
+import { baixarArquivo } from "@/lib/download";
 import {
   COR_BADGE_NIVEL,
   classificacaoPorCodigo,
@@ -35,6 +37,9 @@ import {
   AlertCircle,
   Brain,
   Sparkles,
+  FileText,
+  FileSpreadsheet,
+  Upload,
 } from "lucide-react";
 import {
   classificarIdadeGestacional,
@@ -272,6 +277,16 @@ export default function CriancaDetalhes() {
       setCrianca(response.data);
     } catch (error) {
       toast.error("Erro ao carregar dados da criança");
+    }
+  };
+
+  const [importando, setImportando] = useState(false);
+
+  const baixarPlanilha = async () => {
+    try {
+      await baixarArquivo("/exportar/pesquisa", { formato: "xlsx", criancaId: id! }, "crescer_saudavel.xlsx");
+    } catch {
+      toast.error("Não foi possível gerar a planilha.");
     }
   };
 
@@ -784,6 +799,29 @@ export default function CriancaDetalhes() {
           Chat IA
         </button>
       </div>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => navigate(`/criancas/${id}/relatorio`)}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          <FileText className="w-4 h-4" /> Relatório (imprimir / PDF)
+        </button>
+        <button
+          onClick={baixarPlanilha}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          <FileSpreadsheet className="w-4 h-4" /> Planilha (XLSX)
+        </button>
+        <button
+          onClick={() => setImportando(true)}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          <Upload className="w-4 h-4" /> Importar atendimentos
+        </button>
+      </div>
+      {importando && (
+        <ImportarAtendimentos criancaId={id!} onFechar={() => setImportando(false)} onImportado={() => loadConsultas()} />
+      )}
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200">

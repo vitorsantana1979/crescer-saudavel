@@ -218,14 +218,19 @@ export default function GraficoIntergrowth({ sexo, pontos, medidaInicial = "peso
 
   const ticksX = useMemo(() => {
     const [inicio, fim] = recorte.dominio;
-    return Array.from({ length: fim - inicio + 1 }, (_, i) => inicio + i);
+    // recortes longos (27-64 s) ficam ilegíveis com 38 rótulos em tela estreita ou no A4: de 2 em 2 semanas
+    const passo = fim - inicio > 20 ? 2 : 1;
+    const ticks: number[] = [];
+    for (let s = inicio; s <= fim; s += passo) ticks.push(s);
+    if (ticks[ticks.length - 1] !== fim) ticks.push(fim);
+    return ticks;
   }, [recorte]);
 
   const pontosForaDoRecorte = pontosPlotados.length - pontosJanela.length;
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 print:hidden">
         <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
           {(Object.keys(MEDIDAS) as MedidaIntergrowth[]).map((m) => (
             <button

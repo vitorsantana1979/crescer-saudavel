@@ -133,6 +133,18 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
     helper único no cliente (`idadesNaData`), que substitui três cálculos de IGC duplicados. Os campos
     `IdadeGestacionalCorrigida*` do RN ficam como legado: saem do formulário e não são usados.
 
+21. **Relatório e planilhas**: o relatório de acompanhamento (`/criancas/:id/relatorio`) é uma página
+    própria em A4, impressa ou salva em PDF pelo navegador — sem PDF no servidor por ora: nascimento e
+    adequação, idades, ganho para manter o canal, gráficos INTERGROWTH e OMS (todas as medidas), tabela
+    de atendimentos com z/percentil/classificação/alertas/VGP, dieta vigente e créditos das referências.
+    A exportação (`GET /api/exportar/pesquisa?formato=csv|xlsx&criancaId=`) gera CSV RFC 4180 (ponto
+    decimal, para análise) ou XLSX por um gerador mínimo próprio (sem dependência), por criança ou de
+    todas. A importação em lote (`POST /api/consultas/crianca/{id}/importar`) recebe linhas já
+    interpretadas no cliente (CSV, `;` ou tabulação colada do Excel, vírgula decimal, dd/mm/aaaa),
+    valida as mesmas faixas do formulário — agora também no servidor, na criação e edição —, recusa
+    duplicatas no mesmo minuto e reavalia todos os atendimentos da criança em ordem. Pendência: registrar
+    impressão/exportação na auditoria de acesso (LGPD), junto com a ativação da auditoria (N8).
+
 ## Consequências
 
 - Consultas antigas têm z, classificação e alertas desatualizados até rodar o reprocessamento

@@ -21,8 +21,10 @@ import GruposSaude from "./routes/GruposSaude";
 import UnidadesSaude from "./routes/UnidadesSaude";
 import IAInsights from "./routes/IAInsights";
 import ChatIA from "./routes/ChatIA";
+import RelatorioCrianca from "./routes/RelatorioCrianca";
 // Página de desenvolvimento do gráfico OMS; fora do bundle de produção
 const DevGraficoOms = import.meta.env.DEV ? React.lazy(() => import("./routes/DevGraficoOms")) : null;
+const DevEntrarDemo = import.meta.env.DEV ? React.lazy(() => import("./routes/DevEntrarDemo")) : null;
 import { AuthProvider } from "./contexts/AuthContext";
 import RequireAuth from "./components/RequireAuth";
 import "./styles/globals.css";
@@ -43,6 +45,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             element={
               <React.Suspense fallback={null}>
                 <DevGraficoOms />
+              </React.Suspense>
+            }
+          />
+        )}
+        {DevEntrarDemo && (
+          <Route
+            path="/dev/entrar-demo"
+            element={
+              <React.Suspense fallback={null}>
+                <DevEntrarDemo />
               </React.Suspense>
             }
           />
@@ -84,6 +96,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               <Layout>
                 <CriancaForm />
               </Layout>
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/criancas/:id/relatorio"
+          element={
+            <RequireAuth>
+              <RelatorioCrianca />
             </RequireAuth>
           }
         />

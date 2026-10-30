@@ -149,7 +149,7 @@ export default function GraficoPesoEstatura({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs w-fit">
+      <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs w-fit print:hidden">
         {(Object.keys(TIPOS) as TipoPesoEstatura[]).map((t) => (
           <button
             key={t}

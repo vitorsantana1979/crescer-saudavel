@@ -1,35 +1,18 @@
 import { useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
-import GraficoOms, { type PontoPacienteOms } from "@/components/GraficoOms";
-import GraficoIntergrowth, { type PontoPacienteIntergrowth } from "@/components/GraficoIntergrowth";
-import GraficoPesoEstatura, { type PontoPesoEstatura } from "@/components/GraficoPesoEstatura";
+import GraficoOms from "@/components/GraficoOms";
+import GraficoIntergrowth from "@/components/GraficoIntergrowth";
+import GraficoPesoEstatura from "@/components/GraficoPesoEstatura";
+import { diasEntre, formatarZ, idadeGestacionalEmDias, idadesNaData } from "@/lib/crescimento";
 import {
-  ajustarEstaturaPelaPosicao,
-  diasEntre,
-  formatarZ,
-  idadeGestacionalEmDias,
-  idadesNaData,
-  resolverIdadeConsulta,
-} from "@/lib/crescimento";
+  pontosIntergrowth as montarPontosIntergrowth,
+  pontosOms as montarPontosOms,
+  pontosPesoEstatura as montarPontosPesoEstatura,
+  type AtendimentoGrafico,
+} from "@/lib/pontosGrafico";
 
-interface ConsultaItem {
-    id: string;
-    dataHora: string;
-    pesoKg: number;
-    estaturaCm: number;
-    perimetroCefalicoCm: number;
-  zScorePeso?: number;
-  zScoreAltura?: number;
-  zScorePerimetro?: number;
-  imc?: number | null;
-  zScoreImc?: number | null;
-  zScorePesoEstatura?: number | null;
-  posicaoMedida?: string | null;
-  // Rastreabilidade do cálculo gravada pelo backend (ausente em consultas antigas)
-  referenciaCurva?: string | null;
-  idadeCalculoDias?: number | null;
-  tipoIdadeCalculo?: string | null;
-}
+// Atendimento como chega da API (campos usados pelos gráficos e pelo cabeçalho)
+type ConsultaItem = AtendimentoGrafico;
 
 interface DietaItem {
   id: string;
@@ -264,76 +247,26 @@ export default function GraficosZScore({
       .sort((a, b) => a.data.getTime() - b.data.getTime());
   }, [consultasSelecionadas, dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias]);
 
-  // Pontos avaliados na OMS: a termo (idade cronológica) e pré-termo após 64 semanas (idade corrigida)
-  const pontosOms = useMemo<PontoPacienteOms[]>(() => {
-    if (!dataNascimento) return [];
-    const crianca = { dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias };
-    return consultasSelecionadas
-      .map((consulta): PontoPacienteOms | null => {
-        const idade = resolverIdadeConsulta(consulta, crianca);
-        if (idade.referencia !== "OMS") return null;
-        return {
-          id: consulta.id,
-          data: consulta.dataHora,
-          dia: idade.idadeDias,
-          tipoIdade: idade.tipoIdade,
-          pesoKg: consulta.pesoKg,
-          estaturaCm: consulta.estaturaCm,
-          perimetroCefalicoCm: consulta.perimetroCefalicoCm,
-          imc: consulta.imc,
-          zScorePeso: consulta.zScorePeso,
-          zScoreAltura: consulta.zScoreAltura,
-          zScorePerimetro: consulta.zScorePerimetro,
-          zScoreImc: consulta.zScoreImc,
-        };
-      })
-      .filter((p): p is PontoPacienteOms => p !== null);
-  }, [consultasSelecionadas, dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias]);
-
-  // Peso para comprimento/estatura (OMS), com o comprimento corrigido pela posição da medida
-  const pontosPesoEstatura = useMemo<PontoPesoEstatura[]>(() => {
-    if (!dataNascimento) return [];
-    const crianca = { dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias };
-    return consultasSelecionadas
-      .map((consulta): PontoPesoEstatura | null => {
-        const idade = resolverIdadeConsulta(consulta, crianca);
-        if (idade.referencia !== "OMS" || !(consulta.estaturaCm > 0) || !(consulta.pesoKg > 0)) return null;
-        return {
-          id: consulta.id,
-          data: consulta.dataHora,
-          dia: idade.idadeDias,
-          cm: ajustarEstaturaPelaPosicao(consulta.estaturaCm, idade.idadeDias, consulta.posicaoMedida),
-          pesoKg: consulta.pesoKg,
-          zScorePesoEstatura: consulta.zScorePesoEstatura,
-        };
-      })
-      .filter((p): p is PontoPesoEstatura => p !== null);
-  }, [consultasSelecionadas, dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias]);
+  const dadosNascimento = useMemo(
+    () => (dataNascimento ? { dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias } : null),
+    [dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias]
+  );
+  // OMS: a termo (idade cronológica) e pré-termo após 64 semanas (idade corrigida)
+  const pontosOms = useMemo(
+    () => (dadosNascimento ? montarPontosOms(consultasSelecionadas, dadosNascimento) : []),
+    [consultasSelecionadas, dadosNascimento]
+  );
   const mostrarGraficoOms = !ehPretermo || pontosOms.length > 0;
-
-  // Pontos avaliados na INTERGROWTH-21st: pré-termo até 64 semanas pós-menstruais
-  const pontosIntergrowth = useMemo<PontoPacienteIntergrowth[]>(() => {
-    if (!dataNascimento || !ehPretermo) return [];
-    const crianca = { dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias };
-    return consultasSelecionadas
-      .map((consulta): PontoPacienteIntergrowth | null => {
-        const idade = resolverIdadeConsulta(consulta, crianca);
-        if (idade.referencia !== "INTERGROWTH") return null;
-        return {
-          id: consulta.id,
-          data: consulta.dataHora,
-          semanas: idade.idadeDias / 7,
-          pesoKg: consulta.pesoKg,
-          estaturaCm: consulta.estaturaCm,
-          perimetroCefalicoCm: consulta.perimetroCefalicoCm,
-          zScorePeso: consulta.zScorePeso,
-          zScoreAltura: consulta.zScoreAltura,
-          zScorePerimetro: consulta.zScorePerimetro,
-        };
-      })
-      .filter((p): p is PontoPacienteIntergrowth => p !== null);
-  }, [consultasSelecionadas, dataNascimento, ehPretermo, idadeGestacionalSemanas, idadeGestacionalDias]);
-
+  // INTERGROWTH-21st: pré-termo até 64 semanas pós-menstruais
+  const pontosIntergrowth = useMemo(
+    () => (dadosNascimento && ehPretermo ? montarPontosIntergrowth(consultasSelecionadas, dadosNascimento) : []),
+    [consultasSelecionadas, dadosNascimento, ehPretermo]
+  );
+  // Peso para comprimento/estatura (OMS), com o comprimento corrigido pela posição da medida
+  const pontosPesoEstatura = useMemo(
+    () => (dadosNascimento ? montarPontosPesoEstatura(consultasSelecionadas, dadosNascimento) : []),
+    [consultasSelecionadas, dadosNascimento]
+  );
 
   const exportarGraficoComoJpeg = async (): Promise<string> => {
     if (!areaGraficoRef.current) {

@@ -64,7 +64,7 @@ export default function CardGanhoEsperado({ consultaId, dataConsulta }: { consul
           {referencia === "INTERGROWTH" ? "INTERGROWTH-21st" : "OMS"}
         </span>
       </div>
-      <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
         {ganhos.map((g) => (
           <div key={g.medida} className="rounded-md bg-white px-3 py-2 border border-indigo-100">
             <p className="text-xs text-gray-500">

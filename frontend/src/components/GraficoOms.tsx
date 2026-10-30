@@ -318,7 +318,7 @@ export default function GraficoOms({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2 print:hidden">
         <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
           {(Object.keys(MEDIDAS) as MedidaOms[]).map((m) => (
             <button

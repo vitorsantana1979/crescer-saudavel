@@ -97,8 +97,9 @@ public class ConsultaController : ControllerBase
         if (request.DataHora.Date < crianca.DataNascimento.Date)
             return BadRequest(new { message = "Data da consulta anterior ao nascimento" });
 
-        if (!PosicaoMedida.Valida(request.PosicaoMedida))
-            return BadRequest(new { message = "Posição da medida deve ser Deitado ou EmPe" });
+        if (ImportacaoConsultas.ValidarMedidas(crianca, request.DataHora, request.PesoKg, request.EstaturaCm,
+                request.PerimetroCefalicoCm, request.PosicaoMedida, DateTime.Now) is { } erroMedidas)
+            return BadRequest(new { message = erroMedidas });
 
         var consulta = new Consulta
         {
@@ -142,8 +143,9 @@ public class ConsultaController : ControllerBase
         if (request.DataHora.Date < crianca.DataNascimento.Date)
             return BadRequest(new { message = "Data da consulta anterior ao nascimento" });
 
-        if (!PosicaoMedida.Valida(request.PosicaoMedida))
-            return BadRequest(new { message = "Posição da medida deve ser Deitado ou EmPe" });
+        if (ImportacaoConsultas.ValidarMedidas(crianca, request.DataHora, request.PesoKg, request.EstaturaCm,
+                request.PerimetroCefalicoCm, request.PosicaoMedida, DateTime.Now) is { } erroMedidas)
+            return BadRequest(new { message = erroMedidas });
 
         consulta.DataHora = request.DataHora;
         consulta.PesoKg = request.PesoKg;
@@ -158,6 +160,46 @@ public class ConsultaController : ControllerBase
 
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    /// <summary>
+    /// Importa atendimentos em lote para uma criança (linhas de planilha já interpretadas no cliente).
+    /// Linhas inválidas ou duplicadas são recusadas com o motivo; depois da inclusão todas as consultas da
+    /// criança são reavaliadas em ordem cronológica (alertas e VGP dependem da anterior).
+    /// </summary>
+    [HttpPost("crianca/{criancaId}/importar")]
+    public async Task<IActionResult> Importar(Guid criancaId, [FromBody] ImportarConsultasRequest request)
+    {
+        var tenantIds = _currentUserService.TenantIds.ToHashSet();
+        var crianca = await _context.RecemNascidos
+            .Include(r => r.Consultas)
+            .FirstOrDefaultAsync(r => r.Id == criancaId);
+        if (crianca == null)
+            return NotFound(new { message = "Criança não encontrada" });
+        if (!tenantIds.Contains(crianca.TenantId))
+            return Forbid();
+
+        if (request.Linhas is not { Count: > 0 })
+            return BadRequest(new { message = "Nenhuma linha para importar." });
+        if (request.Linhas.Count > ImportacaoConsultas.MaximoLinhas)
+            return BadRequest(new { message = $"Máximo de {ImportacaoConsultas.MaximoLinhas} linhas por importação." });
+
+        var (aceitas, rejeitadas) = ImportacaoConsultas.Planejar(
+            crianca, crianca.Consultas.Select(c => c.DataHora), request.Linhas, DateTime.Now);
+
+        if (aceitas.Count > 0)
+        {
+            _context.Consultas.AddRange(aceitas);
+            Consulta? anterior = null;
+            foreach (var consulta in crianca.Consultas.Concat(aceitas).Distinct().OrderBy(c => c.DataHora))
+            {
+                _avaliacao.Avaliar(consulta, crianca, anterior);
+                anterior = consulta;
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        return Ok(new { importadas = aceitas.Count, rejeitadas });
     }
 
     /// <summary>Ganho de cada medida para manter o z atual no próximo período (7 d INTERGROWTH, 30 d OMS).</summary>
@@ -265,6 +307,8 @@ public record CreateConsultaRequest(
     decimal? ZScoreManualEquipe = null,
     string? PosicaoMedida = null
 );
+
+public record ImportarConsultasRequest(List<LinhaImportacao> Linhas);
 
 public record UpdateConsultaRequest(
     DateTime DataHora,

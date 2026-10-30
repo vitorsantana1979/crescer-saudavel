@@ -446,3 +446,34 @@ export function igPelaDum(dum: string, nascimento: string): number {
 export function igPelaDpp(dpp: string, nascimento: string): number {
   return DIAS_GESTACAO_TERMO - diasEntre(nascimento, dpp);
 }
+
+/** Rótulo curto da classificação, para tabelas e relatórios (o rótulo completo vai no title). */
+const ROTULOS_CURTOS: Record<string, string> = {
+  PesoMuitoBaixo: "muito baixo",
+  PesoBaixo: "baixo",
+  PesoVigilanciaBaixo: "vigilância (baixo)",
+  PesoAdequado: "adequado",
+  PesoVigilanciaElevado: "vigilância (elevado)",
+  PesoElevado: "elevado",
+  EstaturaMuitoBaixa: "muito baixa",
+  EstaturaBaixa: "baixa",
+  EstaturaAdequada: "adequada",
+  PerimetroCefalicoAbaixo: "abaixo (< −2)",
+  PerimetroCefalicoAdequado: "adequado",
+  PerimetroCefalicoAcima: "acima (> +2)",
+};
+const FAIXAS_NUTRICIONAIS: Record<string, string> = {
+  MagrezaAcentuada: "magreza acentuada",
+  Magreza: "magreza",
+  Eutrofia: "eutrofia",
+  RiscoSobrepeso: "risco de sobrepeso",
+  Sobrepeso: "sobrepeso",
+  Obesidade: "obesidade",
+};
+
+export function rotuloCurto(codigo: string | null | undefined): string {
+  if (!codigo) return "";
+  if (ROTULOS_CURTOS[codigo]) return ROTULOS_CURTOS[codigo];
+  const faixa = codigo.replace(/^(Imc|PesoEstatura)/, "");
+  return FAIXAS_NUTRICIONAIS[faixa] ?? codigo;
+}

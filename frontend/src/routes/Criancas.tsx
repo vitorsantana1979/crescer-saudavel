@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
 import PageHeader from "@/components/PageHeader";
+import { baixarArquivo } from "@/lib/download";
 import {
   Baby,
   Plus,
@@ -12,6 +13,7 @@ import {
   Apple,
   Activity,
   Eye,
+  FileSpreadsheet,
 } from "lucide-react";
 
 interface Crianca {
@@ -94,6 +96,30 @@ export default function Criancas() {
           icon: Plus,
         }}
       />
+
+      <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
+        <span className="text-gray-600">Exportar todos os atendimentos:</span>
+        <button
+          onClick={() =>
+            baixarArquivo("/exportar/pesquisa", { formato: "xlsx" }, "crescer_saudavel.xlsx").catch(() =>
+              toast.error("Não foi possível gerar a planilha.")
+            )
+          }
+          className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          <FileSpreadsheet className="w-4 h-4" /> Planilha (XLSX)
+        </button>
+        <button
+          onClick={() =>
+            baixarArquivo("/exportar/pesquisa", { formato: "csv" }, "exportacao_pesquisa.csv").catch(() =>
+              toast.error("Não foi possível gerar o CSV.")
+            )
+          }
+          className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+        >
+          CSV para pesquisa
+        </button>
+      </div>
 
       {/* Search Bar */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
