@@ -14,6 +14,7 @@ interface FormData {
   pesoKg: number;
   estaturaCm: number;
   perimetroCefalicoCm: number;
+  posicaoMedida?: "" | "Deitado" | "EmPe";
   classificacaoManualEquipe?: string;
   zScoreManualEquipe?: number;
 }
@@ -75,6 +76,7 @@ export default function ConsultaForm() {
       setValue("pesoKg", data.pesoKg);
       setValue("estaturaCm", data.estaturaCm);
       setValue("perimetroCefalicoCm", data.perimetroCefalicoCm);
+      setValue("posicaoMedida", data.posicaoMedida ?? "");
       if (data.classificacaoManualEquipe) setValue("classificacaoManualEquipe", data.classificacaoManualEquipe);
       if (data.zScoreManualEquipe) setValue("zScoreManualEquipe", data.zScoreManualEquipe);
     } catch (error) {
@@ -94,6 +96,7 @@ export default function ConsultaForm() {
         pesoKg: data.pesoKg,
         estaturaCm: data.estaturaCm,
         perimetroCefalicoCm: data.perimetroCefalicoCm,
+        posicaoMedida: data.posicaoMedida || null,
         classificacaoManualEquipe: data.classificacaoManualEquipe || null,
         zScoreManualEquipe: data.zScoreManualEquipe || null,
       };
@@ -260,6 +263,18 @@ export default function ConsultaForm() {
                   {errors.estaturaCm.message}
                 </p>
               )}
+              <label className="block text-xs font-medium text-gray-600 mt-3 mb-1">Posição da medida</label>
+              <select
+                {...register("posicaoMedida")}
+                className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              >
+                <option value="">Automática pela idade (deitado até 2 anos, em pé depois)</option>
+                <option value="Deitado">Deitado (comprimento)</option>
+                <option value="EmPe">Em pé (estatura)</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Na posição trocada para a idade, a OMS corrige 0,7 cm (em pé antes de 2 anos: +0,7; deitado depois: −0,7).
+              </p>
               {consulta?.zScoreAltura !== undefined && consulta?.zScoreAltura !== null && (
                 <div className="mt-2">
                   <p className="text-xs text-gray-500">Z-Score Altura</p>

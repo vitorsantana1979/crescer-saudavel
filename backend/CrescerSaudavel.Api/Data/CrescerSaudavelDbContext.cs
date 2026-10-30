@@ -206,6 +206,12 @@ public class CrescerSaudavelDbContext
         modelBuilder.Entity<Consulta>().Property(c => c.ZScorePeso).HasPrecision(6, 3);
         modelBuilder.Entity<Consulta>().Property(c => c.ZScoreAltura).HasPrecision(6, 3);
         modelBuilder.Entity<Consulta>().Property(c => c.ZScorePerimetro).HasPrecision(6, 3);
+        modelBuilder.Entity<Consulta>().Property(c => c.PosicaoMedida).HasMaxLength(10);
+        modelBuilder.Entity<Consulta>().Property(c => c.Imc).HasPrecision(5, 2);
+        modelBuilder.Entity<Consulta>().Property(c => c.ZScoreImc).HasPrecision(6, 3);
+        modelBuilder.Entity<Consulta>().Property(c => c.ZScorePesoEstatura).HasPrecision(6, 3);
+        modelBuilder.Entity<Consulta>().Property(c => c.ClassificacaoImc).HasMaxLength(40);
+        modelBuilder.Entity<Consulta>().Property(c => c.ClassificacaoPesoEstatura).HasMaxLength(40);
         modelBuilder.Entity<Consulta>().Property(c => c.ClassificacaoPeso).HasMaxLength(40);
         modelBuilder.Entity<Consulta>().Property(c => c.ClassificacaoEstatura).HasMaxLength(40);
         modelBuilder.Entity<Consulta>().Property(c => c.ClassificacaoPerimetro).HasMaxLength(40);

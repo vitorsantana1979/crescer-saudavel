@@ -2,7 +2,8 @@ import { useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 import GraficoOms, { type PontoPacienteOms } from "@/components/GraficoOms";
 import GraficoIntergrowth, { type PontoPacienteIntergrowth } from "@/components/GraficoIntergrowth";
-import { formatarZ, resolverIdadeConsulta } from "@/lib/crescimento";
+import GraficoPesoEstatura, { type PontoPesoEstatura } from "@/components/GraficoPesoEstatura";
+import { ajustarEstaturaPelaPosicao, formatarZ, resolverIdadeConsulta } from "@/lib/crescimento";
 
 interface ConsultaItem {
     id: string;
@@ -13,6 +14,10 @@ interface ConsultaItem {
   zScorePeso?: number;
   zScoreAltura?: number;
   zScorePerimetro?: number;
+  imc?: number | null;
+  zScoreImc?: number | null;
+  zScorePesoEstatura?: number | null;
+  posicaoMedida?: string | null;
   // Rastreabilidade do cálculo gravada pelo backend (ausente em consultas antigas)
   referenciaCurva?: string | null;
   idadeCalculoDias?: number | null;
@@ -295,12 +300,34 @@ export default function GraficosZScore({
           pesoKg: consulta.pesoKg,
           estaturaCm: consulta.estaturaCm,
           perimetroCefalicoCm: consulta.perimetroCefalicoCm,
+          imc: consulta.imc,
           zScorePeso: consulta.zScorePeso,
           zScoreAltura: consulta.zScoreAltura,
           zScorePerimetro: consulta.zScorePerimetro,
+          zScoreImc: consulta.zScoreImc,
         };
       })
       .filter((p): p is PontoPacienteOms => p !== null);
+  }, [consultasSelecionadas, dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias]);
+
+  // Peso para comprimento/estatura (OMS), com o comprimento corrigido pela posição da medida
+  const pontosPesoEstatura = useMemo<PontoPesoEstatura[]>(() => {
+    if (!dataNascimento) return [];
+    const crianca = { dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias };
+    return consultasSelecionadas
+      .map((consulta): PontoPesoEstatura | null => {
+        const idade = resolverIdadeConsulta(consulta, crianca);
+        if (idade.referencia !== "OMS" || !(consulta.estaturaCm > 0) || !(consulta.pesoKg > 0)) return null;
+        return {
+          id: consulta.id,
+          data: consulta.dataHora,
+          dia: idade.idadeDias,
+          cm: ajustarEstaturaPelaPosicao(consulta.estaturaCm, idade.idadeDias, consulta.posicaoMedida),
+          pesoKg: consulta.pesoKg,
+          zScorePesoEstatura: consulta.zScorePesoEstatura,
+        };
+      })
+      .filter((p): p is PontoPesoEstatura => p !== null);
   }, [consultasSelecionadas, dataNascimento, idadeGestacionalSemanas, idadeGestacionalDias]);
   const mostrarGraficoOms = !ehPretermo || pontosOms.length > 0;
 
@@ -901,6 +928,12 @@ export default function GraficosZScore({
               </h4>
             )}
             <GraficoOms sexo={sexo === "F" ? "F" : "M"} pontos={pontosOms} />
+            <div className="mt-6">
+              <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wide">
+                Estado nutricional — peso para comprimento/estatura
+              </h4>
+              <GraficoPesoEstatura sexo={sexo === "F" ? "F" : "M"} pontos={pontosPesoEstatura} />
+            </div>
           </div>
         )}
         </div>

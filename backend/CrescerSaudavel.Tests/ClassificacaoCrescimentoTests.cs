@@ -56,11 +56,33 @@ public class ClassificacaoCrescimentoTests
         Assert.Null(ClassificacaoCrescimento.PorCodigo("Inexistente"));
     }
 
+    [Theory]
+    [InlineData(-3.01, "MagrezaAcentuada")]
+    [InlineData(-3.0, "Magreza")]
+    [InlineData(-2.01, "Magreza")]
+    [InlineData(-2.0, "Eutrofia")]
+    [InlineData(1.0, "Eutrofia")]
+    [InlineData(1.01, "RiscoSobrepeso")]
+    [InlineData(2.0, "RiscoSobrepeso")]
+    [InlineData(2.01, "Sobrepeso")]
+    [InlineData(3.0, "Sobrepeso")]
+    [InlineData(3.01, "Obesidade")]
+    public void Imc_e_peso_estatura_seguem_a_tabela_de_estado_nutricional(double z, string faixa)
+    {
+        Assert.Equal($"Imc{faixa}", ClassificacaoCrescimento.Classificar(Indicador.ImcIdade, (decimal)z)!.Codigo);
+        Assert.Equal($"PesoEstatura{faixa}", ClassificacaoCrescimento.Classificar(Indicador.PesoEstatura, (decimal)z)!.Codigo);
+    }
+
     [Fact]
     public void Niveis_de_cuidado_sao_os_extremos_de_cada_indicador()
     {
         Assert.Equal(
-            ["PesoMuitoBaixo", "PesoBaixo", "PesoElevado", "EstaturaMuitoBaixa", "EstaturaBaixa", "PerimetroCefalicoAbaixo", "PerimetroCefalicoAcima"],
+            [
+                "PesoMuitoBaixo", "PesoBaixo", "PesoElevado", "EstaturaMuitoBaixa", "EstaturaBaixa",
+                "PerimetroCefalicoAbaixo", "PerimetroCefalicoAcima",
+                "ImcMagrezaAcentuada", "ImcMagreza", "ImcSobrepeso", "ImcObesidade",
+                "PesoEstaturaMagrezaAcentuada", "PesoEstaturaMagreza", "PesoEstaturaSobrepeso", "PesoEstaturaObesidade"
+            ],
             ClassificacaoCrescimento.CodigosCuidado);
 
         Assert.True(ClassificacaoCrescimento.EhCuidado("PesoBaixo"));

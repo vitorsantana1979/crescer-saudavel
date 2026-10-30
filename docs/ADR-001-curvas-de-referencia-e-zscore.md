@@ -113,6 +113,16 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
     comparável à VGP de Patel). `GET /api/consultas/{id}/ganho-esperado`. É referência de canal, não
     meta nutricional.
 
+19. **Estado nutricional (OMS)**: IMC/idade (tabela expandida diária 0–1856, LMS) e peso para
+    comprimento (45–110 cm, até 2 anos) / peso para estatura (65–120 cm, de 2 a 5 anos), LMS a cada
+    0,1 cm, ambos com o ajuste de caudas da OMS (indicadores baseados em peso). Classificação pela
+    tabela do MS: magreza acentuada (z &lt; −3), magreza, eutrofia (−2 a +1), risco de sobrepeso,
+    sobrepeso, obesidade (z &gt; +3). A consulta grava `PosicaoMedida` (Deitado/EmPe; vazio = esperada
+    para a idade) e a estatura é corrigida em 0,7 cm na posição trocada (em pé antes de 731 dias: +0,7;
+    deitado depois: −0,7), como no WHO Anthro — a correção vale para estatura/idade, IMC e P/E na OMS.
+    Pré-termo no período INTERGROWTH não tem z de IMC nem de P/E (sem tabela pública). O IMC entra nos
+    alertas do painel; P/E não, para não duplicar o mesmo achado. Migration `AddEstadoNutricionalConsulta`.
+
 ## Consequências
 
 - Consultas antigas têm z, classificação e alertas desatualizados até rodar o reprocessamento

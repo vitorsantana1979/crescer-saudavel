@@ -101,6 +101,30 @@ public class ReferenciaController : ControllerBase
         }));
 
     /// <summary>
+    /// Curva OMS de peso para comprimento (<paramref name="tipo"/> = comprimento, 45-110 cm, até 2 anos) ou
+    /// peso para estatura (altura, 65-120 cm, a partir de 2 anos), a cada 0,5 cm, linhas z = -3..+3.
+    /// </summary>
+    [HttpGet("oms/peso-estatura/{tipo}/{sexo}/curva")]
+    public IActionResult GetCurvaPesoEstatura(string tipo, string sexo)
+    {
+        var deitado = tipo.ToLowerInvariant() switch
+        {
+            "comprimento" => (bool?)true,
+            "altura" or "estatura" => false,
+            _ => null
+        };
+        if (deitado is null)
+        {
+            return BadRequest(new { message = "Tipo inválido. Use comprimento ou altura." });
+        }
+
+        var curva = _zScoreService.ObterCurvaPesoEstatura(deitado.Value, SexoChar(sexo));
+        return curva is { Count: > 0 }
+            ? Ok(curva)
+            : NotFound(new { message = $"Referência OMS de peso/{tipo} não encontrada para {sexo}." });
+    }
+
+    /// <summary>
     /// Tamanho ao nascer pela INTERGROWTH-21st (24+0 a 42+6 semanas): z, percentil e adequação
     /// (PIG &lt; P10, AIG, GIG &gt; P90) de peso, comprimento e perímetro cefálico. Recebe só medidas e IG.
     /// </summary>

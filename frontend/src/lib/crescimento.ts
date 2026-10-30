@@ -191,7 +191,7 @@ export function interpolarZ(valor: number, valoresPorZ: number[]): number {
   return Z_LINHAS[n - 1];
 }
 
-export type IndicadorZ = "peso" | "estatura" | "perimetro";
+export type IndicadorZ = "peso" | "estatura" | "perimetro" | "imc" | "pesoEstatura";
 export type NivelClassificacao = "Otimo" | "Atencao" | "Cuidado";
 
 export interface ClassificacaoZ {
@@ -225,8 +225,20 @@ function classificacao(
   return { codigo, indicador, nivel, rotulo, faixa, cor: COR_TEXTO_NIVEL[nivel] };
 }
 
+function estadoNutricional(prefixo: string, indicador: IndicadorZ, sufixo: string): ClassificacaoZ[] {
+  return [
+    classificacao(`${prefixo}MagrezaAcentuada`, indicador, "Cuidado", `Magreza acentuada (${sufixo})`, "z < −3"),
+    classificacao(`${prefixo}Magreza`, indicador, "Cuidado", `Magreza (${sufixo})`, "−3 ≤ z < −2"),
+    classificacao(`${prefixo}Eutrofia`, indicador, "Otimo", `Eutrofia (${sufixo})`, "−2 ≤ z ≤ +1"),
+    classificacao(`${prefixo}RiscoSobrepeso`, indicador, "Atencao", `Risco de sobrepeso (${sufixo})`, "+1 < z ≤ +2"),
+    classificacao(`${prefixo}Sobrepeso`, indicador, "Cuidado", `Sobrepeso (${sufixo})`, "+2 < z ≤ +3"),
+    classificacao(`${prefixo}Obesidade`, indicador, "Cuidado", `Obesidade (${sufixo})`, "z > +3"),
+  ];
+}
+
 // Espelha ClassificacaoCrescimento.Tabela do backend: tabela "Como interpretar os gráficos"
-// (Brasil 2008 / OMS 2006) para peso e estatura; perímetro cefálico pelo corte de ±2 DP (OMS/SBP).
+// (Brasil 2008 / OMS 2006) para peso, estatura, IMC e peso/estatura; perímetro cefálico pelo
+// corte de ±2 DP (OMS/SBP).
 export const CLASSIFICACOES_Z: ClassificacaoZ[] = [
   classificacao("PesoMuitoBaixo", "peso", "Cuidado", "Muito baixo peso para a idade", "z < −3"),
   classificacao("PesoBaixo", "peso", "Cuidado", "Baixo peso para a idade", "−3 ≤ z < −2"),
@@ -240,6 +252,8 @@ export const CLASSIFICACOES_Z: ClassificacaoZ[] = [
   classificacao("PerimetroCefalicoAbaixo", "perimetro", "Cuidado", "Perímetro cefálico abaixo do esperado (microcefalia)", "z < −2"),
   classificacao("PerimetroCefalicoAdequado", "perimetro", "Otimo", "Perímetro cefálico adequado para a idade", "−2 ≤ z ≤ +2"),
   classificacao("PerimetroCefalicoAcima", "perimetro", "Cuidado", "Perímetro cefálico acima do esperado (macrocefalia)", "z > +2"),
+  ...estadoNutricional("Imc", "imc", "IMC para a idade"),
+  ...estadoNutricional("PesoEstatura", "pesoEstatura", "peso para a estatura"),
 ];
 
 const classificacoesPorCodigo = new Map(CLASSIFICACOES_Z.map((c) => [c.codigo, c]));
@@ -261,6 +275,11 @@ export function classificarZ(indicador: IndicadorZ, z: number | null | undefined
       : "PesoElevado";
   } else if (indicador === "estatura") {
     codigo = z < -3 ? "EstaturaMuitoBaixa" : z < -2 ? "EstaturaBaixa" : "EstaturaAdequada";
+  } else if (indicador === "imc" || indicador === "pesoEstatura") {
+    const prefixo = indicador === "imc" ? "Imc" : "PesoEstatura";
+    const faixa =
+      z < -3 ? "MagrezaAcentuada" : z < -2 ? "Magreza" : z <= 1 ? "Eutrofia" : z <= 2 ? "RiscoSobrepeso" : z <= 3 ? "Sobrepeso" : "Obesidade";
+    codigo = prefixo + faixa;
   } else {
     codigo = z < -2 ? "PerimetroCefalicoAbaixo" : z <= 2 ? "PerimetroCefalicoAdequado" : "PerimetroCefalicoAcima";
   }
@@ -343,4 +362,18 @@ export interface DadosTamanhoNascimento {
   pesoGr?: number | null;
   comprimentoCm?: number | null;
   perimetroCefalicoCm?: number | null;
+}
+
+// --- Posição da medida (OMS) ---------------------------------------------------------------------
+
+export type PosicaoMedida = "Deitado" | "EmPe";
+export const IDADE_TROCA_POSICAO_DIAS = 731; // < 731 dias: comprimento (deitado); depois estatura (em pé)
+
+/** Espelha PosicaoMedida.Ajustar do backend: ±0,7 cm quando medido na posição trocada para a idade. */
+export function ajustarEstaturaPelaPosicao(cm: number, idadeDias: number, posicao?: string | null): number {
+  if (!(cm > 0) || !posicao) return cm;
+  const deitadoParaIdade = idadeDias < IDADE_TROCA_POSICAO_DIAS;
+  if (posicao === "EmPe" && deitadoParaIdade) return cm + 0.7;
+  if (posicao === "Deitado" && !deitadoParaIdade) return cm - 0.7;
+  return cm;
 }

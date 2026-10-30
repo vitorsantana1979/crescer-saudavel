@@ -172,6 +172,7 @@ public class DashboardController : ControllerBase
             .Where(x => codigosCuidado.Contains(x.Consulta.ClassificacaoPeso!) ||
                         codigosCuidado.Contains(x.Consulta.ClassificacaoEstatura!) ||
                         codigosCuidado.Contains(x.Consulta.ClassificacaoPerimetro!) ||
+                        codigosCuidado.Contains(x.Consulta.ClassificacaoImc!) ||
                         x.Consulta.AlertaQuedaPonderal ||
                         x.Consulta.AlertaRCEU)
             .OrderByDescending(x => x.Consulta.DataHora)
@@ -189,6 +190,8 @@ public class DashboardController : ControllerBase
             x.Consulta.ClassificacaoPeso,
             x.Consulta.ClassificacaoEstatura,
             x.Consulta.ClassificacaoPerimetro,
+            x.Consulta.ZScoreImc,
+            x.Consulta.ClassificacaoImc,
             x.Consulta.AlertaRCEU,
             x.Consulta.AlertaQuedaPonderal,
             x.crianca,
@@ -201,6 +204,7 @@ public class DashboardController : ControllerBase
         ClassificacaoCrescimento.EhCuidado(c.ClassificacaoPeso)
         || ClassificacaoCrescimento.EhCuidado(c.ClassificacaoEstatura)
         || ClassificacaoCrescimento.EhCuidado(c.ClassificacaoPerimetro)
+        || ClassificacaoCrescimento.EhCuidado(c.ClassificacaoImc)
         || c.AlertaQuedaPonderal
         || c.AlertaRCEU;
 
@@ -222,6 +226,9 @@ public class DashboardController : ControllerBase
         if (ClassificacaoCrescimento.PorCodigo(c.ClassificacaoPerimetro) is { EhCuidado: true } perimetro)
             alertas.Add(perimetro.Rotulo);
 
+        if (ClassificacaoCrescimento.PorCodigo(c.ClassificacaoImc) is { EhCuidado: true } imc)
+            alertas.Add(imc.Rotulo);
+
         return string.Join(", ", alertas);
     }
 
@@ -230,7 +237,7 @@ public class DashboardController : ControllerBase
         if (c.AlertaRCEU || c.AlertaQuedaPonderal)
             return "critico";
 
-        var scores = new[] { c.ZScorePeso, c.ZScoreAltura, c.ZScorePerimetro }
+        var scores = new[] { c.ZScorePeso, c.ZScoreAltura, c.ZScorePerimetro, c.ZScoreImc }
             .Where(z => z.HasValue)
             .Select(z => Math.Abs(z!.Value))
             .ToList();

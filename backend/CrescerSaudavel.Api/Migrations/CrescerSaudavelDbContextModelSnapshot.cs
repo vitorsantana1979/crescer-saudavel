@@ -161,6 +161,10 @@ namespace CrescerSaudavel.Api.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
 
+                    b.Property<string>("ClassificacaoImc")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
                     b.Property<string>("ClassificacaoManualEquipe")
                         .HasColumnType("nvarchar(max)");
 
@@ -169,6 +173,10 @@ namespace CrescerSaudavel.Api.Migrations
                         .HasColumnType("nvarchar(40)");
 
                     b.Property<string>("ClassificacaoPeso")
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<string>("ClassificacaoPesoEstatura")
                         .HasMaxLength(40)
                         .HasColumnType("nvarchar(40)");
 
@@ -188,6 +196,10 @@ namespace CrescerSaudavel.Api.Migrations
                     b.Property<int?>("IdadeCalculoDias")
                         .HasColumnType("int");
 
+                    b.Property<decimal?>("Imc")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
                     b.Property<decimal>("PerimetroCefalicoCm")
                         .HasPrecision(6, 2)
                         .HasColumnType("decimal(6,2)");
@@ -195,6 +207,10 @@ namespace CrescerSaudavel.Api.Migrations
                     b.Property<decimal>("PesoKg")
                         .HasPrecision(6, 3)
                         .HasColumnType("decimal(6,3)");
+
+                    b.Property<string>("PosicaoMedida")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<Guid>("RecemNascidoId")
                         .HasColumnType("uniqueidentifier");
@@ -212,6 +228,10 @@ namespace CrescerSaudavel.Api.Migrations
                         .HasPrecision(6, 3)
                         .HasColumnType("decimal(6,3)");
 
+                    b.Property<decimal?>("ZScoreImc")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("decimal(6,3)");
+
                     b.Property<decimal?>("ZScoreManualEquipe")
                         .HasColumnType("decimal(18,2)");
 
@@ -220,6 +240,10 @@ namespace CrescerSaudavel.Api.Migrations
                         .HasColumnType("decimal(6,3)");
 
                     b.Property<decimal?>("ZScorePeso")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("ZScorePesoEstatura")
                         .HasPrecision(6, 3)
                         .HasColumnType("decimal(6,3)");
 

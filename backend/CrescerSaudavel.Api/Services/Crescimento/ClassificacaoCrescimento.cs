@@ -4,7 +4,9 @@ public enum Indicador
 {
     PesoIdade,
     EstaturaIdade,
-    PerimetroCefalicoIdade
+    PerimetroCefalicoIdade,
+    ImcIdade,
+    PesoEstatura
 }
 
 /// <summary>Coluna "O que significa" da tabela de interpretação: ótimo, atenção ou cuidado.</summary>
@@ -31,6 +33,9 @@ public record ClassificacaoZ(
 /// capacitação em avaliação do crescimento infantil da OMS, 2006) para peso/idade e estatura/idade.
 /// Para perímetro cefálico/idade, que não consta da tabela, usa-se o corte de ±2 DP da OMS/SBP
 /// (microcefalia abaixo de −2 DP, macrocefalia acima de +2 DP).
+/// IMC/idade e peso/estatura (peso para comprimento até 2 anos, peso para estatura depois) seguem a
+/// mesma tabela: magreza acentuada (z &lt; −3), magreza (−3 a −2), eutrofia (−2 a +1), risco de
+/// sobrepeso (+1 a +2), sobrepeso (+2 a +3) e obesidade (z &gt; +3).
 /// Os mesmos cortes de z valem para a curva INTERGROWTH-21st (pré-termo).
 /// </summary>
 public static class ClassificacaoCrescimento
@@ -62,11 +67,27 @@ public static class ClassificacaoCrescimento
     public static readonly ClassificacaoZ PerimetroCefalicoAcima =
         new("PerimetroCefalicoAcima", Indicador.PerimetroCefalicoIdade, NivelClassificacao.Cuidado, "Perímetro cefálico acima do esperado (macrocefalia)", "z > +2");
 
+    public static readonly ClassificacaoZ[] Imc = EstadoNutricional("Imc", Indicador.ImcIdade, "IMC para a idade");
+    public static readonly ClassificacaoZ[] PesoEstatura = EstadoNutricional("PesoEstatura", Indicador.PesoEstatura, "peso para a estatura");
+
+    // Magreza acentuada, magreza, eutrofia, risco de sobrepeso, sobrepeso, obesidade
+    private static ClassificacaoZ[] EstadoNutricional(string prefixo, Indicador indicador, string sufixo) =>
+    [
+        new($"{prefixo}MagrezaAcentuada", indicador, NivelClassificacao.Cuidado, $"Magreza acentuada ({sufixo})", "z < −3"),
+        new($"{prefixo}Magreza", indicador, NivelClassificacao.Cuidado, $"Magreza ({sufixo})", "−3 ≤ z < −2"),
+        new($"{prefixo}Eutrofia", indicador, NivelClassificacao.Otimo, $"Eutrofia ({sufixo})", "−2 ≤ z ≤ +1"),
+        new($"{prefixo}RiscoSobrepeso", indicador, NivelClassificacao.Atencao, $"Risco de sobrepeso ({sufixo})", "+1 < z ≤ +2"),
+        new($"{prefixo}Sobrepeso", indicador, NivelClassificacao.Cuidado, $"Sobrepeso ({sufixo})", "+2 < z ≤ +3"),
+        new($"{prefixo}Obesidade", indicador, NivelClassificacao.Cuidado, $"Obesidade ({sufixo})", "z > +3"),
+    ];
+
     public static IReadOnlyList<ClassificacaoZ> Tabela { get; } =
     [
         PesoMuitoBaixo, PesoBaixo, PesoVigilanciaBaixo, PesoAdequado, PesoVigilanciaElevado, PesoElevado,
         EstaturaMuitoBaixa, EstaturaBaixa, EstaturaAdequada,
-        PerimetroCefalicoAbaixo, PerimetroCefalicoAdequado, PerimetroCefalicoAcima
+        PerimetroCefalicoAbaixo, PerimetroCefalicoAdequado, PerimetroCefalicoAcima,
+        ..Imc,
+        ..PesoEstatura
     ];
 
     private static readonly Dictionary<string, ClassificacaoZ> PorCodigoIndex = Tabela.ToDictionary(c => c.Codigo);
@@ -95,9 +116,19 @@ public static class ClassificacaoCrescimento
                 v < -2 ? PerimetroCefalicoAbaixo
                 : v <= 2 ? PerimetroCefalicoAdequado
                 : PerimetroCefalicoAcima,
+            Indicador.ImcIdade => FaixaNutricional(Imc, v),
+            Indicador.PesoEstatura => FaixaNutricional(PesoEstatura, v),
             _ => throw new ArgumentOutOfRangeException(nameof(indicador), indicador, null)
         };
     }
+
+    private static ClassificacaoZ FaixaNutricional(ClassificacaoZ[] faixas, decimal z) =>
+        z < -3 ? faixas[0]
+        : z < -2 ? faixas[1]
+        : z <= 1 ? faixas[2]
+        : z <= 2 ? faixas[3]
+        : z <= 3 ? faixas[4]
+        : faixas[5];
 
     public static ClassificacaoZ? PorCodigo(string? codigo) =>
         codigo != null && PorCodigoIndex.TryGetValue(codigo, out var classificacao) ? classificacao : null;

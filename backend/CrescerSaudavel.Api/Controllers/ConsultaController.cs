@@ -97,6 +97,9 @@ public class ConsultaController : ControllerBase
         if (request.DataHora.Date < crianca.DataNascimento.Date)
             return BadRequest(new { message = "Data da consulta anterior ao nascimento" });
 
+        if (!PosicaoMedida.Valida(request.PosicaoMedida))
+            return BadRequest(new { message = "Posição da medida deve ser Deitado ou EmPe" });
+
         var consulta = new Consulta
         {
             RecemNascidoId = request.RecemNascidoId,
@@ -104,6 +107,7 @@ public class ConsultaController : ControllerBase
             PesoKg = request.PesoKg,
             EstaturaCm = request.EstaturaCm,
             PerimetroCefalicoCm = request.PerimetroCefalicoCm,
+            PosicaoMedida = request.PosicaoMedida,
             ClassificacaoManualEquipe = request.ClassificacaoManualEquipe,
             ZScoreManualEquipe = request.ZScoreManualEquipe
         };
@@ -138,10 +142,14 @@ public class ConsultaController : ControllerBase
         if (request.DataHora.Date < crianca.DataNascimento.Date)
             return BadRequest(new { message = "Data da consulta anterior ao nascimento" });
 
+        if (!PosicaoMedida.Valida(request.PosicaoMedida))
+            return BadRequest(new { message = "Posição da medida deve ser Deitado ou EmPe" });
+
         consulta.DataHora = request.DataHora;
         consulta.PesoKg = request.PesoKg;
         consulta.EstaturaCm = request.EstaturaCm;
         consulta.PerimetroCefalicoCm = request.PerimetroCefalicoCm;
+        consulta.PosicaoMedida = request.PosicaoMedida;
         consulta.ClassificacaoManualEquipe = request.ClassificacaoManualEquipe;
         consulta.ZScoreManualEquipe = request.ZScoreManualEquipe;
 
@@ -152,10 +160,6 @@ public class ConsultaController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>
-    /// Recalcula z-scores, classificações, alertas e velocidade de ganho ponderal de todas as consultas
-    /// com as referências atuais. Usar após atualizar as tabelas de referência ou a regra de seleção.
-    /// </summary>
     /// <summary>Ganho de cada medida para manter o z atual no próximo período (7 d INTERGROWTH, 30 d OMS).</summary>
     [HttpGet("{id}/ganho-esperado")]
     public async Task<IActionResult> GetGanhoEsperado(Guid id)
@@ -175,6 +179,11 @@ public class ConsultaController : ControllerBase
         return Ok(_avaliacao.GanhoParaManterCanal(consulta, crianca));
     }
 
+    /// <summary>
+    /// Recalcula z-scores, classificações, alertas e velocidade de ganho ponderal de todas as consultas
+    /// (e o tamanho ao nascer de todas as crianças) com as referências atuais. Usar após atualizar as
+    /// tabelas de referência ou a regra de seleção.
+    /// </summary>
     [HttpPost("recalcular-zscores")]
     [Authorize(Roles = SystemRoles.SuperAdmin)]
     public async Task<IActionResult> RecalcularZScores()
@@ -253,7 +262,8 @@ public record CreateConsultaRequest(
     decimal EstaturaCm,
     decimal PerimetroCefalicoCm,
     string? ClassificacaoManualEquipe = null,
-    decimal? ZScoreManualEquipe = null
+    decimal? ZScoreManualEquipe = null,
+    string? PosicaoMedida = null
 );
 
 public record UpdateConsultaRequest(
@@ -262,5 +272,6 @@ public record UpdateConsultaRequest(
     decimal EstaturaCm,
     decimal PerimetroCefalicoCm,
     string? ClassificacaoManualEquipe = null,
-    decimal? ZScoreManualEquipe = null
+    decimal? ZScoreManualEquipe = null,
+    string? PosicaoMedida = null
 );

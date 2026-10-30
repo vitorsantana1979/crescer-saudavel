@@ -246,6 +246,61 @@ public class AvaliacaoCrescimentoServiceTests
     }
 
     [Fact]
+    public void Termo_calcula_imc_e_peso_para_comprimento_com_classificacao()
+    {
+        var consulta = ConsultaTermoNaMediana();
+
+        Servico().Avaliar(consulta, Crianca(39), null);
+
+        Assert.Equal(Math.Round(3.232m / (0.49148m * 0.49148m), 2), consulta.Imc);
+        Assert.NotNull(consulta.ZScoreImc);
+        Assert.NotNull(consulta.ZScorePesoEstatura);
+        Assert.Equal("ImcEutrofia", consulta.ClassificacaoImc);
+        Assert.Equal("PesoEstaturaEutrofia", consulta.ClassificacaoPesoEstatura);
+    }
+
+    [Fact]
+    public void Estatura_medida_em_pe_antes_de_2_anos_ganha_0_7_cm()
+    {
+        var semPosicao = new Consulta { DataHora = Nascimento.AddDays(400), PesoKg = 9.5m, EstaturaCm = 75m, PerimetroCefalicoCm = 45m };
+        var emPe = new Consulta { DataHora = Nascimento.AddDays(400), PesoKg = 9.5m, EstaturaCm = 74.3m, PerimetroCefalicoCm = 45m, PosicaoMedida = PosicaoMedida.EmPe };
+
+        Servico().Avaliar(semPosicao, Crianca(39), null);
+        Servico().Avaliar(emPe, Crianca(39), null);
+
+        Assert.Equal(semPosicao.ZScoreAltura, emPe.ZScoreAltura);
+        Assert.Equal(semPosicao.Imc, emPe.Imc);
+        Assert.Equal(semPosicao.ZScorePesoEstatura, emPe.ZScorePesoEstatura);
+    }
+
+    [Fact]
+    public void Estatura_medida_deitado_depois_de_2_anos_perde_0_7_cm_e_usa_peso_para_estatura()
+    {
+        var deitado = new Consulta { DataHora = Nascimento.AddDays(800), PesoKg = 12m, EstaturaCm = 87.7m, PerimetroCefalicoCm = 48m, PosicaoMedida = PosicaoMedida.Deitado };
+        var emPe = new Consulta { DataHora = Nascimento.AddDays(800), PesoKg = 12m, EstaturaCm = 87m, PerimetroCefalicoCm = 48m };
+
+        Servico().Avaliar(deitado, Crianca(39), null);
+        Servico().Avaliar(emPe, Crianca(39), null);
+
+        Assert.Equal(emPe.ZScoreAltura, deitado.ZScoreAltura);
+        var esperado = Referencias.Servico.CalcularZPesoEstatura('F', deitado: false, 87.0, 12.0);
+        Assert.Equal((decimal)esperado!.Value, deitado.ZScorePesoEstatura);
+    }
+
+    [Fact]
+    public void Pretermo_no_intergrowth_tem_imc_calculado_mas_sem_z_de_imc()
+    {
+        var consulta = new Consulta { DataHora = Nascimento.AddDays(70), PesoKg = 3.13m, EstaturaCm = 49.3m, PerimetroCefalicoCm = 34.2m };
+
+        Servico().Avaliar(consulta, Crianca(30), null);
+
+        Assert.NotNull(consulta.Imc);
+        Assert.Null(consulta.ZScoreImc);
+        Assert.Null(consulta.ZScorePesoEstatura);
+        Assert.Null(consulta.ClassificacaoImc);
+    }
+
+    [Fact]
     public void Medida_nao_informada_fica_sem_z_nem_classificacao()
     {
         var consulta = new Consulta

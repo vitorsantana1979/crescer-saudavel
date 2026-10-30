@@ -37,7 +37,7 @@ public sealed class TamanhoNascimentoService : ITamanhoNascimentoService
     public TamanhoNascimentoService(string basePath)
     {
         var opcoes = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        foreach (var medida in Enum.GetValues<Medida>())
+        foreach (var medida in new[] { Medida.Peso, Medida.Estatura, Medida.PerimetroCefalico })
         foreach (var sexo in new[] { 'f', 'm' })
         {
             var arquivo = Path.Combine(basePath, "INTERGROWTH", $"nascimento_{NomeArquivo(medida)}_{sexo}.json");
@@ -111,12 +111,7 @@ public sealed class TamanhoNascimentoService : ITamanhoNascimentoService
         return ordenados;
     }
 
-    private static string NomeArquivo(Medida medida) => medida switch
-    {
-        Medida.Peso => "peso",
-        Medida.Estatura => "estatura",
-        _ => "perimetro"
-    };
+    private static string NomeArquivo(Medida medida) => ZScoreService.NomeArquivo(medida);
 
     private static string Chave(Medida medida, char sexo) => $"{NomeArquivo(medida)}_{sexo}";
 

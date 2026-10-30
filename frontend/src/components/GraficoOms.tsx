@@ -27,7 +27,7 @@ import {
 // Curvas vêm de /referencias/oms/{medida}/{sexo}/curva-diaria (dia 0-1856); eixo X em dias,
 // rotulado em semanas/meses/anos completos (1 mês = 30,4375 dias).
 
-export type MedidaOms = "peso" | "estatura" | "perimetro";
+export type MedidaOms = "peso" | "estatura" | "perimetro" | "imc";
 export type RecorteOms = "0-6m" | "0-2a" | "6m-2a" | "2-5a" | "0-5a";
 
 export interface PontoPacienteOms {
@@ -38,9 +38,11 @@ export interface PontoPacienteOms {
   pesoKg?: number | null;
   estaturaCm?: number | null;
   perimetroCefalicoCm?: number | null;
+  imc?: number | null;
   zScorePeso?: number | null;
   zScoreAltura?: number | null;
   zScorePerimetro?: number | null;
+  zScoreImc?: number | null;
 }
 
 interface PontoCurva {
@@ -81,10 +83,11 @@ const CORES_SEXO = {
   F: { primaria: "#E91E63", secundaria: "#AD1457", rotulo: "Meninas" },
 };
 
-const MEDIDAS: Record<MedidaOms, { rotulo: string; unidade: string; eixo: string }> = {
-  peso: { rotulo: "Peso para idade", unidade: "kg", eixo: "Peso (kg)" },
-  estatura: { rotulo: "Comprimento/estatura para idade", unidade: "cm", eixo: "Comprimento/estatura (cm)" },
-  perimetro: { rotulo: "Perímetro cefálico para idade", unidade: "cm", eixo: "Perímetro cefálico (cm)" },
+const MEDIDAS: Record<MedidaOms, { botao: string; rotulo: string; unidade: string; eixo: string }> = {
+  peso: { botao: "Peso", rotulo: "Peso para idade", unidade: "kg", eixo: "Peso (kg)" },
+  estatura: { botao: "Comprimento/Estatura", rotulo: "Comprimento/estatura para idade", unidade: "cm", eixo: "Comprimento/estatura (cm)" },
+  perimetro: { botao: "Perímetro cefálico", rotulo: "Perímetro cefálico para idade", unidade: "cm", eixo: "Perímetro cefálico (cm)" },
+  imc: { botao: "IMC", rotulo: "IMC para idade", unidade: "kg/m²", eixo: "IMC (kg/m²)" },
 };
 
 interface Tick {
@@ -195,12 +198,25 @@ function carregarCurva(medida: MedidaOms, sexo: "M" | "F"): Promise<PontoCurva[]
 
 function valorDaMedida(ponto: PontoPacienteOms, medida: MedidaOms): number | null {
   const valor =
-    medida === "peso" ? ponto.pesoKg : medida === "estatura" ? ponto.estaturaCm : ponto.perimetroCefalicoCm;
+    medida === "peso"
+      ? ponto.pesoKg
+      : medida === "estatura"
+      ? ponto.estaturaCm
+      : medida === "imc"
+      ? ponto.imc
+      : ponto.perimetroCefalicoCm;
   return valor != null && Number.isFinite(valor) && valor > 0 ? valor : null;
 }
 
 function zDaMedida(ponto: PontoPacienteOms, medida: MedidaOms): number | null {
-  const z = medida === "peso" ? ponto.zScorePeso : medida === "estatura" ? ponto.zScoreAltura : ponto.zScorePerimetro;
+  const z =
+    medida === "peso"
+      ? ponto.zScorePeso
+      : medida === "estatura"
+      ? ponto.zScoreAltura
+      : medida === "imc"
+      ? ponto.zScoreImc
+      : ponto.zScorePerimetro;
   return z != null && Number.isFinite(z) ? z : null;
 }
 
@@ -312,7 +328,7 @@ export default function GraficoOms({
               className={`px-3 py-1.5 ${medida === m ? "text-white" : "bg-white text-gray-700 hover:bg-gray-50"}`}
               style={medida === m ? { backgroundColor: cores.primaria } : undefined}
             >
-              {m === "peso" ? "Peso" : m === "estatura" ? "Comprimento/Estatura" : "Perímetro cefálico"}
+              {MEDIDAS[m].botao}
             </button>
           ))}
         </div>
@@ -568,7 +584,7 @@ function formatarTickY(valor: number, passo: number): string {
 }
 
 function formatarValor(valor: number, medida: MedidaOms): string {
-  return valor.toFixed(medida === "peso" ? 3 : 1).replace(".", ",");
+  return valor.toFixed(medida === "peso" ? 3 : medida === "imc" ? 2 : 1).replace(".", ",");
 }
 
 // Começa no menor recorte que contém o último atendimento

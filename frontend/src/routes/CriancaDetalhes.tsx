@@ -73,12 +73,33 @@ interface Consulta {
   classificacaoPeso?: string | null;
   classificacaoEstatura?: string | null;
   classificacaoPerimetro?: string | null;
+  posicaoMedida?: string | null;
+  imc?: number | null;
+  zScoreImc?: number | null;
+  zScorePesoEstatura?: number | null;
+  classificacaoImc?: string | null;
+  classificacaoPesoEstatura?: string | null;
   alertaRCEU?: boolean;
   alertaQuedaPonderal?: boolean;
 }
 
 // Classificação gravada pelo backend; para consultas ainda não reprocessadas, deriva do z no cliente.
 function indicadoresZ(consulta: Consulta) {
+  const nutricionais = [
+    {
+      sigla: "IMC",
+      titulo: `IMC/idade${consulta.imc != null ? ` (IMC ${consulta.imc.toFixed(1).replace(".", ",")} kg/m²)` : ""}`,
+      z: consulta.zScoreImc,
+      classificacao: classificacaoPorCodigo(consulta.classificacaoImc) ?? classificarZ("imc", consulta.zScoreImc),
+    },
+    {
+      sigla: "P/E",
+      titulo: "Z-score peso para comprimento/estatura",
+      z: consulta.zScorePesoEstatura,
+      classificacao:
+        classificacaoPorCodigo(consulta.classificacaoPesoEstatura) ?? classificarZ("pesoEstatura", consulta.zScorePesoEstatura),
+    },
+  ].filter((item) => item.z != null);
   return [
     {
       sigla: "Peso",
@@ -99,6 +120,7 @@ function indicadoresZ(consulta: Consulta) {
       classificacao:
         classificacaoPorCodigo(consulta.classificacaoPerimetro) ?? classificarZ("perimetro", consulta.zScorePerimetro),
     },
+    ...nutricionais,
   ];
 }
 

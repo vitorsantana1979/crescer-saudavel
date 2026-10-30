@@ -13,7 +13,9 @@ public enum Medida
 {
     Peso,
     Estatura,
-    PerimetroCefalico
+    PerimetroCefalico,
+    /// <summary>IMC para idade (só OMS, kg/m²).</summary>
+    Imc
 }
 
 /// <summary>
@@ -32,6 +34,14 @@ public class ZScoreService
     private sealed class PontoLms
     {
         [JsonPropertyName("dia")] public int Dia { get; set; }
+        [JsonPropertyName("l")] public double L { get; set; }
+        [JsonPropertyName("m")] public double M { get; set; }
+        [JsonPropertyName("s")] public double S { get; set; }
+    }
+
+    private sealed class PontoLmsPorCm
+    {
+        [JsonPropertyName("cm")] public double Cm { get; set; }
         [JsonPropertyName("l")] public double L { get; set; }
         [JsonPropertyName("m")] public double M { get; set; }
         [JsonPropertyName("s")] public double S { get; set; }
@@ -73,8 +83,26 @@ public class ZScoreService
         double ZP3
     );
 
+    public record PontoCurvaPorCm(
+        double Cm,
+        double ZN3,
+        double ZN2,
+        double ZN1,
+        double Z0,
+        double ZP1,
+        double ZP2,
+        double ZP3
+    );
+
+    /// <summary>Faixas das tabelas OMS de peso para comprimento (deitado) e peso para estatura (em pé).</summary>
+    public const double PesoComprimentoMinimoCm = 45.0;
+    public const double PesoComprimentoMaximoCm = 110.0;
+    public const double PesoAlturaMinimoCm = 65.0;
+    public const double PesoAlturaMaximoCm = 120.0;
+
     private readonly Dictionary<string, PontoLms[]> _oms = new();
     private readonly Dictionary<string, PontoSemanal[]> _intergrowth = new();
+    private readonly Dictionary<string, PontoLmsPorCm[]> _pesoEstatura = new();
 
     public ZScoreService(string basePath)
     {
@@ -86,6 +114,7 @@ public class ZScoreService
         Medida.Peso => "peso",
         Medida.Estatura => "estatura",
         Medida.PerimetroCefalico => "perimetro",
+        Medida.Imc => "imc",
         _ => throw new ArgumentOutOfRangeException(nameof(medida))
     };
 
@@ -100,6 +129,7 @@ public class ZScoreService
             case "perimetro":
             case "pc":
             case "perimetrocefalico": medida = Medida.PerimetroCefalico; return true;
+            case "imc": medida = Medida.Imc; return true;
             default: medida = default; return false;
         }
     }
@@ -131,6 +161,7 @@ public class ZScoreService
                 }
 
                 var arquivoIg = Path.Combine(basePath, "INTERGROWTH", $"{Chave(medida, sexo)}.json");
+                if (medida == Medida.Imc) continue;
                 if (File.Exists(arquivoIg))
                 {
                     var pontos = JsonSerializer.Deserialize<List<PontoSemanal>>(File.ReadAllText(arquivoIg), opcoes);
@@ -139,6 +170,73 @@ public class ZScoreService
                 }
             }
         }
+
+        foreach (var deitado in new[] { true, false })
+        foreach (var sexo in new[] { 'f', 'm' })
+        {
+            var arquivo = Path.Combine(basePath, "OMS", $"{(deitado ? "peso_comprimento" : "peso_altura")}_{sexo}.json");
+            if (!File.Exists(arquivo)) continue;
+            var pontos = JsonSerializer.Deserialize<List<PontoLmsPorCm>>(File.ReadAllText(arquivo), opcoes);
+            var (minimo, maximo) = FaixaPesoEstatura(deitado);
+            var esperado = (int)Math.Round((maximo - minimo) * 10) + 1;
+            if (pontos is { Count: > 0 } && pontos.Count == esperado)
+                _pesoEstatura[ChavePesoEstatura(deitado, sexo)] = pontos.OrderBy(p => p.Cm).ToArray();
+            else
+                Console.WriteLine($"Referência OMS de peso/estatura incompleta ignorada: {arquivo}");
+        }
+    }
+
+    private static string ChavePesoEstatura(bool deitado, char sexo) =>
+        $"{(deitado ? "comprimento" : "altura")}_{char.ToLowerInvariant(sexo)}";
+
+    private static (double Minimo, double Maximo) FaixaPesoEstatura(bool deitado) =>
+        deitado ? (PesoComprimentoMinimoCm, PesoComprimentoMaximoCm) : (PesoAlturaMinimoCm, PesoAlturaMaximoCm);
+
+    public bool PossuiReferenciaPesoEstatura(bool deitado, char sexo) => _pesoEstatura.ContainsKey(ChavePesoEstatura(deitado, sexo));
+
+    /// <summary>
+    /// z de peso para comprimento (<paramref name="deitado"/>, 45-110 cm, usado até 2 anos) ou de peso para
+    /// estatura (em pé, 65-120 cm, a partir de 2 anos), pelo método LMS com o ajuste de caudas da OMS.
+    /// </summary>
+    public double? CalcularZPesoEstatura(char sexo, bool deitado, double cm, double pesoKg)
+    {
+        if (pesoKg <= 0 || !TryLmsPorCm(sexo, deitado, cm, out var lms)) return null;
+        return Math.Round(ZLms(pesoKg, lms.L, lms.M, lms.S, ajustarCaudas: true), 2);
+    }
+
+    private bool TryLmsPorCm(char sexo, bool deitado, double cm, out (double L, double M, double S) lms)
+    {
+        lms = default;
+        if (!_pesoEstatura.TryGetValue(ChavePesoEstatura(deitado, sexo), out var tabela)) return false;
+        var (minimo, maximo) = FaixaPesoEstatura(deitado);
+        if (double.IsNaN(cm) || cm < minimo || cm > maximo) return false;
+
+        var posicao = (cm - minimo) * 10;
+        var i = Math.Min((int)Math.Floor(posicao), tabela.Length - 1);
+        var j = Math.Min(i + 1, tabela.Length - 1);
+        var f = posicao - i;
+        var a = tabela[i];
+        var b = tabela[j];
+        lms = (a.L + (b.L - a.L) * f, a.M + (b.M - a.M) * f, a.S + (b.S - a.S) * f);
+        return true;
+    }
+
+    /// <summary>Curva de peso para comprimento/estatura a cada 0,5 cm, valores nas linhas z = -3..+3.</summary>
+    public List<PontoCurvaPorCm>? ObterCurvaPesoEstatura(bool deitado, char sexo)
+    {
+        if (!_pesoEstatura.TryGetValue(ChavePesoEstatura(deitado, sexo), out var tabela)) return null;
+        return tabela
+            .Where((_, indice) => indice % 5 == 0)
+            .Select(p => new PontoCurvaPorCm(
+                p.Cm,
+                Arredondar(ValorLms(p.L, p.M, p.S, -3)),
+                Arredondar(ValorLms(p.L, p.M, p.S, -2)),
+                Arredondar(ValorLms(p.L, p.M, p.S, -1)),
+                Arredondar(ValorLms(p.L, p.M, p.S, 0)),
+                Arredondar(ValorLms(p.L, p.M, p.S, 1)),
+                Arredondar(ValorLms(p.L, p.M, p.S, 2)),
+                Arredondar(ValorLms(p.L, p.M, p.S, 3))))
+            .ToList();
     }
 
     public bool PossuiReferencia(TipoReferencia tipo, Medida medida, char sexo) => tipo switch
@@ -172,9 +270,11 @@ public class ZScoreService
         if (idadeDias < 0 || idadeDias > OmsDiaMaximo) return null;
 
         var (l, m, s) = ParametrosLms(tabela, idadeDias);
-        // A OMS restringe as caudas além de ±3 apenas nos indicadores baseados em peso.
-        return ZLms(valor, l, m, s, ajustarCaudas: medida == Medida.Peso);
+        // A OMS restringe as caudas além de ±3 apenas nos indicadores baseados em peso (peso e IMC).
+        return ZLms(valor, l, m, s, ajustarCaudas: AjustaCaudas(medida));
     }
+
+    private static bool AjustaCaudas(Medida medida) => medida is Medida.Peso or Medida.Imc;
 
     private static (double L, double M, double S) ParametrosLms(PontoLms[] tabela, double idadeDias)
     {
@@ -275,12 +375,12 @@ public class ZScoreService
             if (!_oms.TryGetValue(Chave(medida, sexo), out var tabela)) return null;
             if (idadeDias < 0 || idadeDias > OmsDiaMaximo) return null;
             var (l, m, s) = ParametrosLms(tabela, idadeDias);
-            if (medida == Medida.Peso && z > 3)
+            if (AjustaCaudas(medida) && z > 3)
             {
                 var sd3 = ValorLms(l, m, s, 3);
                 return sd3 + (z - 3) * (sd3 - ValorLms(l, m, s, 2));
             }
-            if (medida == Medida.Peso && z < -3)
+            if (AjustaCaudas(medida) && z < -3)
             {
                 var sd3n = ValorLms(l, m, s, -3);
                 return sd3n + (z + 3) * (ValorLms(l, m, s, -2) - sd3n);

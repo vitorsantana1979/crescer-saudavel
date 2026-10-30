@@ -42,7 +42,7 @@ public class ExportController : ControllerBase
 
         var builder = new StringBuilder();
         // Cabeçalho
-        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,Sexo,IdadeGestacionalSemanas,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,AdequacaoPesoNascimento,ZNascimentoPeso,ZNascimentoComprimento,ZNascimentoPerimetro,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ReferenciaCurva,TipoIdadeCalculo,IdadeCalculoDias,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,PercentilPeso,PercentilEstatura,PercentilPerimetro,ClassificacaoPeso,ClassificacaoEstatura,ClassificacaoPerimetro,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
+        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,Sexo,IdadeGestacionalSemanas,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,AdequacaoPesoNascimento,ZNascimentoPeso,ZNascimentoComprimento,ZNascimentoPerimetro,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ReferenciaCurva,TipoIdadeCalculo,IdadeCalculoDias,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,PercentilPeso,PercentilEstatura,PercentilPerimetro,ClassificacaoPeso,ClassificacaoEstatura,ClassificacaoPerimetro,PosicaoMedida,Imc,ZScoreImc,ZScorePesoEstatura,ClassificacaoImc,ClassificacaoPesoEstatura,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
 
         foreach (var c in consultas)
         {
@@ -79,6 +79,12 @@ public class ExportController : ControllerBase
                                $"{c.ClassificacaoPeso ?? ""}," +
                                $"{c.ClassificacaoEstatura ?? ""}," +
                                $"{c.ClassificacaoPerimetro ?? ""}," +
+                               $"{c.PosicaoMedida ?? ""}," +
+                               $"{c.Imc?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
+                               $"{c.ZScoreImc?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
+                               $"{c.ZScorePesoEstatura?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
+                               $"{c.ClassificacaoImc ?? ""}," +
+                               $"{c.ClassificacaoPesoEstatura ?? ""}," +
                                $"{c.VelocidadeGanhoPonderal?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"{c.ZScoreManualEquipe?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"\"{c.ClassificacaoManualEquipe ?? ""}\"," +

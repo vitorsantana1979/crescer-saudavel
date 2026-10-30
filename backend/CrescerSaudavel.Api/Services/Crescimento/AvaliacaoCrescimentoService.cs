@@ -73,7 +73,7 @@ public class AvaliacaoCrescimentoService : IAvaliacaoCrescimentoService
         foreach (var (medida, nome, valor) in new[]
                  {
                      (Medida.Peso, "peso", consulta.PesoKg),
-                     (Medida.Estatura, "estatura", consulta.EstaturaCm),
+                     (Medida.Estatura, "estatura", EstaturaAjustada(consulta, referencia, selecao.IdadeDias)),
                      (Medida.PerimetroCefalico, "perimetro", consulta.PerimetroCefalicoCm)
                  })
         {
@@ -114,13 +114,47 @@ public class AvaliacaoCrescimentoService : IAvaliacaoCrescimentoService
             consulta.ZScorePeso = null;
             consulta.ZScoreAltura = null;
             consulta.ZScorePerimetro = null;
+            consulta.Imc = CalcularImc(consulta.PesoKg, consulta.EstaturaCm);
+            consulta.ZScoreImc = null;
+            consulta.ZScorePesoEstatura = null;
             return selecao;
         }
 
+        // Correção de 0,7 cm pela posição só faz sentido na OMS (a INTERGROWTH é sempre deitado)
+        var estatura = EstaturaAjustada(consulta, referencia, selecao.IdadeDias);
+
         consulta.ZScorePeso = Calcular(referencia, Medida.Peso, crianca.Sexo, selecao.IdadeDias, consulta.PesoKg);
-        consulta.ZScoreAltura = Calcular(referencia, Medida.Estatura, crianca.Sexo, selecao.IdadeDias, consulta.EstaturaCm);
+        consulta.ZScoreAltura = Calcular(referencia, Medida.Estatura, crianca.Sexo, selecao.IdadeDias, estatura);
         consulta.ZScorePerimetro = Calcular(referencia, Medida.PerimetroCefalico, crianca.Sexo, selecao.IdadeDias, consulta.PerimetroCefalicoCm);
+
+        consulta.Imc = CalcularImc(consulta.PesoKg, estatura);
+        if (referencia == TipoReferencia.OMS)
+        {
+            consulta.ZScoreImc = consulta.Imc is { } imc ? Calcular(referencia, Medida.Imc, crianca.Sexo, selecao.IdadeDias, imc) : null;
+            var zPesoEstatura = consulta.PesoKg > 0 && estatura > 0
+                ? _zScoreService.CalcularZPesoEstatura(crianca.Sexo, PosicaoMedida.DeitadoParaIdade(selecao.IdadeDias), (double)estatura, (double)consulta.PesoKg)
+                : null;
+            consulta.ZScorePesoEstatura = zPesoEstatura.HasValue ? (decimal)zPesoEstatura.Value : null;
+        }
+        else
+        {
+            // A INTERGROWTH-21st não publica IMC; peso/comprimento do pré-termo não tem tabela pública
+            consulta.ZScoreImc = null;
+            consulta.ZScorePesoEstatura = null;
+        }
         return selecao;
+    }
+
+    private static decimal EstaturaAjustada(Consulta consulta, TipoReferencia referencia, int idadeDias) =>
+        referencia == TipoReferencia.OMS
+            ? PosicaoMedida.Ajustar(consulta.EstaturaCm, idadeDias, consulta.PosicaoMedida)
+            : consulta.EstaturaCm;
+
+    private static decimal? CalcularImc(decimal pesoKg, decimal estaturaCm)
+    {
+        if (pesoKg <= 0 || estaturaCm <= 0) return null;
+        var metros = estaturaCm / 100m;
+        return Math.Round(pesoKg / (metros * metros), 2);
     }
 
     private decimal? Calcular(TipoReferencia referencia, Medida medida, char sexo, int idadeDias, decimal valor)
@@ -135,6 +169,8 @@ public class AvaliacaoCrescimentoService : IAvaliacaoCrescimentoService
         consulta.ClassificacaoPeso = ClassificacaoCrescimento.Classificar(Indicador.PesoIdade, consulta.ZScorePeso)?.Codigo;
         consulta.ClassificacaoEstatura = ClassificacaoCrescimento.Classificar(Indicador.EstaturaIdade, consulta.ZScoreAltura)?.Codigo;
         consulta.ClassificacaoPerimetro = ClassificacaoCrescimento.Classificar(Indicador.PerimetroCefalicoIdade, consulta.ZScorePerimetro)?.Codigo;
+        consulta.ClassificacaoImc = ClassificacaoCrescimento.Classificar(Indicador.ImcIdade, consulta.ZScoreImc)?.Codigo;
+        consulta.ClassificacaoPesoEstatura = ClassificacaoCrescimento.Classificar(Indicador.PesoEstatura, consulta.ZScorePesoEstatura)?.Codigo;
     }
 
     private static void AplicarAlertas(Consulta consulta, Consulta? anterior)

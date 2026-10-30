@@ -166,6 +166,15 @@ public class Consulta : EntidadeAuditavel
     public string? ClassificacaoPeso { get; set; }
     public string? ClassificacaoEstatura { get; set; }
     public string? ClassificacaoPerimetro { get; set; }
+
+    // Posição da medida de comprimento/estatura ("Deitado" ou "EmPe"); null = esperada para a idade
+    public string? PosicaoMedida { get; set; }
+    // Estado nutricional (OMS): IMC = peso / estatura² com a estatura corrigida pela posição
+    public decimal? Imc { get; set; }
+    public decimal? ZScoreImc { get; set; }
+    public decimal? ZScorePesoEstatura { get; set; } // peso para comprimento (< 2 anos) ou para estatura
+    public string? ClassificacaoImc { get; set; }
+    public string? ClassificacaoPesoEstatura { get; set; }
 }
 
 public class Alimento : EntidadeAuditavel

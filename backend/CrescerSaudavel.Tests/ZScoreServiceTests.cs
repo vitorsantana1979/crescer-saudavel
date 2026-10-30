@@ -138,9 +138,60 @@ public class ZScoreServiceTests
     [Fact]
     public void Intergrowth_possui_as_tres_medidas_para_os_dois_sexos()
     {
-        foreach (var medida in Enum.GetValues<Medida>())
+        foreach (var medida in new[] { Medida.Peso, Medida.Estatura, Medida.PerimetroCefalico })
         foreach (var sexo in new[] { 'f', 'm' })
             Assert.True(_servico.PossuiReferencia(TipoReferencia.INTERGROWTH, medida, sexo), $"{medida} {sexo}");
+
+        Assert.False(_servico.PossuiReferencia(TipoReferencia.INTERGROWTH, Medida.Imc, 'f'));
+    }
+
+    [Theory]
+    [InlineData('f', 0, 16.071, 2.00)]      // BFA meninas, SD2 do dia 0
+    [InlineData('f', 0, 13.336, 0.00)]
+    [InlineData('m', 1856, 15.184, 0.00)]   // BFA meninos, mediana do último dia
+    public void Oms_imc_reproduz_a_tabela_expandida(char sexo, int dia, double imc, double zEsperado)
+    {
+        Assert.Equal(zEsperado, _servico.CalcularZ(TipoReferencia.OMS, Medida.Imc, sexo, dia, imc)!.Value, 2);
+    }
+
+    [Fact]
+    public void Oms_imc_usa_o_ajuste_de_caudas_como_o_peso()
+    {
+        // além de +3, z = 3 + (IMC − SD3)/(SD3 − SD2): meninas dia 0, SD3 = 17,657 e SD2 = 16,071
+        var z = _servico.CalcularZ(TipoReferencia.OMS, Medida.Imc, 'f', 0, 17.657 + (17.657 - 16.071) * 0.5);
+
+        Assert.Equal(3.5, z!.Value, 2);
+    }
+
+    [Theory]
+    [InlineData('m', true, 45.0, 2.951, 2.00)]     // WFL meninos, SD2 em 45 cm
+    [InlineData('m', true, 45.0, 2.441, 0.00)]
+    [InlineData('f', true, 110.0, 18.332, 0.00)]   // WFL meninas, mediana em 110 cm
+    [InlineData('m', false, 120.0, 18.624, -2.00)] // WFH meninos, SD2neg em 120 cm
+    [InlineData('f', false, 65.0, 7.240, 0.00)]    // WFH meninas, mediana em 65 cm
+    public void Oms_peso_para_comprimento_e_estatura_reproduz_a_tabela(char sexo, bool deitado, double cm, double peso, double zEsperado)
+    {
+        Assert.Equal(zEsperado, _servico.CalcularZPesoEstatura(sexo, deitado, cm, peso)!.Value, 2);
+    }
+
+    [Theory]
+    [InlineData(true, 44.9)]
+    [InlineData(true, 110.1)]
+    [InlineData(false, 64.9)]
+    [InlineData(false, 120.1)]
+    public void Peso_para_estatura_fora_da_faixa_retorna_null(bool deitado, double cm)
+    {
+        Assert.Null(_servico.CalcularZPesoEstatura('f', deitado, cm, 10));
+    }
+
+    [Fact]
+    public void Peso_para_estatura_interpola_entre_decimos_de_cm()
+    {
+        var a = _servico.CalcularZPesoEstatura('m', true, 60.0, 5.8)!.Value;
+        var meio = _servico.CalcularZPesoEstatura('m', true, 60.05, 5.8)!.Value;
+        var b = _servico.CalcularZPesoEstatura('m', true, 60.1, 5.8)!.Value;
+
+        Assert.InRange(meio, Math.Min(a, b), Math.Max(a, b));
     }
 
     [Theory]

@@ -2,7 +2,7 @@
 
 Carregadas por `Services/ZScoreService.cs` na inicialização.
 
-## OMS (`OMS/{peso,estatura,perimetro}_{f,m}.json`)
+## OMS (`OMS/{peso,estatura,perimetro,imc}_{f,m}.json`)
 
 Tabelas expandidas diárias da OMS (WHO Child Growth Standards, "Expanded tables for constructing
 national health cards"), dia 0 a 1856, com os parâmetros LMS:
@@ -11,8 +11,11 @@ national health cards"), dia 0 a 1856, com os parâmetros LMS:
 [{"dia":0,"l":0.3809,"m":3.2322,"s":0.14171}, ...]
 ```
 
-- `peso`: weight-for-age; `estatura`: length/height-for-age; `perimetro`: head circumference-for-age.
-- z = ((valor/M)^L − 1) / (L·S). Para o peso, além de ±3 aplica-se o ajuste da OMS
+- `peso`: weight-for-age; `estatura`: length/height-for-age; `perimetro`: head circumference-for-age;
+  `imc`: BMI-for-age.
+- `peso_comprimento_{f,m}.json` (weight-for-length, 45-110 cm) e `peso_altura_{f,m}.json`
+  (weight-for-height, 65-120 cm): LMS a cada 0,1 cm, `[{"cm":45.0,"l":..,"m":..,"s":..}]`.
+- z = ((valor/M)^L − 1) / (L·S). Para os indicadores de peso (peso/idade, IMC, peso/estatura), além de ±3 aplica-se o ajuste da OMS
   (z = 3 + (valor − SD3)/(SD3 − SD2), e o simétrico abaixo de −3).
 - Idade em dias. Para rótulos em meses: 1 mês = 30,4375 dias.
 - Geradas por `scripts/importar_referencias_oms.py` a partir das planilhas oficiais (`.xlsx`);
