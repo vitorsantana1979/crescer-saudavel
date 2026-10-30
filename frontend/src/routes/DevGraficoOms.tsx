@@ -103,7 +103,7 @@ export default function DevGraficoOms() {
 
       <section>
         <h2 className="font-semibold mb-2">Ganho esperado para manter o canal (exemplo do mock)</h2>
-        <CardGanhoEsperado consultaId="dev" dataConsulta={new Date(2025, 1, 12).toISOString()} />
+        <CardGanhoEsperado consultaId="demo-helena-a10" dataConsulta="2026-03-12T09:30:00" />
       </section>
 
       <section className="space-y-3">

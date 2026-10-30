@@ -28,12 +28,15 @@ export default function ImportarAtendimentos({
   criancaId,
   onFechar,
   onImportado,
+  textoInicial = "",
 }: {
   criancaId: string;
   onFechar: () => void;
   onImportado: () => void;
+  /** Conteúdo já colado (usado na vitrine de desenvolvimento). */
+  textoInicial?: string;
 }) {
-  const [texto, setTexto] = useState("");
+  const [texto, setTexto] = useState(textoInicial);
   const [enviando, setEnviando] = useState(false);
   const [resultado, setResultado] = useState<Resultado | null>(null);
   const leitura = useMemo(() => (texto.trim() ? interpretarPlanilha(texto) : null), [texto]);

@@ -25,6 +25,7 @@ import RelatorioCrianca from "./routes/RelatorioCrianca";
 // Página de desenvolvimento do gráfico OMS; fora do bundle de produção
 const DevGraficoOms = import.meta.env.DEV ? React.lazy(() => import("./routes/DevGraficoOms")) : null;
 const DevEntrarDemo = import.meta.env.DEV ? React.lazy(() => import("./routes/DevEntrarDemo")) : null;
+const DevVitrine = import.meta.env.DEV ? React.lazy(() => import("./routes/DevVitrine")) : null;
 import { AuthProvider } from "./contexts/AuthContext";
 import RequireAuth from "./components/RequireAuth";
 import "./styles/globals.css";
@@ -45,6 +46,16 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             element={
               <React.Suspense fallback={null}>
                 <DevGraficoOms />
+              </React.Suspense>
+            }
+          />
+        )}
+        {DevVitrine && (
+          <Route
+            path="/dev/vitrine"
+            element={
+              <React.Suspense fallback={null}>
+                <DevVitrine />
               </React.Suspense>
             }
           />

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "frontend", "run", "dev"],
+      "port": 5193
+    },
+    {
+      "name": "mock-api",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["scripts/mock_api/mock_api.py", "5280"],
+      "port": 5280
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Plano — novidades do benchmark (PediTools · app INTERGROWTH · Caderneta SUS)
 
-Status: **proposto em 2026-10-30, aguardando aprovação** · Base: `docs/DIAGNOSTICO_BENCHMARK_FERRAMENTAS.md`,
+Status: **Onda 1 concluída em 2026-10-30** (Fases 0–7 e apresentação; ADR-001 itens 16–22) · Ondas 2–3 aguardam validação clínica · Base: `docs/DIAGNOSTICO_BENCHMARK_FERRAMENTAS.md`,
 `docs/ADR-001-curvas-de-referencia-e-zscore.md`, `docs/CRESCER_SAUDAVEL_NOVIDADES_EQUIPE_CLINICA.pdf` · HEAD `d57c37b`.
 
 ## Estado atual (conferido no código)
@@ -123,6 +123,24 @@ atualizada.
   ficou para as ondas seguintes.
 - Atualizar ADR-001, o diagnóstico (§2 e §4) e o PDF de stakeholders.
 - **Validação**: PDF conferido página a página; matriz confere com o código.
+
+## Execução (2026-10-30)
+
+| Fase | Commit | Observação |
+|---|---|---|
+| F0 tabelas INTERGROWTH comprimento/PC | `feb30e0` | PDFs oficiais versionados; importador confere o peso |
+| F1 pré-termo com as três medidas | `abbfb10` | `GraficoIntergrowth` substitui o gráfico legado (−1.000 linhas) |
+| F2 PIG/AIG/GIG | `4682a7f` | z por 13 nós (linhas z + centis) para coincidir com P10/P90 |
+| F3 percentil e ganho esperado | `83d8a61` | percentil **não** gravado (função do z) — mudança em relação ao plano |
+| F4 IMC e peso/estatura + posição | `2ed0de0` | IMC nos alertas do painel; P/E não |
+| F5 datas e idades | `d4dd705` | helper único `idadesNaData`; IGC manual vira legado |
+| F6 relatório e planilhas | `6beec7b` | PDF pelo navegador; XLSX por gerador próprio; validação de faixas também no servidor |
+| F7 responsividade | `7ed62e3` | gaveta abaixo de `lg`, gráficos simplificados abaixo de `sm` |
+| Apresentação | — | `docs/CRESCER_SAUDAVEL_ONDA1_ENTREGUE.pdf` (não versionado); telas do `scripts/mock_api` |
+
+Deploy: aplicar as migrations `AddRastreabilidadeZScoreConsulta`, `AddClassificacaoZConsulta`,
+`AddTamanhoNascimentoRecemNascido`, `AddEstadoNutricionalConsulta`, `AddDatasGestacaoRecemNascido` e rodar
+`POST /api/consultas/recalcular-zscores` (SuperAdmin).
 
 ## Gatilhos de replanejamento
 
