@@ -18,14 +18,18 @@ public class ConsultaController : ControllerBase
     private readonly IAvaliacaoCrescimentoService _avaliacao;
     private readonly ICurrentUserService _currentUserService;
 
+    private readonly ITamanhoNascimentoService _tamanhoNascimento;
+
     public ConsultaController(
         CrescerSaudavelDbContext context,
         IAvaliacaoCrescimentoService avaliacao,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ITamanhoNascimentoService tamanhoNascimento)
     {
         _context = context;
         _avaliacao = avaliacao;
         _currentUserService = currentUserService;
+        _tamanhoNascimento = tamanhoNascimento;
     }
 
     [HttpGet("crianca/{recemNascidoId}")]
@@ -166,6 +170,8 @@ public class ConsultaController : ControllerBase
 
         foreach (var crianca in criancas)
         {
+            _tamanhoNascimento.Aplicar(crianca);
+
             Consulta? anterior = null;
             foreach (var consulta in crianca.Consultas.OrderBy(c => c.DataHora))
             {
@@ -187,7 +193,7 @@ public class ConsultaController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok(new { total, comReferencia, semReferencia });
+        return Ok(new { criancas = criancas.Count, total, comReferencia, semReferencia });
     }
 
     [HttpDelete("{id}")]

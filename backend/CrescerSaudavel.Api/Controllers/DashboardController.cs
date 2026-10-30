@@ -39,7 +39,9 @@ public class DashboardController : ControllerBase
                 atendimentosHoje = 0,
                 alertas = 0,
                 totalAlimentos = 0,
-                totalProfissionais = 0
+                totalProfissionais = 0,
+                criancasPig = 0,
+                criancasComAdequacao = 0
             });
         }
 
@@ -86,6 +88,15 @@ public class DashboardController : ControllerBase
             .Where(a => tenantIds.Contains(a.TenantId) && a.Ativo && !a.Excluido)
             .CountAsync();
 
+        // Adequação do peso ao nascer pela INTERGROWTH-21st (PIG < P10)
+        var adequacoes = await _context.RecemNascidos
+            .Where(r => tenantIds.Contains(r.TenantId) && r.AdequacaoPesoNascimento != null)
+            .GroupBy(r => r.AdequacaoPesoNascimento)
+            .Select(g => new { Adequacao = g.Key, Total = g.Count() })
+            .ToListAsync();
+        var criancasComAdequacao = adequacoes.Sum(a => a.Total);
+        var criancasPig = adequacoes.Where(a => a.Adequacao == "PIG").Sum(a => a.Total);
+
         // Total de profissionais
         var totalProfissionais = await _context.Users
             .Where(u => tenantIds.Contains(u.TenantId ?? Guid.Empty) && u.Ativo)
@@ -98,7 +109,9 @@ public class DashboardController : ControllerBase
             atendimentosHoje,
             alertas,
             totalAlimentos,
-            totalProfissionais
+            totalProfissionais,
+            criancasPig,
+            criancasComAdequacao
         });
     }
 

@@ -15,15 +15,18 @@ public class DevSeedController : ControllerBase
     private readonly CrescerSaudavelDbContext _context;
     private readonly IAvaliacaoCrescimentoService _avaliacao;
     private readonly IWebHostEnvironment _environment;
+    private readonly ITamanhoNascimentoService _tamanhoNascimento;
 
     public DevSeedController(
         CrescerSaudavelDbContext context,
         IAvaliacaoCrescimentoService avaliacao,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        ITamanhoNascimentoService tamanhoNascimento)
     {
         _context = context;
         _avaliacao = avaliacao;
         _environment = environment;
+        _tamanhoNascimento = tamanhoNascimento;
     }
 
     [HttpPost("seed-sample-data")]
@@ -113,6 +116,7 @@ public class DevSeedController : ControllerBase
                 ComprimentoCm = criancaSeed.ComprimentoCm,
                 PerimetroCefalicoCm = criancaSeed.PerimetroCefalicoCm
             };
+            _tamanhoNascimento.Aplicar(crianca);
 
             _context.RecemNascidos.Add(crianca);
             await _context.SaveChangesAsync();

@@ -42,7 +42,7 @@ public class ExportController : ControllerBase
 
         var builder = new StringBuilder();
         // Cabeçalho
-        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,Sexo,IdadeGestacionalSemanas,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ReferenciaCurva,TipoIdadeCalculo,IdadeCalculoDias,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,ClassificacaoPeso,ClassificacaoEstatura,ClassificacaoPerimetro,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
+        builder.AppendLine("RecemNascidoId,Nome,DataNascimento,Sexo,IdadeGestacionalSemanas,ClassificacaoIG,PesoNascimentoGr,ClassificacaoPN,AdequacaoPesoNascimento,ZNascimentoPeso,ZNascimentoComprimento,ZNascimentoPerimetro,ConsultaId,DataConsulta,IdadeDiasNaConsulta,PesoKg,EstaturaCm,PerimetroCefalicoCm,ReferenciaCurva,TipoIdadeCalculo,IdadeCalculoDias,ZScorePesoPlataforma,ZScoreAlturaPlataforma,ZScorePerimetroPlataforma,ClassificacaoPeso,ClassificacaoEstatura,ClassificacaoPerimetro,VGP_gKgDia,ZScorePesoManual,ClassificacaoManual,AlertaQuedaPonderal,AlertaRCEU");
 
         foreach (var c in consultas)
         {
@@ -57,6 +57,10 @@ public class ExportController : ControllerBase
                                $"\"{r.ClassificacaoIG}\"," +
                                $"{r.PesoNascimentoGr}," +
                                $"\"{r.ClassificacaoPN}\"," +
+                               $"{r.AdequacaoPesoNascimento ?? ""}," +
+                               $"{r.ZNascimentoPeso?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
+                               $"{r.ZNascimentoComprimento?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
+                               $"{r.ZNascimentoPerimetro?.ToString(CultureInfo.InvariantCulture) ?? ""}," +
                                $"{c.Id}," +
                                $"{c.DataHora:yyyy-MM-dd}," +
                                $"{idadeDias}," +

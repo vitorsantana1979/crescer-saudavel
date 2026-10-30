@@ -1,6 +1,7 @@
 import { useState } from "react";
 import GraficoOms, { type PontoPacienteOms } from "@/components/GraficoOms";
 import GraficoIntergrowth, { type PontoPacienteIntergrowth } from "@/components/GraficoIntergrowth";
+import CardTamanhoNascimento from "@/components/CardTamanhoNascimento";
 
 // Página de desenvolvimento (só em `vite dev`): exercita GraficoOms e GraficoIntergrowth com pontos fictícios.
 // Rota: /dev/grafico-oms
@@ -86,6 +87,13 @@ export default function DevGraficoOms() {
           Sexo: {sexo}
         </button>
       </div>
+
+      <section className="space-y-3">
+        <h2 className="font-semibold">Tamanho ao nascer (INTERGROWTH-21st)</h2>
+        <CardTamanhoNascimento dados={{ sexo: "F", igSemanas: 40, igDias: 0, pesoGr: 2700, comprimentoCm: 49, perimetroCefalicoCm: 33.8 }} />
+        <CardTamanhoNascimento dados={{ sexo: "M", igSemanas: 26, igDias: 3, pesoGr: 1150, comprimentoCm: 36, perimetroCefalicoCm: 21.5 }} />
+        <CardTamanhoNascimento dados={{ sexo: "M", igSemanas: 23, igDias: 4, pesoGr: 550 }} />
+      </section>
 
       <section>
         <h2 className="font-semibold mb-2">Pré-termo, 27–64 semanas (INTERGROWTH-21st)</h2>

@@ -173,6 +173,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.Configure<CrescimentoOptions>(builder.Configuration.GetSection(CrescimentoOptions.Secao));
 builder.Services.AddSingleton(_ => new ZScoreService(Path.Combine(builder.Environment.ContentRootPath, "Data", "Referencias")));
+builder.Services.AddSingleton<ITamanhoNascimentoService>(_ => new TamanhoNascimentoService(Path.Combine(builder.Environment.ContentRootPath, "Data", "Referencias")));
 builder.Services.AddSingleton<IReferenciaCrescimentoService, ReferenciaCrescimentoService>();
 builder.Services.AddSingleton<IAvaliacaoCrescimentoService, AvaliacaoCrescimentoService>();
 builder.Services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();

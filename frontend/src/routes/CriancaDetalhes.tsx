@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import api from "@/lib/api";
 import PageHeader from "@/components/PageHeader";
 import GraficosZScore from "@/components/GraficosZScore";
+import CardTamanhoNascimento from "@/components/CardTamanhoNascimento";
 import {
   COR_BADGE_NIVEL,
   classificacaoPorCodigo,
@@ -668,6 +669,20 @@ export default function CriancaDetalhes() {
               </div>
             );
           })()}
+
+        {/* Adequação ao nascer pela INTERGROWTH-21st (PIG/AIG/GIG) */}
+        <div className="col-span-full">
+          <CardTamanhoNascimento
+            dados={{
+              sexo: crianca.sexo,
+              igSemanas: Number(crianca.idadeGestacionalSemanas),
+              igDias: crianca.idadeGestacionalDias ?? null,
+              pesoGr: crianca.pesoNascimentoGr,
+              comprimentoCm: crianca.comprimentoCm ?? null,
+              perimetroCefalicoCm: crianca.perimetroCefalicoCm ?? null,
+            }}
+          />
+        </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <div className="flex items-center gap-3">

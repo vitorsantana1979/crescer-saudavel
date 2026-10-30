@@ -5,6 +5,7 @@ using CrescerSaudavel.Api.Data;
 using CrescerSaudavel.Api.Models;
 using CrescerSaudavel.Api.Services.Time;
 using CrescerSaudavel.Api.Services;
+using CrescerSaudavel.Api.Services.Crescimento;
 using System.Linq;
 
 namespace CrescerSaudavel.Api.Controllers;
@@ -16,13 +17,16 @@ public class RecemNascidoController : ControllerBase
 {
     private readonly CrescerSaudavelDbContext _context;
     private readonly ICurrentUserService _currentUserService;
+    private readonly ITamanhoNascimentoService _tamanhoNascimento;
 
     public RecemNascidoController(
         CrescerSaudavelDbContext context,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ITamanhoNascimentoService tamanhoNascimento)
     {
         _context = context;
         _currentUserService = currentUserService;
+        _tamanhoNascimento = tamanhoNascimento;
     }
 
     [HttpGet]
@@ -82,6 +86,7 @@ public class RecemNascidoController : ControllerBase
         {
             recemNascido.ClassificacaoPN = RecemNascidoClassificacaoService.ClassificarPesoNascimento(recemNascido.PesoNascimentoGr.Value);
         }
+        _tamanhoNascimento.Aplicar(recemNascido);
 
         _context.RecemNascidos.Add(recemNascido);
         await _context.SaveChangesAsync();
@@ -109,6 +114,7 @@ public class RecemNascidoController : ControllerBase
         {
             recemNascido.ClassificacaoPN = RecemNascidoClassificacaoService.ClassificarPesoNascimento(recemNascido.PesoNascimentoGr.Value);
         }
+        _tamanhoNascimento.Aplicar(recemNascido);
 
         _context.Entry(recemNascido).State = EntityState.Modified;
 

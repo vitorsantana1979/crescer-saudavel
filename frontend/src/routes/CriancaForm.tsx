@@ -6,6 +6,7 @@ import api from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { getErrorMessage } from "@/lib/errorHandler";
 import PageHeader from "@/components/PageHeader";
+import CardTamanhoNascimento from "@/components/CardTamanhoNascimento";
 import { Baby, Save, X, AlertCircle } from "lucide-react";
 import {
   classificarIdadeGestacional,
@@ -30,6 +31,9 @@ export default function CriancaForm() {
   const idadeGestacionalSemanas = useWatch({ control, name: "idadeGestacionalSemanas" });
   const idadeGestacionalDias = useWatch({ control, name: "idadeGestacionalDias" });
   const pesoNascimentoGr = useWatch({ control, name: "pesoNascimentoGr" });
+  const sexo = useWatch({ control, name: "sexo" });
+  const comprimentoCm = useWatch({ control, name: "comprimentoCm" });
+  const perimetroCefalicoCm = useWatch({ control, name: "perimetroCefalicoCm" });
 
   // Calcular classificações
   const classificacaoIG =
@@ -440,6 +444,21 @@ export default function CriancaForm() {
                 </div>
               </div>
             )}
+
+            {/* Adequação ao nascer pela INTERGROWTH-21st (PIG/AIG/GIG) */}
+            <div className="md:col-span-2">
+              <CardTamanhoNascimento
+                atrasoMs={400}
+                dados={{
+                  sexo: sexo ?? "",
+                  igSemanas: Number(idadeGestacionalSemanas),
+                  igDias: idadeGestacionalDias === "" || idadeGestacionalDias == null ? null : Number(idadeGestacionalDias),
+                  pesoGr: Number(pesoNascimentoGr) || null,
+                  comprimentoCm: Number(comprimentoCm) || null,
+                  perimetroCefalicoCm: Number(perimetroCefalicoCm) || null,
+                }}
+              />
+            </div>
           </div>
 
           <div className="flex gap-3 mt-8">

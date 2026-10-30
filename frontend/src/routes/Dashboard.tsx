@@ -10,6 +10,8 @@ interface Stats {
   alertas: number;
   totalAlimentos: number;
   totalProfissionais: number;
+  criancasPig?: number;
+  criancasComAdequacao?: number;
 }
 
 interface Atendimento {
@@ -347,7 +349,7 @@ export default function Dashboard() {
           <TrendingUp className="w-5 h-5 text-primary" />
           Resumo do Sistema
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
             <p className="text-sm text-gray-600 mb-1">Taxa de Prematuros</p>
             <p className="text-2xl font-bold text-primary">
@@ -358,6 +360,18 @@ export default function Dashboard() {
             </p>
             <p className="text-xs text-gray-500 mt-1">
               {stats.criancasPreTermo} de {stats.totalCriancas} crianças
+            </p>
+          </div>
+          <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+            <p className="text-sm text-gray-600 mb-1">Nascidos PIG</p>
+            <p className="text-2xl font-bold text-red-700">
+              {stats.criancasComAdequacao
+                ? (((stats.criancasPig ?? 0) / stats.criancasComAdequacao) * 100).toFixed(1).replace(".", ",")
+                : 0}
+              %
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              {stats.criancasPig ?? 0} de {stats.criancasComAdequacao ?? 0} com peso abaixo do P10 (INTERGROWTH-21st)
             </p>
           </div>
           <div className="p-4 bg-secondary/5 rounded-lg border border-secondary/20">

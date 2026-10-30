@@ -94,6 +94,17 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
     como classificação de nível "cuidado". `GraficoIntergrowth` substitui o gráfico legado de peso do
     pré-termo, com seletor de medida e recortes 27–40 / 35–50 / 40–64 / 27–64 semanas.
 
+17. **Tamanho ao nascer (PIG/AIG/GIG)** pela INTERGROWTH-21st: padrão de 33+0 a 42+6 semanas (Villar
+    2014) e referência para muito pré-termo de 24+0 a 32+6 (Villar 2016), por dia de IG, para peso,
+    comprimento e PC (`nascimento_*.json`, `scripts/importar_tamanho_nascimento_intergrowth.py`). O z
+    interpola linearmente entre 13 nós (linhas z −3..+3 e centis 3/5/10/90/95/97 publicados), de modo
+    que PIG (&lt; P10) e GIG (&gt; P90) coincidem com a tabela oficial de centis — só as linhas z
+    desviam até ~1,3 ponto de percentil no P10/P90 por arredondamento. Adequação só pelo peso
+    (campo AIG/PIG/GIG da Caderneta, p. 69); comprimento e PC ao nascer exibem z e percentil.
+    Fora de 24+0 a 42+6 não há classificação. A classificação por faixa de gramas continua como
+    informação complementar. Gravado em `RecemNascido.ZNascimento*`/`AdequacaoPesoNascimento`
+    (migration `AddTamanhoNascimentoRecemNascido`); não usar para crescimento pós-natal.
+
 ## Consequências
 
 - Consultas antigas têm z, classificação e alertas desatualizados até rodar o reprocessamento
@@ -102,5 +113,7 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
   ~2 anos; não há regra oficial explícita do MS/SBP) e fica configurável.
 - Os cortes de perímetro cefálico (±2 DP) e a restrição do RCEU ao período INTERGROWTH são
   decisões desta ADR, a validar com a equipe clínica.
+- Crianças cadastradas antes de 2026-10-30 só ganham adequação ao nascer após o reprocessamento
+  (`recalcular-zscores` agora também recalcula o tamanho ao nascer).
 - Consultas de pré-termo ≤ 64 s registradas antes de 2026-10-30 só ganham z de comprimento e PC
   após o reprocessamento.

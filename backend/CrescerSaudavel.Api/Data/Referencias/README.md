@@ -37,6 +37,18 @@ semanas, valores nas linhas z = −3..+3:
 - Os demais PDFs são material de referência (tabelas de tamanho ao nascer, que **não** devem ser
   usadas para crescimento pós-natal, e gráficos).
 
+## INTERGROWTH-21st — tamanho ao nascer (`INTERGROWTH/nascimento_{peso,estatura,perimetro}_{f,m}.json`)
+
+Um registro por dia de idade gestacional, 24+0 a 42+6 semanas (`igDias` 168-300), com as linhas
+z −3..+3 e os centis 3, 5, 10, 50, 90, 95 e 97 publicados:
+
+- 24+0 a 32+6: International Newborn Size References for Very Preterm Infants (Villar 2016) — referência;
+- 33+0 a 42+6: International Newborn Size Standards (Villar 2014) — padrão.
+
+Gerados por `scripts/importar_tamanho_nascimento_intergrowth.py` a partir dos 24 PDFs oficiais (as URLs
+estão no script; os PDFs não ficam no repositório). Usados por `Services/Crescimento/TamanhoNascimentoService.cs`
+para z, percentil e PIG/AIG/GIG ao nascer. **Não** servem para acompanhar o crescimento pós-natal.
+
 ## Regra de seleção
 
 `Services/Crescimento/ReferenciaCrescimentoService.cs`: a termo → OMS (idade cronológica);

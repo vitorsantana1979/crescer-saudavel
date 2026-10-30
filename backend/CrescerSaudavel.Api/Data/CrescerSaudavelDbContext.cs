@@ -195,6 +195,10 @@ public class CrescerSaudavelDbContext
         modelBuilder.Entity<RecemNascido>().Property(r => r.IdadeGestacionalCorrigidaSemanas).HasPrecision(5, 2);
         modelBuilder.Entity<RecemNascido>().Property(r => r.ComprimentoCm).HasPrecision(6, 2);
         modelBuilder.Entity<RecemNascido>().Property(r => r.PerimetroCefalicoCm).HasPrecision(6, 2);
+        modelBuilder.Entity<RecemNascido>().Property(r => r.ZNascimentoPeso).HasPrecision(6, 3);
+        modelBuilder.Entity<RecemNascido>().Property(r => r.ZNascimentoComprimento).HasPrecision(6, 3);
+        modelBuilder.Entity<RecemNascido>().Property(r => r.ZNascimentoPerimetro).HasPrecision(6, 3);
+        modelBuilder.Entity<RecemNascido>().Property(r => r.AdequacaoPesoNascimento).HasMaxLength(3);
 
         modelBuilder.Entity<Consulta>().Property(c => c.PesoKg).HasPrecision(6, 3);
         modelBuilder.Entity<Consulta>().Property(c => c.EstaturaCm).HasPrecision(6, 2);

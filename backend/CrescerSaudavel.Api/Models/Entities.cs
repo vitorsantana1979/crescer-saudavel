@@ -106,6 +106,12 @@ public class RecemNascido : EntidadeAuditavel
     
     public decimal? ComprimentoCm { get; set; }
     public decimal? PerimetroCefalicoCm { get; set; }
+
+    // Tamanho ao nascer pela INTERGROWTH-21st (24+0 a 42+6 semanas), calculado pelo TamanhoNascimentoService
+    public decimal? ZNascimentoPeso { get; set; }
+    public decimal? ZNascimentoComprimento { get; set; }
+    public decimal? ZNascimentoPerimetro { get; set; }
+    public string? AdequacaoPesoNascimento { get; set; } // PIG (< P10), AIG, GIG (> P90)
     
     // Dados demográficos expandidos para conformidade com PDQ (IHE PDQV3)
     public string? NomeMae { get; set; }

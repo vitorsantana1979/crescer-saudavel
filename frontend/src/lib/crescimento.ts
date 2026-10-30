@@ -270,3 +270,77 @@ export function classificarZ(indicador: IndicadorZ, z: number | null | undefined
 export function formatarZ(z: number | null | undefined): string {
   return z == null || !Number.isFinite(z) ? "—" : z.toFixed(2).replace(".", ",");
 }
+
+// --- Percentil -----------------------------------------------------------------------------------
+
+// Função erro (série de Taylor e fração contínua de erfc na cauda), igual à do backend (Percentil.cs).
+function erf(x: number): number {
+  const sinal = Math.sign(x);
+  const a = Math.abs(x);
+  if (a < 2.5) {
+    let soma = a;
+    let termo = a;
+    for (let n = 1; n < 80; n++) {
+      termo *= (-a * a) / n;
+      const parcela = termo / (2 * n + 1);
+      soma += parcela;
+      if (Math.abs(parcela) < 1e-17) break;
+    }
+    return (sinal * 2 * soma) / Math.sqrt(Math.PI);
+  }
+  let f = 0;
+  for (let k = 80; k >= 1; k--) f = k / 2 / (a + f);
+  const erfc = Math.exp(-a * a) / Math.sqrt(Math.PI) / (a + f);
+  return sinal * (1 - erfc);
+}
+
+/** Percentil (0-100) do z pela normal padrão. */
+export function percentilDeZ(z: number | null | undefined): number | null {
+  if (z == null || !Number.isFinite(z)) return null;
+  return 50 * (1 + erf(z / Math.SQRT2));
+}
+
+/** "P15", "P2,3", "< P0,1", "> P99,9" ou "—". */
+export function formatarPercentil(percentil: number | null | undefined): string {
+  if (percentil == null || !Number.isFinite(percentil)) return "—";
+  if (percentil < 0.1) return "< P0,1";
+  if (percentil > 99.9) return "> P99,9";
+  const casas = percentil < 3 || percentil > 97 ? 1 : 0;
+  return `P${percentil.toFixed(casas).replace(".", ",")}`;
+}
+
+// --- Tamanho ao nascer (INTERGROWTH-21st, 24+0 a 42+6 semanas) -----------------------------------
+
+export type AdequacaoNascimento = "PIG" | "AIG" | "GIG";
+
+export const ADEQUACAO_NASCIMENTO: Record<AdequacaoNascimento, { rotulo: string; faixa: string; nivel: NivelClassificacao }> = {
+  PIG: { rotulo: "Pequeno para a idade gestacional", faixa: "abaixo do percentil 10", nivel: "Cuidado" },
+  AIG: { rotulo: "Adequado para a idade gestacional", faixa: "entre os percentis 10 e 90", nivel: "Otimo" },
+  GIG: { rotulo: "Grande para a idade gestacional", faixa: "acima do percentil 90", nivel: "Atencao" },
+};
+
+export interface AvaliacaoMedidaNascimento {
+  z: number;
+  percentil: number;
+  adequacao: AdequacaoNascimento;
+  padrao: boolean;
+}
+
+export interface AvaliacaoTamanhoNascimento {
+  idadeGestacionalDias: number;
+  dentroDaFaixa: boolean;
+  /** true: padrão (33+0 a 42+6); false: referência para muito pré-termo (24+0 a 32+6); null: fora da faixa. */
+  padrao: boolean | null;
+  peso: AvaliacaoMedidaNascimento | null;
+  comprimento: AvaliacaoMedidaNascimento | null;
+  perimetroCefalico: AvaliacaoMedidaNascimento | null;
+}
+
+export interface DadosTamanhoNascimento {
+  sexo: string;
+  igSemanas: number;
+  igDias?: number | null;
+  pesoGr?: number | null;
+  comprimentoCm?: number | null;
+  perimetroCefalicoCm?: number | null;
+}

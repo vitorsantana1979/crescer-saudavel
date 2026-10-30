@@ -578,6 +578,10 @@ namespace CrescerSaudavel.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("AdequacaoPesoNascimento")
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
                     b.Property<int?>("Apgar1Minuto")
                         .HasColumnType("int");
 
@@ -679,6 +683,18 @@ namespace CrescerSaudavel.Api.Migrations
 
                     b.Property<string>("TipoParto")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal?>("ZNascimentoComprimento")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("ZNascimentoPerimetro")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("decimal(6,3)");
+
+                    b.Property<decimal?>("ZNascimentoPeso")
+                        .HasPrecision(6, 3)
+                        .HasColumnType("decimal(6,3)");
 
                     b.HasKey("Id");
 
