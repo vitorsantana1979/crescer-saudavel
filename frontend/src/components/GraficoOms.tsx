@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import api from "@/lib/api";
+import { useTelaEstreita } from "@/lib/useTelaEstreita";
 import {
   DIAS_POR_MES,
   OMS_DIA_MAXIMO,
@@ -246,9 +247,12 @@ export default function GraficoOms({
   const [mostrarZ1, setMostrarZ1] = useState(false);
   const [curva, setCurva] = useState<PontoCurva[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const estreita = useTelaEstreita();
 
   const cores = CORES_SEXO[sexo];
   const recorte = RECORTES.find((r) => r.id === recorteId) ?? RECORTES[4];
+  // Em tela estreita, metade dos rótulos do eixo X (os marcos de ano/mês "fortes" ficam sempre)
+  const ticksX = estreita ? recorte.ticks.filter((t, i) => t.forte || i % 2 === 0) : recorte.ticks;
   const infoMedida = MEDIDAS[medida];
 
   useEffect(() => {
@@ -319,7 +323,7 @@ export default function GraficoOms({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2 print:hidden">
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+        <div className="flex flex-wrap rounded-lg border border-gray-200 overflow-hidden text-xs">
           {(Object.keys(MEDIDAS) as MedidaOms[]).map((m) => (
             <button
               key={m}
@@ -352,7 +356,7 @@ export default function GraficoOms({
       </div>
 
       <div className="rounded-lg overflow-hidden" style={{ backgroundColor: cores.primaria, padding: 6 }}>
-        <div className="flex items-baseline justify-between px-3 py-2 text-white">
+        <div className="flex flex-col gap-1 px-3 py-2 text-white sm:flex-row sm:items-baseline sm:justify-between">
           <div>
             <h4 className="text-base font-bold leading-tight">
               {titulo ?? `${infoMedida.rotulo} — ${cores.rotulo}`}
@@ -362,20 +366,20 @@ export default function GraficoOms({
           <span className="text-[10px] opacity-80">WHO Child Growth Standards</span>
         </div>
 
-        <div className="bg-white rounded" style={{ height: altura }}>
+        <div className="bg-white rounded" style={{ height: `min(${altura}px, 75vw + 120px)` }}>
           {erro ? (
             <div className="h-full flex items-center justify-center text-sm text-red-600">{erro}</div>
           ) : !curva ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-500">Carregando curvas da OMS...</div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={curvaJanela} margin={{ top: 16, right: 48, left: 8, bottom: 28 }}>
+              <ComposedChart data={curvaJanela} margin={{ top: 16, right: estreita ? 8 : 48, left: estreita ? 0 : 8, bottom: 28 }}>
                 <CartesianGrid stroke="#E5E7EB" strokeWidth={0.6} />
                 <XAxis
                   dataKey="dia"
                   type="number"
                   domain={recorte.dominio}
-                  ticks={recorte.ticks.map((t) => t.dia)}
+                  ticks={ticksX.map((t) => t.dia)}
                   interval={0}
                   allowDataOverflow
                   tick={{ fontSize: 10, fill: cores.secundaria }}
@@ -406,6 +410,7 @@ export default function GraficoOms({
                     style: { fontSize: 12, fontWeight: "bold", fill: cores.secundaria },
                   }}
                 />
+{!estreita && (
                 <YAxis
                   yAxisId="direita"
                   orientation="right"
@@ -419,6 +424,7 @@ export default function GraficoOms({
                   stroke={cores.primaria}
                   width={44}
                 />
+                )}
 
                 {recorte.ticks
                   .filter((t) => t.forte && t.dia > recorte.dominio[0] && t.dia < recorte.dominio[1])

@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import api from "@/lib/api";
+import { useTelaEstreita } from "@/lib/useTelaEstreita";
 import {
   IDADE_TROCA_POSICAO_DIAS,
   classificarZ,
@@ -87,6 +88,7 @@ export default function GraficoPesoEstatura({
   const [tipo, setTipo] = useState<TipoPesoEstatura>(ultimoDia >= IDADE_TROCA_POSICAO_DIAS ? "altura" : "comprimento");
   const [curva, setCurva] = useState<PontoCurva[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const estreita = useTelaEstreita();
 
   const cores = CORES_SEXO[sexo];
   const info = TIPOS[tipo];
@@ -138,9 +140,9 @@ export default function GraficoPesoEstatura({
 
   const ticksX = useMemo(() => {
     const t: number[] = [];
-    for (let v = dominioX[0]; v <= dominioX[1]; v += 5) t.push(v);
+    for (let v = dominioX[0]; v <= dominioX[1]; v += estreita ? 10 : 5) t.push(v);
     return t;
-  }, [dominioX]);
+  }, [dominioX, estreita]);
 
   const curvaJanela = useMemo(
     () => (curva ?? []).filter((p) => p.cm >= dominioX[0] - 0.5 && p.cm <= dominioX[1] + 0.5),
@@ -164,7 +166,7 @@ export default function GraficoPesoEstatura({
       </div>
 
       <div className="rounded-lg overflow-hidden" style={{ backgroundColor: cores.primaria, padding: 6 }}>
-        <div className="flex items-baseline justify-between px-3 py-2 text-white">
+        <div className="flex flex-col gap-1 px-3 py-2 text-white sm:flex-row sm:items-baseline sm:justify-between">
           <div>
             <h4 className="text-base font-bold leading-tight">
               {info.titulo} — {cores.rotulo}
@@ -175,14 +177,14 @@ export default function GraficoPesoEstatura({
           </div>
           <span className="text-[10px] opacity-80">WHO Child Growth Standards</span>
         </div>
-        <div className="bg-white rounded" style={{ height: altura }}>
+        <div className="bg-white rounded" style={{ height: `min(${altura}px, 75vw + 120px)` }}>
           {erro ? (
             <div className="h-full flex items-center justify-center text-sm text-red-600">{erro}</div>
           ) : !curva ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-500">Carregando curva da OMS...</div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={curvaJanela} margin={{ top: 16, right: 24, left: 8, bottom: 28 }}>
+              <ComposedChart data={curvaJanela} margin={{ top: 16, right: estreita ? 8 : 24, left: estreita ? 0 : 8, bottom: 28 }}>
                 <CartesianGrid stroke="#E5E7EB" strokeWidth={0.6} />
                 <XAxis
                   dataKey="cm"

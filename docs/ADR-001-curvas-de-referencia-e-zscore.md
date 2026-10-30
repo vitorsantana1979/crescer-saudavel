@@ -145,6 +145,10 @@ registro de consultas de pré-termos após 64 semanas pós-menstruais.
     duplicatas no mesmo minuto e reavalia todos os atendimentos da criança em ordem. Pendência: registrar
     impressão/exportação na auditoria de acesso (LGPD), junto com a ativação da auditoria (N8).
 
+22. **Uso em celular e tablet**: abaixo de `lg` o menu lateral vira gaveta sobreposta (botão no cabeçalho,
+    fecha ao navegar); abaixo de `sm` os gráficos usam um eixo Y só, metade dos rótulos do eixo X e
+    altura proporcional à largura (`min(altura, 75vw + 120px)`), e os cartões reduzem o espaçamento.
+
 ## Consequências
 
 - Consultas antigas têm z, classificação e alertas desatualizados até rodar o reprocessamento

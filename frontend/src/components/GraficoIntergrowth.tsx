@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import api from "@/lib/api";
+import { useTelaEstreita } from "@/lib/useTelaEstreita";
 import {
   INTERGROWTH_SEMANA_MAX,
   INTERGROWTH_SEMANA_MIN,
@@ -153,6 +154,7 @@ export default function GraficoIntergrowth({ sexo, pontos, medidaInicial = "peso
   const [recorteId, setRecorteId] = useState<RecorteIntergrowth>(() => recorteSugerido(pontos));
   const [curva, setCurva] = useState<PontoCurva[] | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const estreita = useTelaEstreita();
 
   const cores = CORES_SEXO[sexo];
   const recorte = RECORTES.find((r) => r.id === recorteId) ?? RECORTES[3];
@@ -219,19 +221,24 @@ export default function GraficoIntergrowth({ sexo, pontos, medidaInicial = "peso
   const ticksX = useMemo(() => {
     const [inicio, fim] = recorte.dominio;
     // recortes longos (27-64 s) ficam ilegíveis com 38 rótulos em tela estreita ou no A4: de 2 em 2 semanas
-    const passo = fim - inicio > 20 ? 2 : 1;
+    const passo = estreita ? (fim - inicio > 20 ? 4 : 2) : fim - inicio > 20 ? 2 : 1;
     const ticks: number[] = [];
     for (let s = inicio; s <= fim; s += passo) ticks.push(s);
-    if (ticks[ticks.length - 1] !== fim) ticks.push(fim);
+    // o fim do recorte sempre tem rótulo; se o último ficou colado nele, troca em vez de somar
+    const ultimo = ticks[ticks.length - 1];
+    if (ultimo !== fim) {
+      if (fim - ultimo < passo / 2 + 0.01) ticks[ticks.length - 1] = fim;
+      else ticks.push(fim);
+    }
     return ticks;
-  }, [recorte]);
+  }, [recorte, estreita]);
 
   const pontosForaDoRecorte = pontosPlotados.length - pontosJanela.length;
 
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2 print:hidden">
-        <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
+        <div className="flex flex-wrap rounded-lg border border-gray-200 overflow-hidden text-xs">
           {(Object.keys(MEDIDAS) as MedidaIntergrowth[]).map((m) => (
             <button
               key={m}
@@ -260,7 +267,7 @@ export default function GraficoIntergrowth({ sexo, pontos, medidaInicial = "peso
       </div>
 
       <div className="rounded-lg overflow-hidden" style={{ backgroundColor: cores.primaria, padding: 6 }}>
-        <div className="flex items-baseline justify-between px-3 py-2 text-white">
+        <div className="flex flex-col gap-1 px-3 py-2 text-white sm:flex-row sm:items-baseline sm:justify-between">
           <div>
             <h4 className="text-base font-bold leading-tight">
               {infoMedida.rotulo} — {cores.rotulo} pré-termo
@@ -273,14 +280,14 @@ export default function GraficoIntergrowth({ sexo, pontos, medidaInicial = "peso
           </span>
         </div>
 
-        <div className="bg-white rounded" style={{ height: altura }}>
+        <div className="bg-white rounded" style={{ height: `min(${altura}px, 75vw + 120px)` }}>
           {erro ? (
             <div className="h-full flex items-center justify-center text-sm text-red-600">{erro}</div>
           ) : !curva ? (
             <div className="h-full flex items-center justify-center text-sm text-gray-500">Carregando curvas INTERGROWTH-21st...</div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={curvaJanela} margin={{ top: 16, right: 48, left: 8, bottom: 28 }}>
+              <ComposedChart data={curvaJanela} margin={{ top: 16, right: estreita ? 8 : 48, left: estreita ? 0 : 8, bottom: 28 }}>
                 <CartesianGrid stroke="#E5E7EB" strokeWidth={0.6} />
                 <XAxis
                   dataKey="semanas"
@@ -316,6 +323,7 @@ export default function GraficoIntergrowth({ sexo, pontos, medidaInicial = "peso
                     style: { fontSize: 12, fontWeight: "bold", fill: cores.secundaria },
                   }}
                 />
+{!estreita && (
                 <YAxis
                   yAxisId="direita"
                   orientation="right"
@@ -329,6 +337,7 @@ export default function GraficoIntergrowth({ sexo, pontos, medidaInicial = "peso
                   stroke={cores.primaria}
                   width={44}
                 />
+                )}
 
                 {recorte.dominio[0] < 40 && recorte.dominio[1] > 40 && (
                   <ReferenceLine

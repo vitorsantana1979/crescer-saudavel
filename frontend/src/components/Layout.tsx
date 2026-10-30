@@ -24,6 +24,8 @@ type UnidadeOption = {
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Abaixo de lg o menu vira gaveta sobreposta, aberta pelo botão do cabeçalho
+  const [gavetaAberta, setGavetaAberta] = useState(false);
   const [unidades, setUnidades] = useState<UnidadeOption[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
@@ -59,6 +61,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   }, [activeTenantId, unidades, setActiveTenantId]);
 
+  useEffect(() => {
+    setGavetaAberta(false);
+  }, [location.pathname]);
+
+  const rotulosVisiveis = sidebarOpen || gavetaAberta;
+
   const handleLogout = () => {
     logout();
     navigate("/");
@@ -88,17 +96,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
+      {gavetaAberta && (
+        <div className="fixed inset-0 z-30 bg-black/30 lg:hidden" onClick={() => setGavetaAberta(false)} aria-hidden="true" />
+      )}
+      {/* Sidebar: fixa a partir de lg; gaveta sobreposta abaixo disso */}
       <aside
         className={`${
-          sidebarOpen ? "w-auto min-w-[200px]" : "w-20"
-        } bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
+          rotulosVisiveis ? "w-64 lg:w-auto lg:min-w-[200px]" : "w-64 lg:w-20"
+        } fixed inset-y-0 left-0 z-40 lg:static ${
+          gavetaAberta ? "translate-x-0" : "-translate-x-full"
+        } lg:translate-x-0 bg-white border-r border-gray-200 transition-all duration-300 flex flex-col`}
       >
         {/* Logo */}
         <div className={`h-16 border-b border-gray-200 ${
-          sidebarOpen ? "flex items-center justify-between px-4" : "flex items-center justify-center"
+          rotulosVisiveis ? "flex items-center justify-between px-4" : "flex items-center justify-center"
         }`}>
-          {sidebarOpen ? (
+          {rotulosVisiveis ? (
             <>
               <img 
                 src="/logo_crescer_saudavel_completa_800.png" 
@@ -106,8 +119,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className="h-10 object-contain"
               />
               <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
+                onClick={() => (gavetaAberta ? setGavetaAberta(false) : setSidebarOpen(!sidebarOpen))}
                 className="p-2 rounded-lg hover:bg-gray-100"
+                aria-label="Recolher menu"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
@@ -147,7 +161,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && <span>{item.label}</span>}
+                {rotulosVisiveis && <span>{item.label}</span>}
               </Link>
             );
           })}
@@ -155,10 +169,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-          <h2 className="text-lg font-semibold text-gray-800">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between gap-2 px-4 sm:px-6">
+          <button
+            onClick={() => setGavetaAberta(true)}
+            className="p-2 -ml-2 rounded-lg hover:bg-gray-100 lg:hidden"
+            aria-label="Abrir menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+          <h2 className="flex-1 truncate text-lg font-semibold text-gray-800">
             {menuItems.find((item) => 
               item.path === location.pathname || 
               (item.path !== "/dashboard" && location.pathname.startsWith(item.path))
@@ -166,8 +187,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </h2>
 
           {/* User Menu */}
-          <div className="flex items-center gap-4">
-            <div className="text-right">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden sm:block text-right">
               <p className="text-sm font-medium text-gray-800">
                 {auth?.nome ?? "Usuário"}
               </p>
@@ -187,7 +208,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {unidades.length > 0 && (
-          <div className="px-6 py-3 bg-slate-100 border-b border-slate-200 flex items-center gap-3 text-sm">
+          <div className="px-4 sm:px-6 py-2 sm:py-3 bg-slate-100 border-b border-slate-200 flex flex-wrap items-center gap-2 sm:gap-3 text-sm">
             <span className="text-slate-700 font-medium">Unidade ativa:</span>
             <select
               className="px-3 py-1 border border-slate-400 rounded-lg text-sm bg-white text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -204,10 +225,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
 
         {/* Footer com informações de versão */}
-        <footer className="px-6 py-3 bg-gray-50 border-t border-gray-200">
+        <footer className="hidden sm:block px-6 py-3 bg-gray-50 border-t border-gray-200">
           <div className="flex items-center justify-between text-xs text-gray-500">
             <div className="flex items-center gap-4">
               <span>© 2024 Crescer Saudável</span>

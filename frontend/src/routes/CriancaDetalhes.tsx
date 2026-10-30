@@ -860,7 +860,7 @@ export default function CriancaDetalhes() {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-2 sm:p-6">
           {activeTab === "graficos" ? (
             <GraficosZScore
               consultasSelecionadas={consultasPlotadas}

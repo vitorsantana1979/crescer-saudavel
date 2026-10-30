@@ -674,7 +674,7 @@ export default function GraficosZScore({
             <h2 className="text-lg font-bold text-white tracking-wide">EVOLUÇÃO NUTRIÇÃO</h2>
           </div>
         
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {/* Nome do RN */}
             {nomeCrianca && (
@@ -800,7 +800,7 @@ export default function GraficosZScore({
           </p>
             </div>
         
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {/* Dados de nascimento resumidos */}
           <div className="flex flex-wrap gap-6 mb-6 pb-4 border-b border-gray-200">
             {pesoNascimentoGr && (
@@ -909,7 +909,7 @@ export default function GraficosZScore({
           <h3 className="text-lg font-bold text-amber-800">NECESSIDADES NUTRICIONAIS</h3>
         </div>
         
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {dietaAtual && totaisDieta ? (
             <>
               {/* Parâmetros definidos pelo profissional */}
