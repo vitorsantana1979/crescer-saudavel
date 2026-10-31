@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     """Configurações da aplicação"""
     
     # Banco de dados
-    DATABASE_SERVER: str = "sql.vsantana.com.br"
-    DATABASE_PORT: int = 1279
+    DATABASE_SERVER: str = ""
+    DATABASE_PORT: int = 1433
     DATABASE_NAME: str = "crescer"
     DATABASE_USER: str = "crescer"
     DATABASE_PASSWORD: str = ""
@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     @property
     def database_url(self) -> str:
         """Constrói URL de conexão com SQL Server"""
+        if not self.DATABASE_SERVER:
+            raise RuntimeError(
+                "DATABASE_SERVER não configurado. Defina a variável de ambiente no formato "
+                "host,porta (ou ml-service/.env) — veja .env.example na raiz do repositório."
+            )
         if not self.DATABASE_PASSWORD:
             raise RuntimeError(
                 "DATABASE_PASSWORD não configurada. Defina a variável de ambiente "

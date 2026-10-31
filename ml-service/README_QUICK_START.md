@@ -205,8 +205,7 @@ python3 -m app.services.etl_service
 
 ```bash
 # Banco de Dados
-DATABASE_SERVER=sql.vsantana.com.br
-DATABASE_PORT=1279
+DATABASE_SERVER=<host-do-sql>,<porta>
 DATABASE_NAME=crescer
 DATABASE_USER=crescer
 DATABASE_PASSWORD=<senha-do-banco>

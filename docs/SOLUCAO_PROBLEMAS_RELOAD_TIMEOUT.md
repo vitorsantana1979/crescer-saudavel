@@ -125,7 +125,7 @@ Clicar em "Gerar Predição" e verificar se retorna resultados sem timeout.
 | Frontend (Vite) | 5193 | ✅ Rodando | http://localhost:5193 |
 | Backend (C#) | 5280 | ✅ Rodando | http://localhost:5280/api/health |
 | ML Service (Python) | 8000 | ✅ Rodando | http://localhost:8000/health |
-| SQL Server | 1279 | ✅ Conectado | sql.vsantana.com.br |
+| SQL Server | (ver `.env`) | ✅ Conectado | `DATABASE_SERVER` do `.env` |
 
 ---
 

@@ -77,7 +77,7 @@ cat .env | grep -E "OpenAI|DATABASE"
 **Deve conter**:
 
 ```env
-DATABASE_SERVER=sql.vsantana.com.br:1279
+DATABASE_SERVER=<host-do-sql>,<porta>
 DATABASE_NAME=crescer
 DATABASE_USER=crescer
 DATABASE_PASSWORD=<senha-do-banco>

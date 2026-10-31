@@ -49,7 +49,7 @@ caddy reload --config /etc/caddy/Caddyfile
 - https://cs.quasarai.co/api/analytics/stats → deve retornar JSON
 
 ARQUIVO .env DEVE CONTER:
-DATABASE_SERVER=sql.vsantana.com.br:1279
+DATABASE_SERVER=<host-do-sql>,<porta>
 DATABASE_NAME=crescer
 DATABASE_USER=crescer
 DATABASE_PASSWORD=<senha-do-banco>
