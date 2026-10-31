@@ -19,7 +19,7 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     networks:
       - app-network
     restart: unless-stopped
@@ -39,7 +39,7 @@ services:
       - OpenAI__MaxTokens=1500
       - Seed__SuperAdminPassword=${SEED_SUPERADMIN_PASSWORD:-}
     ports:
-      - "5280:5280"
+      - "127.0.0.1:5280:5280"
     networks:
       - app-network
     depends_on:
@@ -53,14 +53,14 @@ services:
       args:
         - VITE_API_URL=${VITE_API_URL}
     ports:
-      - "80:80"
+      - "127.0.0.1:3000:80"
     networks:
       - app-network
     depends_on:
       - backend
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/"]
       interval: 30s
       timeout: 3s
       retries: 3

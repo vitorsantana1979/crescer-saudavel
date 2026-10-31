@@ -47,9 +47,12 @@ class Settings(BaseSettings):
                 "DATABASE_PASSWORD não configurada. Defina a variável de ambiente "
                 "(ou ml-service/.env) — veja .env.example na raiz do repositório."
             )
+        # DATABASE_SERVER segue o formato do .env.example ("host,porta"); "host:porta" e
+        # só "host" (com DATABASE_PORT) também valem.
+        host, _, port = self.DATABASE_SERVER.replace(":", ",").partition(",")
         return (
             f"mssql+pymssql://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}"
-            f"@{self.DATABASE_SERVER}:{self.DATABASE_PORT}/{self.DATABASE_NAME}"
+            f"@{host}:{port or self.DATABASE_PORT}/{self.DATABASE_NAME}"
         )
 
 

@@ -264,7 +264,6 @@ app.MapGet("/api/localizacao/cep/{cep}", async (string cep, ILocationService ser
 
 // Configurar URLs para desenvolvimento
 app.Urls.Add("http://0.0.0.0:5280");
-app.Urls.Add("http://localhost:5280");
 
 app.UseAuthentication();
 app.UseAuthorization();
