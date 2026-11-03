@@ -222,10 +222,6 @@ export default function Login() {
             {loading ? "Entrando..." : "Entrar"}
           </button>
         </form>
-        <div className="mt-4 text-xs text-gray-500 text-center">
-          <p>Teste: medico@hospital.com</p>
-          <p>Senha: 123456</p>
-        </div>
       </div>
     </div>
   );
