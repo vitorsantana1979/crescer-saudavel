@@ -275,8 +275,8 @@ export default function ProfissionalForm() {
                   {...register("senha", {
                     required: !isEditing ? "Senha é obrigatória" : false,
                     minLength: {
-                      value: 6,
-                      message: "Senha deve ter no mínimo 6 caracteres",
+                      value: 8,
+                      message: "Senha deve ter no mínimo 8 caracteres",
                     },
                   })}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"

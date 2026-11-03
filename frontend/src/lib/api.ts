@@ -87,17 +87,12 @@ api.interceptors.request.use((config) => {
     const auth = loadAuth();
     if (auth?.token) {
       config.headers.Authorization = `Bearer ${auth.token}`;
-      console.log(`[API Request] Token adicionado ao header`);
     }
     if (auth?.tenantId) {
       config.headers["X-Tenant-Id"] = auth.tenantId;
-      console.log(`[API Request] TenantId adicionado: ${auth.tenantId}`);
     }
-  } else {
-    console.log(`[API Request] Rota de login detectada - não adicionando token`);
   }
-  
-  console.log(`[API Request] Headers:`, config.headers);
+
   return config;
 });
 
@@ -110,7 +105,13 @@ api.interceptors.response.use(
     const status = error.response?.status || "NO STATUS";
     const url = error.config?.url || "UNKNOWN";
     const errorData = error.response?.data;
-    
+
+    // Várias telas imprimem o erro no console: o token e o corpo enviado não vão junto.
+    if (error.config) {
+      delete error.config.data;
+      if (error.config.headers) delete error.config.headers.Authorization;
+    }
+
     console.error(`[API Response Error] ${status} ${url}`);
     
     // Log detailed error information
