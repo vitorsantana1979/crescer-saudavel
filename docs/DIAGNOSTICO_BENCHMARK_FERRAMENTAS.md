@@ -392,7 +392,8 @@ Critérios: **Impacto clínico** (A/M/B), **Esforço** (B ≈ ≤ 1 semana, M �
 
 ## 7. Achados colaterais (fora do escopo deste diagnóstico; listar como follow-ups)
 - ~~`AuthController` expõe `register` e `reset-password` anônimos.~~ Corrigido em 2026-11-03: `reset-password` exige SuperAdmin e `register` exige perfil administrador, limitado ao papel e às unidades de quem cadastra.
-- `AnalyticsController` e `ChatService.get_patient_data` não filtram por tenant; ml-service sem autenticação e lendo o banco inteiro;
+- ~~`AnalyticsController` e `ChatService.get_patient_data` não filtram por tenant.~~ Corrigido em 2026-11-03.
+- ml-service sem autenticação e lendo o banco inteiro;
   ETL com f-string de id.
 - ML usa `Consulta.ZScorePeso` sem distinguir `ReferenciaCurva` (mistura escalas OMS/INTERGROWTH no alvo); horizonte único treinado.
 - `IdadePreTermoLimite` (unidade) e `IdadeGestacionalCorrigida*` (RN) gravados e ignorados pelas regras.

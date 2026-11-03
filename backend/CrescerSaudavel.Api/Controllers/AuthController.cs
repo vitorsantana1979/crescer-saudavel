@@ -83,7 +83,7 @@ public class AuthController : ControllerBase
             _logger.LogInformation("Usuário encontrado: {Nome} (ID: {UserId})", user.Nome, user.Id);
             _logger.LogInformation("Verificando senha...");
             
-            var result = await _signInManager.CheckPasswordSignInAsync(user, request.Senha, false);
+            var result = await _signInManager.CheckPasswordSignInAsync(user, request.Senha, lockoutOnFailure: true);
             _logger.LogInformation("Resultado da verificação de senha: Succeeded={Succeeded}, IsLockedOut={IsLockedOut}, IsNotAllowed={IsNotAllowed}", 
                 result.Succeeded, result.IsLockedOut, result.IsNotAllowed);
             
@@ -92,7 +92,7 @@ public class AuthController : ControllerBase
                 if (result.IsLockedOut)
                 {
                     _logger.LogWarning("ERRO: Usuário bloqueado");
-                    return Unauthorized(new { message = "Usuário bloqueado" });
+                    return Unauthorized(new { message = "Conta bloqueada por excesso de tentativas. Tente novamente em alguns minutos." });
                 }
                 if (result.IsNotAllowed)
                 {
@@ -104,6 +104,12 @@ public class AuthController : ControllerBase
             }
             
             _logger.LogInformation("Senha verificada com sucesso!");
+
+            if (!user.Ativo)
+            {
+                _logger.LogWarning("ERRO: Usuário desativado");
+                return Unauthorized(new { message = "Usuário desativado" });
+            }
 
             _logger.LogInformation("Buscando roles do usuário...");
             var roles = await _userManager.GetRolesAsync(user);
@@ -165,7 +171,6 @@ public class AuthController : ControllerBase
             
             _logger.LogInformation("Gerando token JWT...");
             var token = GenerateJwtToken(claims);
-            _logger.LogInformation("Token gerado: {TokenPreview}...", token?.Substring(0, Math.Min(50, token?.Length ?? 0)));
 
             var response = new
             {
@@ -202,20 +207,16 @@ public class AuthController : ControllerBase
             }
             _logger.LogError("=====================");
             
-            return StatusCode(500, new { 
-                error = ex.Message, 
-                stackTrace = ex.StackTrace,
-                innerException = ex.InnerException?.Message 
-            });
+            return StatusCode(500, new { message = "Erro interno do servidor. Tente novamente mais tarde." });
         }
     }
 
     [HttpPost("register")]
-    [Authorize(Roles = SystemRoles.SuperAdmin + "," + SystemRoles.AdminGrupo + "," + SystemRoles.AdminUnidade)]
+    [Authorize(Roles = SystemRoles.Administradores)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
         var role = string.IsNullOrWhiteSpace(request.Role) ? SystemRoles.Operador : request.Role.Trim();
-        if (!PodeAtribuirPapel(role))
+        if (!SystemRoles.AtribuiveisPor(_currentUserService.IsInRole).Contains(role))
             return Forbid();
 
         if (!_currentUserService.IsInRole(SystemRoles.SuperAdmin) &&
@@ -260,9 +261,9 @@ public class AuthController : ControllerBase
             }
         }
 
-        if (tenantPrincipalId == null)
+        if (tenantPrincipalId == null && tenantIds.Count > 0)
         {
-            tenantPrincipalId = tenantIds.FirstOrDefault();
+            tenantPrincipalId = tenantIds[0];
         }
 
         tenantIds = tenantIds.Distinct().ToList();
@@ -356,27 +357,13 @@ public class AuthController : ControllerBase
         return Ok(new { message = "Senha resetada com sucesso" });
     }
 
-    // Mesmas opções que o cadastro de profissionais oferece a cada perfil.
-    private bool PodeAtribuirPapel(string role)
-    {
-        if (_currentUserService.IsInRole(SystemRoles.SuperAdmin))
-        {
-            return role is SystemRoles.SuperAdmin or SystemRoles.AdminGrupo
-                or SystemRoles.AdminUnidade or SystemRoles.Operador;
-        }
-
-        if (_currentUserService.IsInRole(SystemRoles.AdminGrupo))
-        {
-            return role is SystemRoles.AdminGrupo or SystemRoles.AdminUnidade or SystemRoles.Operador;
-        }
-
-        return role is SystemRoles.AdminUnidade or SystemRoles.Operador;
-    }
-
     private async Task<bool> PodeVincularUnidadesAsync(IReadOnlyCollection<Guid> tenantIds)
     {
         if (_currentUserService.IsInRole(SystemRoles.SuperAdmin))
             return true;
+
+        if (tenantIds.Count == 0)
+            return false;
 
         if (_currentUserService.IsInRole(SystemRoles.AdminGrupo))
         {

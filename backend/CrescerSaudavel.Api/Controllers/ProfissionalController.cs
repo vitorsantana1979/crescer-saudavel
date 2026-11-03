@@ -125,8 +125,12 @@ public class ProfissionalController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = SystemRoles.Administradores)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProfissionalRequest request)
     {
+        if (!request.Ativo && id == _currentUserService.UserId)
+            return BadRequest(new { message = "Você não pode desativar a própria conta." });
+
         var tenantIdsUsuario = _currentUserService.TenantIds.ToHashSet();
         var profissional = await _userManager.Users
             .Include(p => p.UnidadesPermitidas)
@@ -135,14 +139,8 @@ public class ProfissionalController : ControllerBase
         if (profissional == null)
             return NotFound();
 
-        if (!_currentUserService.IsInRole(SystemRoles.SuperAdmin))
-        {
-            var possuiAcesso = profissional.GrupoSaudeId == _currentUserService.GrupoSaudeId ||
-                                profissional.UnidadesPermitidas.Any(up => tenantIdsUsuario.Contains(up.TenantId));
-
-            if (!possuiAcesso)
-                return Forbid();
-        }
+        if (!await PodeGerenciarAsync(profissional))
+            return Forbid();
 
         profissional.Nome = request.Nome;
         profissional.TipoConselhoId = request.TipoConselhoId;
@@ -279,9 +277,12 @@ public class ProfissionalController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = SystemRoles.Administradores)]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var tenantIds = _currentUserService.TenantIds.ToHashSet();
+        if (id == _currentUserService.UserId)
+            return BadRequest(new { message = "Você não pode desativar a própria conta." });
+
         var profissional = await _userManager.Users
             .Include(p => p.UnidadesPermitidas)
             .FirstOrDefaultAsync(p => p.Id == id);
@@ -289,20 +290,35 @@ public class ProfissionalController : ControllerBase
         if (profissional == null)
             return NotFound();
 
-        if (!_currentUserService.IsInRole(SystemRoles.SuperAdmin))
-        {
-            var possuiAcesso = profissional.GrupoSaudeId == _currentUserService.GrupoSaudeId ||
-                                profissional.UnidadesPermitidas.Any(up => tenantIds.Contains(up.TenantId));
-
-            if (!possuiAcesso)
-                return Forbid();
-        }
+        if (!await PodeGerenciarAsync(profissional))
+            return Forbid();
 
         // Soft delete
         profissional.Ativo = false;
         await _userManager.UpdateAsync(profissional);
 
         return NoContent();
+    }
+
+    private async Task<bool> PodeGerenciarAsync(ProfissionalSaude alvo)
+    {
+        var atribuiveis = SystemRoles.AtribuiveisPor(_currentUserService.IsInRole);
+        var papeisDoAlvo = await _userManager.GetRolesAsync(alvo);
+        if (!papeisDoAlvo.All(atribuiveis.Contains))
+            return false;
+
+        if (_currentUserService.IsInRole(SystemRoles.SuperAdmin))
+            return true;
+
+        if (_currentUserService.IsInRole(SystemRoles.AdminGrupo) &&
+            _currentUserService.GrupoSaudeId != null &&
+            alvo.GrupoSaudeId == _currentUserService.GrupoSaudeId)
+        {
+            return true;
+        }
+
+        var tenantIds = _currentUserService.TenantIds;
+        return alvo.UnidadesPermitidas.Any(up => tenantIds.Contains(up.TenantId));
     }
 }
 

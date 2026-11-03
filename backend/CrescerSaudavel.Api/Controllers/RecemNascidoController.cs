@@ -110,6 +110,17 @@ public class RecemNascidoController : ControllerBase
         if (!tenantIds.Contains(recemNascido.TenantId))
             return Forbid();
 
+        var unidadeAtual = await _context.RecemNascidos
+            .Where(r => r.Id == id)
+            .Select(r => (Guid?)r.TenantId)
+            .FirstOrDefaultAsync();
+
+        if (unidadeAtual == null)
+            return NotFound();
+
+        if (!tenantIds.Contains(unidadeAtual.Value))
+            return Forbid();
+
         if (DatasGestacao.Validar(recemNascido) is { } erroDatas)
             return BadRequest(new { message = erroDatas });
 

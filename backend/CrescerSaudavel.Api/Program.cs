@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 using CrescerSaudavel.Api.Data;
 using CrescerSaudavel.Api.Models;
@@ -58,12 +59,16 @@ builder.Services.AddIdentity<ProfissionalSaude, IdentityRole<Guid>>(options =>
         options.SignIn.RequireConfirmedEmail = false;
         options.SignIn.RequireConfirmedPhoneNumber = false;
 
-        // Configurações de senha mais simples para desenvolvimento
+        // Tamanho mínimo em vez de regras de composição; vale só para senhas novas
         options.Password.RequireDigit = false;
         options.Password.RequireLowercase = false;
         options.Password.RequireUppercase = false;
         options.Password.RequireNonAlphanumeric = false;
-        options.Password.RequiredLength = 4;
+        options.Password.RequiredLength = 8;
+
+        options.Lockout.AllowedForNewUsers = true;
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
     })
     .AddEntityFrameworkStores<CrescerSaudavelDbContext>()
     .AddDefaultTokenProviders();
@@ -119,6 +124,19 @@ builder.Services.AddAuthentication(options =>
         // Não falhar quando não há token - permite endpoints anônimos
         options.Events = new JwtBearerEvents
         {
+            OnTokenValidated = async context =>
+            {
+                // Profissional desativado perde o acesso na hora, mesmo com token ainda válido
+                var usuarioId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (Guid.TryParse(usuarioId, out var id))
+                {
+                    var db = context.HttpContext.RequestServices.GetRequiredService<CrescerSaudavelDbContext>();
+                    if (await db.Users.AnyAsync(u => u.Id == id && !u.Ativo, context.HttpContext.RequestAborted))
+                    {
+                        context.Fail("Usuário desativado");
+                    }
+                }
+            },
             OnMessageReceived = context =>
             {
                 // Permite que requisições sem token passem (para endpoints anônimos)
@@ -195,6 +213,7 @@ builder.Services.AddHttpClient("OpenAI", client =>
 });
 
 // Registrar ChatService
+builder.Services.AddScoped<AcessoCriancaService>();
 builder.Services.AddScoped<ChatService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ILocationService, LocationService>();

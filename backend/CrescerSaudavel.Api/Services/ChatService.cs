@@ -1,9 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using CrescerSaudavel.Api.Data;
 using CrescerSaudavel.Api.Models;
 using CrescerSaudavel.Api.Models.ML;
+using CrescerSaudavel.Api.Services.Time;
 using Microsoft.EntityFrameworkCore;
 
 namespace CrescerSaudavel.Api.Services;
@@ -15,9 +15,12 @@ public class ChatService
 {
     private readonly HttpClient _openAIClient;
     private readonly MLService _mlService;
-    private readonly CrescerSaudavelDbContext _context;
+    private readonly AcessoCriancaService _acessoCrianca;
+    private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<ChatService> _logger;
     private readonly IConfiguration _config;
+
+    private const int MaximoCasosSimilares = 50;
 
     // Cache de conversas em memória (produção deveria usar Redis ou similar)
     private static readonly Dictionary<Guid, Conversation> _conversations = new();
@@ -32,13 +35,15 @@ public class ChatService
     public ChatService(
         IHttpClientFactory httpClientFactory,
         MLService mlService,
-        CrescerSaudavelDbContext context,
+        AcessoCriancaService acessoCrianca,
+        ICurrentUserService currentUserService,
         ILogger<ChatService> logger,
         IConfiguration config)
     {
         _openAIClient = httpClientFactory.CreateClient("OpenAI");
         _mlService = mlService;
-        _context = context;
+        _acessoCrianca = acessoCrianca;
+        _currentUserService = currentUserService;
         _logger = logger;
         _config = config;
 
@@ -192,15 +197,23 @@ public class ChatService
 
     private Conversation GetOrCreateConversation(Guid? conversationId, Guid? criancaId)
     {
-        if (conversationId.HasValue && _conversations.ContainsKey(conversationId.Value))
+        var idInformadoLivre = conversationId.HasValue;
+
+        if (conversationId.HasValue && _conversations.TryGetValue(conversationId.Value, out var existente))
         {
-            return _conversations[conversationId.Value];
+            if (existente.UsuarioId == _currentUserService.UserId)
+            {
+                return existente;
+            }
+
+            idInformadoLivre = false;
         }
 
         var conversation = new Conversation
         {
-            Id = conversationId ?? Guid.NewGuid(),
-            CriancaId = criancaId
+            Id = idInformadoLivre ? conversationId!.Value : Guid.NewGuid(),
+            CriancaId = criancaId,
+            UsuarioId = _currentUserService.UserId
         };
 
         _conversations[conversation.Id] = conversation;
@@ -382,7 +395,7 @@ Você tem acesso às seguintes funções para consultar dados:
         // Tentar como GUID primeiro
         if (Guid.TryParse(criancaIdStr, out var criancaId))
         {
-            crianca = await _context.RecemNascidos
+            crianca = await _acessoCrianca.CriancasAcessiveis()
                 .Include(r => r.Consultas.OrderByDescending(c => c.DataHora).Take(5))
                 .FirstOrDefaultAsync(r => r.Id == criancaId, cancellationToken);
         }
@@ -390,7 +403,7 @@ Você tem acesso às seguintes funções para consultar dados:
         // Se não encontrou, tentar buscar por nome
         if (crianca == null)
         {
-            crianca = await _context.RecemNascidos
+            crianca = await _acessoCrianca.CriancasAcessiveis()
                 .Include(r => r.Consultas.OrderByDescending(c => c.DataHora).Take(5))
                 .FirstOrDefaultAsync(r => r.Nome.Contains(criancaIdStr), cancellationToken);
         }
@@ -426,6 +439,9 @@ Você tem acesso às seguintes funções para consultar dados:
             return JsonSerializer.Serialize(new { error = "Parâmetros inválidos" });
 
         var criancaId = Guid.Parse(args["crianca_id"].GetString() ?? "");
+        if (!await _acessoCrianca.PodeAcessarAsync(criancaId, cancellationToken))
+            return JsonSerializer.Serialize(new { error = "Paciente não encontrado" });
+
         var taxaEnergia = args["taxa_energia"].GetDouble();
         var metaProteina = args["meta_proteina"].GetDouble();
 
@@ -437,6 +453,7 @@ Você tem acesso às seguintes funções para consultar dados:
         };
 
         var prediction = await _mlService.PredictGrowthAsync(criancaId, cenario, 14, cancellationToken);
+        prediction.CasosSimilares = await _acessoCrianca.ManterAcessiveisAsync(prediction.CasosSimilares, cancellationToken);
 
         return JsonSerializer.Serialize(prediction, _jsonOptions);
     }
@@ -449,11 +466,15 @@ Você tem acesso às seguintes funções para consultar dados:
             return JsonSerializer.Serialize(new { error = "crianca_id não fornecido" });
 
         var criancaId = Guid.Parse(args["crianca_id"].GetString() ?? "");
+        if (!await _acessoCrianca.PodeAcessarAsync(criancaId, cancellationToken))
+            return JsonSerializer.Serialize(new { error = "Paciente não encontrado" });
+
         var limit = args.ContainsKey("limit") ? args["limit"].GetInt32() : 10;
 
-        var cases = await _mlService.GetSimilarCasesAsync(criancaId, limit, cancellationToken);
+        var cases = await _mlService.GetSimilarCasesAsync(criancaId, MaximoCasosSimilares, cancellationToken);
+        var acessiveis = await _acessoCrianca.ManterAcessiveisAsync(cases, cancellationToken);
 
-        return JsonSerializer.Serialize(cases, _jsonOptions);
+        return JsonSerializer.Serialize(acessiveis.Take(limit), _jsonOptions);
     }
 
     private async Task<string> QueryStatisticsFunction(CancellationToken cancellationToken)

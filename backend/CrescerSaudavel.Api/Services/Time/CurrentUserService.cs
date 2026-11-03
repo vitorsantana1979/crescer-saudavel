@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using CrescerSaudavel.Api.Authorization;
 using Microsoft.AspNetCore.Http;
 
 namespace CrescerSaudavel.Api.Services.Time;
@@ -24,13 +25,10 @@ public class CurrentUserService : ICurrentUserService
     {
         get
         {
-            var headerTenant = _httpContextAccessor.HttpContext?.Request.Headers["X-Tenant-Id"].FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(headerTenant) && Guid.TryParse(headerTenant, out var headerId))
-            {
-                return headerId;
-            }
-
-            return ParseGuidClaim(TenantClaim);
+            var unidadeDoCabecalho = ObterUnidadeDoCabecalho();
+            return unidadeDoCabecalho.HasValue && TenantIds.Contains(unidadeDoCabecalho.Value)
+                ? unidadeDoCabecalho
+                : ParseGuidClaim(TenantClaim);
         }
     }
 
@@ -45,24 +43,8 @@ public class CurrentUserService : ICurrentUserService
                 return _tenantIdsCache;
             }
 
-            var httpContext = _httpContextAccessor.HttpContext;
-
-            var claim = httpContext?.User?.FindFirst(TenantsClaim);
-            if (claim == null || string.IsNullOrWhiteSpace(claim.Value))
-            {
-                var headerTenant = httpContext?.Request.Headers["X-Tenant-Id"].FirstOrDefault();
-                if (!string.IsNullOrWhiteSpace(headerTenant) && Guid.TryParse(headerTenant, out var headerId))
-                {
-                    _tenantIdsCache = new[] { headerId };
-                }
-                else
-                {
-                    _tenantIdsCache = TenantId.HasValue ? new[] { TenantId.Value } : Array.Empty<Guid>();
-                }
-                return _tenantIdsCache;
-            }
-
-            var ids = claim.Value
+            var claim = _httpContextAccessor.HttpContext?.User?.FindFirst(TenantsClaim);
+            var ids = (claim?.Value ?? string.Empty)
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(value => Guid.TryParse(value, out var id) ? id : (Guid?)null)
                 .Where(id => id.HasValue)
@@ -70,7 +52,15 @@ public class CurrentUserService : ICurrentUserService
                 .Distinct()
                 .ToArray();
 
-            _tenantIdsCache = ids.Length > 0 ? ids : (TenantId.HasValue ? new[] { TenantId.Value } : Array.Empty<Guid>());
+            if (ids.Length == 0)
+            {
+                // Só o SuperAdmin, que não tem unidades no token, escolhe a unidade pelo cabeçalho.
+                var unidade = IsInRole(SystemRoles.SuperAdmin) ? ObterUnidadeDoCabecalho() : null;
+                unidade ??= ParseGuidClaim(TenantClaim);
+                ids = unidade.HasValue ? new[] { unidade.Value } : Array.Empty<Guid>();
+            }
+
+            _tenantIdsCache = ids;
             return _tenantIdsCache;
         }
     }
@@ -79,6 +69,12 @@ public class CurrentUserService : ICurrentUserService
     {
         var principal = _httpContextAccessor.HttpContext?.User;
         return principal?.IsInRole(role) ?? false;
+    }
+
+    private Guid? ObterUnidadeDoCabecalho()
+    {
+        var valor = _httpContextAccessor.HttpContext?.Request.Headers["X-Tenant-Id"].FirstOrDefault();
+        return Guid.TryParse(valor, out var id) ? id : null;
     }
 
     private Guid? ParseGuidClaim(string claimType)

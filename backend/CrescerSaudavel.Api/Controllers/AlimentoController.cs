@@ -28,23 +28,16 @@ public class AlimentosController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        try
-        {
-            var tenantIds = _currentUserService.TenantIds.ToHashSet();
-            if (tenantIds.Count == 0)
-                return Ok(Array.Empty<Alimento>());
+        var tenantIds = _currentUserService.TenantIds.ToHashSet();
+        if (tenantIds.Count == 0)
+            return Ok(Array.Empty<Alimento>());
 
-            var alimentos = await _context.Alimentos
-                .Where(a => a.Ativo && !a.Excluido && tenantIds.Contains(a.TenantId))
-                .OrderBy(a => a.Nome)
-                .ToListAsync();
+        var alimentos = await _context.Alimentos
+            .Where(a => a.Ativo && !a.Excluido && tenantIds.Contains(a.TenantId))
+            .OrderBy(a => a.Nome)
+            .ToListAsync();
 
-            return Ok(alimentos);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
-        }
+        return Ok(alimentos);
     }
 
     [HttpGet("{id}")]
@@ -97,6 +90,17 @@ public class AlimentosController : ControllerBase
             return Forbid();
 
         if (!tenantIds.Contains(alimento.TenantId))
+            return Forbid();
+
+        var unidadeAtual = await _context.Alimentos
+            .Where(a => a.Id == id)
+            .Select(a => (Guid?)a.TenantId)
+            .FirstOrDefaultAsync();
+
+        if (unidadeAtual == null)
+            return NotFound();
+
+        if (!tenantIds.Contains(unidadeAtual.Value))
             return Forbid();
 
         _context.Entry(alimento).State = EntityState.Modified;

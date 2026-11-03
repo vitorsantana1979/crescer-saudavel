@@ -14,15 +14,20 @@ public class AnalyticsController : ControllerBase
     private readonly MLService _mlService;
     private readonly ILogger<AnalyticsController> _logger;
     private readonly ICurrentUserService _currentUserService;
+    private readonly AcessoCriancaService _acessoCrianca;
+
+    private const int MaximoCasosSimilares = 50;
 
     public AnalyticsController(
         MLService mlService,
         ILogger<AnalyticsController> logger,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        AcessoCriancaService acessoCrianca)
     {
         _mlService = mlService;
         _logger = logger;
         _currentUserService = currentUserService;
+        _acessoCrianca = acessoCrianca;
     }
 
     /// <summary>
@@ -40,9 +45,11 @@ public class AnalyticsController : ControllerBase
     {
         try
         {
-            // TODO: Verificar permissões de acesso à criança
             if (_currentUserService.UserId == null)
                 return Unauthorized();
+
+            if (!await _acessoCrianca.PodeAcessarAsync(criancaId))
+                return Forbid();
 
             _logger.LogInformation(
                 "Usuário {UserId} solicitou predição para criança {CriancaId}",
@@ -53,6 +60,8 @@ public class AnalyticsController : ControllerBase
                 criancaId,
                 request.Cenario,
                 request.HorizonteDias);
+
+            result.CasosSimilares = await _acessoCrianca.ManterAcessiveisAsync(result.CasosSimilares);
 
             return Ok(result);
         }
@@ -87,6 +96,9 @@ public class AnalyticsController : ControllerBase
 
             if (_currentUserService.UserId == null)
                 return Unauthorized();
+
+            if (!await _acessoCrianca.PodeAcessarAsync(criancaId))
+                return Forbid();
 
             _logger.LogInformation(
                 "Usuário {UserId} solicitou comparação de {Count} cenários para criança {CriancaId}",
@@ -126,12 +138,16 @@ public class AnalyticsController : ControllerBase
             if (_currentUserService.UserId == null)
                 return Unauthorized();
 
+            if (!await _acessoCrianca.PodeAcessarAsync(criancaId))
+                return Forbid();
+
             _logger.LogInformation(
                 "Usuário {UserId} solicitou casos similares para criança {CriancaId}",
                 _currentUserService.UserId,
                 criancaId);
 
-            var result = await _mlService.GetSimilarCasesAsync(criancaId, limit);
+            var casos = await _mlService.GetSimilarCasesAsync(criancaId, MaximoCasosSimilares);
+            var result = (await _acessoCrianca.ManterAcessiveisAsync(casos)).Take(limit).ToList();
 
             return Ok(result);
         }
