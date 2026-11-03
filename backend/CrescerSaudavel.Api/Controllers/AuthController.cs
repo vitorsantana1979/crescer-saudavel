@@ -1,6 +1,7 @@
 using CrescerSaudavel.Api.Authorization;
 using CrescerSaudavel.Api.Data;
 using CrescerSaudavel.Api.Models;
+using CrescerSaudavel.Api.Services.Time;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,6 @@ namespace CrescerSaudavel.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[AllowAnonymous]
 public class AuthController : ControllerBase
 {
     private readonly UserManager<ProfissionalSaude> _userManager;
@@ -24,6 +24,7 @@ public class AuthController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly CrescerSaudavelDbContext _context;
     private readonly ILogger<AuthController> _logger;
+    private readonly ICurrentUserService _currentUserService;
 
     public AuthController(
         UserManager<ProfissionalSaude> userManager,
@@ -31,7 +32,8 @@ public class AuthController : ControllerBase
         RoleManager<IdentityRole<Guid>> roleManager,
         IConfiguration configuration,
         CrescerSaudavelDbContext context,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+        ICurrentUserService currentUserService)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -39,8 +41,10 @@ public class AuthController : ControllerBase
         _configuration = configuration;
         _context = context;
         _logger = logger;
+        _currentUserService = currentUserService;
     }
 
+    [AllowAnonymous]
     [HttpGet("tipos-conselho")]
     public async Task<IActionResult> GetTiposConselho()
     {
@@ -52,6 +56,7 @@ public class AuthController : ControllerBase
         return Ok(tipos);
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -206,8 +211,20 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
+    [Authorize(Roles = SystemRoles.SuperAdmin + "," + SystemRoles.AdminGrupo + "," + SystemRoles.AdminUnidade)]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
+        var role = string.IsNullOrWhiteSpace(request.Role) ? SystemRoles.Operador : request.Role.Trim();
+        if (!PodeAtribuirPapel(role))
+            return Forbid();
+
+        if (!_currentUserService.IsInRole(SystemRoles.SuperAdmin) &&
+            request.GrupoSaudeId.HasValue &&
+            request.GrupoSaudeId != _currentUserService.GrupoSaudeId)
+        {
+            return Forbid();
+        }
+
         var existingUser = await _userManager.FindByEmailAsync(request.Email);
         if (existingUser != null)
             return BadRequest(new { message = "Email já cadastrado" });
@@ -250,6 +267,9 @@ public class AuthController : ControllerBase
 
         tenantIds = tenantIds.Distinct().ToList();
 
+        if (!await PodeVincularUnidadesAsync(tenantIds))
+            return Forbid();
+
         var user = new ProfissionalSaude
         {
             Id = Guid.NewGuid(),
@@ -276,7 +296,6 @@ public class AuthController : ControllerBase
         if (!result.Succeeded)
             return BadRequest(new { message = "Erro ao criar usuário", errors = result.Errors });
 
-        var role = string.IsNullOrWhiteSpace(request.Role) ? SystemRoles.Operador : request.Role.Trim();
         if (!await _roleManager.RoleExistsAsync(role))
         {
             await _roleManager.CreateAsync(new IdentityRole<Guid>(role));
@@ -321,6 +340,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("reset-password")]
+    [Authorize(Roles = SystemRoles.SuperAdmin)]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
@@ -334,6 +354,45 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "Erro ao resetar senha", errors = result.Errors });
 
         return Ok(new { message = "Senha resetada com sucesso" });
+    }
+
+    // Mesmas opções que o cadastro de profissionais oferece a cada perfil.
+    private bool PodeAtribuirPapel(string role)
+    {
+        if (_currentUserService.IsInRole(SystemRoles.SuperAdmin))
+        {
+            return role is SystemRoles.SuperAdmin or SystemRoles.AdminGrupo
+                or SystemRoles.AdminUnidade or SystemRoles.Operador;
+        }
+
+        if (_currentUserService.IsInRole(SystemRoles.AdminGrupo))
+        {
+            return role is SystemRoles.AdminGrupo or SystemRoles.AdminUnidade or SystemRoles.Operador;
+        }
+
+        return role is SystemRoles.AdminUnidade or SystemRoles.Operador;
+    }
+
+    private async Task<bool> PodeVincularUnidadesAsync(IReadOnlyCollection<Guid> tenantIds)
+    {
+        if (_currentUserService.IsInRole(SystemRoles.SuperAdmin))
+            return true;
+
+        if (_currentUserService.IsInRole(SystemRoles.AdminGrupo))
+        {
+            var grupoIdAtual = _currentUserService.GrupoSaudeId;
+            if (grupoIdAtual == null)
+                return false;
+
+            var allowedTenantIds = await _context.Tenants
+                .Where(t => t.GrupoSaudeId == grupoIdAtual)
+                .Select(t => t.Id)
+                .ToListAsync();
+
+            return !tenantIds.Except(allowedTenantIds).Any();
+        }
+
+        return !tenantIds.Except(_currentUserService.TenantIds).Any();
     }
 
     private string GenerateJwtToken(IEnumerable<Claim> claims)

@@ -270,3 +270,5 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapGet("/api/health", () => Results.Ok(new { ok = true }));
 await app.RunAsync();
+
+public partial class Program { }
